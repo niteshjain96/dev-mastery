@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Chapter 2</title>
+<title>this, Prototypes, Objects &amp; Classes — Chapter 2</title>
 <link rel="stylesheet" href="../assets/book.css">
 </head>
 <body data-chapter="2">
@@ -12,7 +12,7 @@
   <div class="site-head-in">
     <a class="logo" href="../index.html"><span class="logo-mark">DM</span> Dev Mastery</a>
     <span class="head-sp"></span>
-    <span class="head-meta">Chapter 2 of 30</span>
+    <span class="head-meta">Part I &middot; Chapter 2 of 30</span>
   </div>
   <div class="readbar" id="readbar"></div>
 </header>
@@ -22,12 +22,2039 @@
   <main class="ch-main">
 
     <div class="ch-hero">
-      <p class="ch-kicker" id="stub-kicker">Chapter 2</p>
-      <h1 id="stub-title">Chapter 2</h1>
-      <p class="lede" id="stub-lede"></p>
+      <p class="ch-kicker">Part I &middot; JavaScript: The Gate &middot; Chapter Two</p>
+      <h1>this, Prototypes, Objects &amp; Classes</h1>
+      <p class="lede">
+        Chapter 1 was about how JavaScript resolves <em>names</em> &mdash; the scope chain, fixed
+        when you write the code. This chapter is the other half: how it resolves
+        <em>properties</em> &mdash; the prototype chain, walked at runtime &mdash; and
+        <code>this</code>, the one thing in the language decided by the call site rather than by
+        where you wrote it.
+      </p>
+      <div class="ch-facts">
+        <span><b>5</b> sessions</span>
+        <span><b>~6.25</b> hours</span>
+        <span><b>10</b> Q-blocks</span>
+        <span><b>10</b> timed drills</span>
+        <span>Prerequisites: <b>Chapter 1</b></span>
+      </div>
     </div>
 
-    <div id="stub"></div>
+    <div class="callout key">
+      <span class="ct">The three-sentence frame for this whole area</span>
+      <p>
+        Interviewers ask scope, <code>this</code> and prototypes back to back, almost every time.
+        Candidates who sound strongest can separate them in one breath:
+      </p>
+      <p>
+        <strong>Names come from the scope chain, fixed at authoring time. Properties come from the
+        prototype chain, walked at lookup time. <code>this</code> comes from the call.</strong>
+      </p>
+      <p>
+        Learn that sentence now. Every question in this chapter is a detail hanging off one of its
+        three clauses, and saying it early tells the interviewer you have a model rather than a
+        pile of facts.
+      </p>
+    </div>
+
+    <!-- ================================================================= -->
+    <div class="session">
+      <span class="sn">Session 1</span>
+      <span class="st">this is decided by the call, not the code</span>
+      <span class="sd">~75 min</span>
+    </div>
+
+    <h2>1 &middot; How this is determined</h2>
+
+    <div class="qblock">
+      <div class="q-head">
+        <span class="q-n">Question 1</span>
+        <span class="q-t">How is the value of this determined in JavaScript?</span>
+        <span class="q-freq">Near-certain &middot; and the follow-ups run deep</span>
+      </div>
+      <div class="q-body">
+
+        <div class="saythis">
+          <span class="st-lab">Say this</span>
+          <p>
+            For a normal function, <code>this</code> is <strong>not</strong> decided by where the
+            function is written &mdash; it is decided by <strong>how it is called</strong>. MDN
+            calls it runtime binding. There are four call shapes, and they have a precedence
+            order.
+          </p>
+          <p>
+            <strong>One: <code>new Fn()</code></strong> &mdash; <code>this</code> is the newly
+            created object. <strong>Two: explicit binding</strong> &mdash;
+            <code>fn.call(obj)</code>, <code>fn.apply(obj)</code> or a function produced by
+            <code>fn.bind(obj)</code> &mdash; <code>this</code> is that object.
+            <strong>Three: a method call</strong>, <code>obj.fn()</code> &mdash;
+            <code>this</code> is the object <em>left of the dot</em> at the moment of the call.
+            <strong>Four: a plain call</strong>, <code>fn()</code> &mdash; <code>this</code> is
+            <code>undefined</code> in strict mode, and the global object in sloppy mode, where the
+            engine substitutes it.
+          </p>
+          <p>
+            Arrow functions sit outside all four. They do not have their own <code>this</code>
+            &mdash; they take it lexically from the enclosing scope, exactly like any other
+            captured variable, and <code>call</code>, <code>apply</code> and <code>bind</code>
+            cannot change it.
+          </p>
+        </div>
+
+        <figure class="diagram">
+          <svg viewBox="0 0 700 290" role="img" aria-label="Decision order for determining the value of this">
+            <defs>
+              <marker id="b1" markerWidth="8" markerHeight="8" refX="6.4" refY="2.9" orient="auto">
+                <path d="M0,0 L6.4,2.9 L0,5.8 z" fill="var(--muted)"/>
+              </marker>
+            </defs>
+            <g font-family="var(--ui)" font-size="11.5">
+              <rect x="14" y="10" width="200" height="34" rx="8" fill="var(--bg-2)" stroke="var(--line)"/>
+              <text x="114" y="32" text-anchor="middle" font-weight="700" fill="var(--ink)">Is it an arrow function?</text>
+              <line x1="214" y1="27" x2="286" y2="27" stroke="var(--muted)" stroke-width="1.3" marker-end="url(#b1)"/>
+              <text x="246" y="21" text-anchor="middle" font-size="10" fill="var(--ok)" font-weight="700">YES</text>
+              <rect x="292" y="10" width="394" height="34" rx="8" fill="var(--ok-soft)" stroke="var(--ok-line)"/>
+              <text x="306" y="32" fill="var(--ok)" font-weight="700">lexical this from the enclosing scope &mdash; call/apply/bind ignored</text>
+
+              <line x1="114" y1="44" x2="114" y2="66" stroke="var(--muted)" stroke-width="1.3" marker-end="url(#b1)"/>
+              <text x="126" y="60" font-size="10" fill="var(--muted)" font-weight="700">NO</text>
+
+              <rect x="14" y="70" width="200" height="34" rx="8" fill="var(--bg-2)" stroke="var(--line)"/>
+              <text x="114" y="92" text-anchor="middle" font-weight="700" fill="var(--ink)">Called with new?</text>
+              <line x1="214" y1="87" x2="286" y2="87" stroke="var(--muted)" stroke-width="1.3" marker-end="url(#b1)"/>
+              <rect x="292" y="70" width="394" height="34" rx="8" fill="var(--accent-soft)" stroke="var(--accent-line)"/>
+              <text x="306" y="92" fill="var(--accent)" font-weight="700">the brand-new object (a bound this would be ignored)</text>
+
+              <line x1="114" y1="104" x2="114" y2="126" stroke="var(--muted)" stroke-width="1.3" marker-end="url(#b1)"/>
+
+              <rect x="14" y="130" width="200" height="34" rx="8" fill="var(--bg-2)" stroke="var(--line)"/>
+              <text x="114" y="152" text-anchor="middle" font-weight="700" fill="var(--ink)">call / apply / bind?</text>
+              <line x1="214" y1="147" x2="286" y2="147" stroke="var(--muted)" stroke-width="1.3" marker-end="url(#b1)"/>
+              <rect x="292" y="130" width="394" height="34" rx="8" fill="var(--info-soft)" stroke="var(--info-line)"/>
+              <text x="306" y="152" fill="var(--info)" font-weight="700">the thisArg you passed (boxed to an object in sloppy mode)</text>
+
+              <line x1="114" y1="164" x2="114" y2="186" stroke="var(--muted)" stroke-width="1.3" marker-end="url(#b1)"/>
+
+              <rect x="14" y="190" width="200" height="34" rx="8" fill="var(--bg-2)" stroke="var(--line)"/>
+              <text x="114" y="212" text-anchor="middle" font-weight="700" fill="var(--ink)">Called as obj.fn()?</text>
+              <line x1="214" y1="207" x2="286" y2="207" stroke="var(--muted)" stroke-width="1.3" marker-end="url(#b1)"/>
+              <rect x="292" y="190" width="394" height="34" rx="8" fill="var(--warn-soft)" stroke="var(--warn-line)"/>
+              <text x="306" y="212" fill="var(--warn)" font-weight="700">the object left of the dot &mdash; at CALL time, not definition time</text>
+
+              <line x1="114" y1="224" x2="114" y2="246" stroke="var(--muted)" stroke-width="1.3" marker-end="url(#b1)"/>
+
+              <rect x="14" y="250" width="200" height="34" rx="8" fill="var(--bg-2)" stroke="var(--line)"/>
+              <text x="114" y="272" text-anchor="middle" font-weight="700" fill="var(--ink)">Plain call: fn()</text>
+              <line x1="214" y1="267" x2="286" y2="267" stroke="var(--muted)" stroke-width="1.3" marker-end="url(#b1)"/>
+              <rect x="292" y="250" width="394" height="34" rx="8" fill="var(--danger-soft)" stroke="var(--danger-line)"/>
+              <text x="306" y="272" fill="var(--danger)" font-weight="700">undefined in strict mode &middot; globalThis in sloppy mode</text>
+            </g>
+          </svg>
+          <figcaption>Read top to bottom: the first matching row wins. Modules and class bodies are always strict, so in modern code the bottom row means <code>undefined</code>.</figcaption>
+        </figure>
+
+        <p class="qlabel">Example &mdash; the same function, five call shapes</p>
+
+<pre><code>"use strict";
+
+function whoAmI() { return this; }
+
+const widget = { id: "w1", whoAmI };
+
+whoAmI();                      <span class="cmt">// undefined        — plain call, strict mode</span>
+widget.whoAmI();               <span class="cmt">// widget           — left of the dot</span>
+whoAmI.call({ id: "w2" });     <span class="cmt">// { id: "w2" }     — explicit</span>
+new whoAmI();                  <span class="cmt">// a fresh object   — new wins over everything</span>
+
+const detached = widget.whoAmI;
+detached();                    <span class="cmt">// undefined        — the dot was not part of the function</span></code></pre>
+
+        <p>
+          That last pair is the entire chapter in four lines.
+          <code>widget.whoAmI</code> does not return "the method of widget" &mdash; it returns a
+          plain function value. The binding lived in the <em>call expression</em>, not in the
+          function. Pull the function out of the object and the binding is gone.
+        </p>
+
+        <div class="hing">
+          <span class="h-lab">Seedhi baat</span>
+          <p>
+            <code>this</code> function ke andar likha hota hai, par uski value <strong>call ke
+            waqt</strong> decide hoti hai. Dot ke left mein jo object hai, wahi
+            <code>this</code> ban jata hai &mdash; aur agar dot hi nahi hai, to kuch nahi milta
+            (<code>undefined</code>, strict mode mein).
+          </p>
+          <p>
+            Isliye <code>const f = obj.method; f()</code> tootta hai. Aapne function to le liya,
+            par <em>dot chhod diya</em>. Function saath aaya, binding peeche reh gayi. Yahi baat
+            React handlers, <code>setTimeout</code> aur <code>forEach</code> callbacks &mdash;
+            sab jagah wahi bug banati hai.
+          </p>
+        </div>
+
+        <div class="drill">
+          <div class="d-head"><span>Now you code</span><span>AI off &middot; autocomplete off</span><span class="clock">12 min</span></div>
+          <div class="d-body">
+            <h4>Build the this harness &mdash; predict first, then run</h4>
+            <p>
+              Create <code>this-harness.js</code>. Write the file below by hand, and
+              <strong>write your prediction for all ten lines on paper before running it.</strong>
+              Score yourself out of ten.
+            </p>
+<pre><code>"use strict";
+
+function report(label, value) {
+  const kind = value === undefined ? "undefined"
+    : value === globalThis ? "globalThis"
+    : value.tag ?? value.constructor?.name ?? String(value);
+  console.log(label.padEnd(24), "=&gt;", kind);
+}
+
+const obj = {
+  tag: "obj",
+  regular() { report("1 method", this); },
+  arrow: () =&gt; { report("2 field arrow", this); },
+  nested() {
+    function inner() { report("3 inner function", this); }
+    const innerArrow = () =&gt; report("4 inner arrow", this);
+    inner();
+    innerArrow();
+  },
+};
+
+<span class="cmt">// you write lines 5 to 10: a detached method, a detached method + bind,
+// a setTimeout callback, a forEach with and without thisArg,
+// and the same method called via new. Predict each one first.</span></code></pre>
+          </div>
+        </div>
+
+        <details class="solution">
+          <summary>Solution &mdash; open only after the timer</summary>
+          <div class="sol-in">
+<pre><code>obj.regular();                 <span class="cmt">// 1 =&gt; obj</span>
+obj.arrow();                   <span class="cmt">// 2 =&gt; undefined in a module, globalThis in a script
+                                     //      — the arrow captured the TOP-LEVEL this,
+                                     //        not obj. Object literals create no this scope.</span>
+obj.nested();                  <span class="cmt">// 3 =&gt; undefined  (plain call, strict)
+                                     // 4 =&gt; obj        (arrow captured nested()'s this)</span>
+
+const d = obj.regular;
+d();                           <span class="cmt">// 5 =&gt; undefined  — the dot is gone</span>
+d.call(obj);                   <span class="cmt">// 6 =&gt; obj</span>
+setTimeout(obj.regular, 0);    <span class="cmt">// 7 =&gt; undefined  — passed as a bare function value</span>
+[1].forEach(obj.regular);      <span class="cmt">// 8 =&gt; undefined</span>
+[1].forEach(obj.regular, obj); <span class="cmt">// 9 =&gt; obj        — forEach takes a thisArg</span>
+new obj.regular();             <span class="cmt">// 10 =&gt; Object     — new wins; a brand-new object</span></code></pre>
+            <p>
+              Line 2 is the one that catches people, including experienced people. An object
+              literal is <strong>not</strong> a scope for <code>this</code> &mdash; MDN is explicit
+              about it. An arrow in a property position captures whatever <code>this</code> was
+              outside the literal, which at module top level is <code>undefined</code>. So
+              "always use arrows to be safe" is wrong advice: in an object literal, arrows are the
+              <em>unsafe</em> choice.
+            </p>
+            <p>
+              Line 7 is the one that bites in production, and line 9 is the fact almost nobody
+              volunteers: <code>forEach</code>, <code>map</code>, <code>filter</code>,
+              <code>some</code> and <code>every</code> all accept a second <code>thisArg</code>
+              argument.
+            </p>
+          </div>
+        </details>
+
+        <p class="qlabel">Cross-questions</p>
+        <div class="xq">
+
+          <div class="xq-item">
+            <p class="xq-q">What is <code>this</code> at the top level of a file?</p>
+            <p class="xq-why">Testing: do you know modules differ from scripts?</p>
+            <p class="ans bad">"<code>window</code>."</p>
+            <p class="ans good">"In a classic script it is <code>globalThis</code>. In an ES module it is <code>undefined</code>, because module code is always strict and has no global <code>this</code>. In Node's CommonJS it is <code>module.exports</code>, which surprises people. So the honest answer is 'it depends what kind of file' &mdash; and in any modern bundled app, it is <code>undefined</code>."</p>
+          </div>
+
+          <div class="xq-item">
+            <p class="xq-q">In sloppy mode, what happens if I call <code>fn.call(7)</code>?</p>
+            <p class="xq-why">Testing: this-substitution &mdash; an obscure but real detail.</p>
+            <p class="ans good">"In sloppy mode the engine guarantees <code>this</code> is always an object, so a primitive gets boxed &mdash; <code>this</code> becomes a <code>Number</code> wrapper object, and <code>null</code> or <code>undefined</code> become <code>globalThis</code>. In strict mode no substitution happens: <code>this</code> is exactly the 7 you passed. That difference is one of the quieter reasons strict mode is saner."</p>
+          </div>
+
+          <div class="xq-item">
+            <p class="xq-q">Method shorthand versus an arrow in an object literal &mdash; which should I use?</p>
+            <p class="xq-why">Testing: the line-2 trap, asked directly.</p>
+            <p class="ans good">"Method shorthand, if the function needs the object. An arrow in a literal captures the surrounding <code>this</code>, not the object, so <code>this.id</code> will be <code>undefined</code>. Arrows belong <em>inside</em> methods &mdash; where you want to keep the method's <code>this</code> in a callback &mdash; not <em>as</em> methods."</p>
+          </div>
+
+          <div class="xq-item">
+            <p class="xq-q">What is <code>this</code> inside a DOM event handler?</p>
+            <p class="xq-why">Testing: platform knowledge, and the arrow trap in UI code.</p>
+            <p class="ans good">"For a normal function, the element the listener is attached to &mdash; equal to <code>event.currentTarget</code>, not <code>event.target</code>. For an arrow function, whatever <code>this</code> was where you wrote it, so the element binding is lost. In a canvas editor I prefer <code>event.currentTarget</code> explicitly rather than relying on <code>this</code>, because then the handler works identically whichever form I use."</p>
+          </div>
+
+          <div class="xq-item">
+            <p class="xq-q">Does <code>this</code> have anything to do with closures?</p>
+            <p class="xq-why">Testing: can you keep two mechanisms separate?</p>
+            <p class="ans good">"For normal functions, no &mdash; closures capture variables through the scope chain, while <code>this</code> is passed in per call, more like a hidden argument. The two only meet in arrow functions, where <code>this</code> is resolved lexically and therefore <em>is</em> captured like a closure variable. That is exactly why an arrow's <code>this</code> cannot be changed by <code>call</code>."</p>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <h2>2 &middot; call, apply and bind</h2>
+
+    <div class="qblock">
+      <div class="q-head">
+        <span class="q-n">Question 2</span>
+        <span class="q-t">What's the difference between call, apply and bind? Now implement bind.</span>
+        <span class="q-freq">Extremely common &middot; the implementation is a standard machine-coding warm-up</span>
+      </div>
+      <div class="q-body">
+
+        <div class="saythis">
+          <span class="st-lab">Say this</span>
+          <p>
+            All three set <code>this</code> explicitly. <code>call</code> and <code>apply</code>
+            <strong>invoke immediately</strong> and differ only in how arguments are passed
+            &mdash; <code>call</code> takes them individually, <code>apply</code> takes an array.
+            <code>bind</code> <strong>does not invoke</strong>; it returns a new function with
+            <code>this</code> permanently fixed, and it can also pre-fill leading arguments, which
+            makes it partial application.
+          </p>
+          <p>
+            Three details that separate a good answer from a recited one. The binding from
+            <code>bind</code> is <strong>permanent</strong> &mdash; binding an already-bound
+            function again does nothing, the second <code>thisArg</code> is ignored. A bound
+            function used with <code>new</code> <strong>ignores the bound <code>this</code></strong>,
+            because construction creates its own. And a bound function has
+            <strong>no <code>prototype</code> property</strong>, so it cannot be extended by a
+            class.
+          </p>
+        </div>
+
+        <p class="qlabel">Example</p>
+
+<pre><code>function move(dx, dy) { this.x += dx; this.y += dy; return this; }
+
+const widget = { x: 10, y: 20 };
+
+move.call(widget, 5, 5);            <span class="cmt">// args spread   → { x: 15, y: 25 }</span>
+move.apply(widget, [5, 5]);         <span class="cmt">// args as array → { x: 20, y: 30 }</span>
+
+const moveWidget = move.bind(widget, 100);   <span class="cmt">// this AND dx pre-filled</span>
+moveWidget(0);                      <span class="cmt">// → { x: 120, y: 30 }</span>
+
+<span class="cmt">// the three facts people miss</span>
+const rebound = moveWidget.bind({ x: 0, y: 0 });
+rebound(0);                         <span class="cmt">// still mutates `widget` — rebinding is ignored</span>
+
+console.log(moveWidget.name);       <span class="cmt">// "bound move"</span>
+console.log(moveWidget.length);     <span class="cmt">// 1  — original 2 minus 1 pre-filled argument</span>
+console.log("prototype" in moveWidget); <span class="cmt">// false</span></code></pre>
+
+        <div class="tbl">
+          <table>
+            <thead><tr><th style="width:90px"></th><th>Invokes now?</th><th>Arguments</th><th>Returns</th><th>Typical use</th></tr></thead>
+            <tbody>
+              <tr><td><code>call</code></td><td>Yes</td><td>Individually</td><td>fn's return value</td><td>Borrowing a method once</td></tr>
+              <tr><td><code>apply</code></td><td>Yes</td><td>As an array</td><td>fn's return value</td><td>Spreading a dynamic argument list</td></tr>
+              <tr><td><code>bind</code></td><td>No</td><td>Pre-filled (partial)</td><td>a new function</td><td>Passing a method as a callback</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="trap">
+          <span class="t-lab">Trap</span>
+          <div class="t-in">
+            <p>
+              "<code>apply</code> is for arrays" is a dated answer. With spread syntax,
+              <code>fn.call(obj, ...args)</code> covers almost every case
+              <code>apply</code> used to. Say that &mdash; it signals you know the modern idiom
+              rather than reciting an ES5-era table. The one place <code>apply</code> still wins
+              is very old code and <code>Math.max.apply(null, arr)</code> style calls you meet in
+              legacy files.
+            </p>
+          </div>
+        </div>
+
+        <div class="drill">
+          <div class="d-head"><span>Now you code</span><span>AI off &middot; autocomplete off</span><span class="clock">20 min</span></div>
+          <div class="d-body">
+            <h4>myCall, myApply and myBind &mdash; the new-correct version</h4>
+<pre><code><span class="cmt">// Add all three to Function.prototype. Do not use the built-ins.
+//
+// myBind must satisfy ALL of these:
+//   1. permanent this
+//   2. partial application of leading arguments
+//   3. when the bound function is used with `new`, the bound this is
+//      IGNORED and the instance must still be instanceof the original
+//   4. rebinding a bound function does not change this</span>
+
+Function.prototype.myCall = function (thisArg, ...args) { <span class="cmt">/* you */</span> };
+Function.prototype.myApply = function (thisArg, args) { <span class="cmt">/* you */</span> };
+Function.prototype.myBind = function (thisArg, ...preset) { <span class="cmt">/* you */</span> };
+
+<span class="cmt">// test 3 is the one that separates answers:</span>
+function Widget(id) { this.id = id; }
+Widget.prototype.render = function () { return "&lt;" + this.id + "&gt;"; };
+const Bound = Widget.myBind({ id: "IGNORED" });
+const w = new Bound("w1");
+console.log(w.id, w instanceof Widget, w.render());  <span class="cmt">// "w1" true "&lt;w1&gt;"</span></code></pre>
+          </div>
+        </div>
+
+        <details class="solution">
+          <summary>Solution &mdash; open only after the timer</summary>
+          <div class="sol-in">
+<pre><code>Function.prototype.myCall = function (thisArg, ...args) {
+  if (typeof this !== "function") throw new TypeError("not callable");
+  <span class="cmt">// a unique key so we never clobber a real property on thisArg</span>
+  const key = Symbol("fn");
+  const ctx = thisArg ?? globalThis;          <span class="cmt">// sloppy-mode substitution</span>
+  Object.defineProperty(ctx, key, { value: this, enumerable: false, configurable: true });
+  try { return ctx[key](...args); }
+  finally { delete ctx[key]; }
+};
+
+Function.prototype.myApply = function (thisArg, args) {
+  return this.myCall(thisArg, ...(args ?? []));
+};
+
+Function.prototype.myBind = function (thisArg, ...preset) {
+  if (typeof this !== "function") throw new TypeError("not callable");
+  const target = this;
+
+  function bound(...later) {
+    <span class="cmt">// new.target is set only when called with `new`.
+    // In that case ignore thisArg entirely and use the fresh instance.</span>
+    return target.apply(
+      new.target ? this : thisArg,
+      [...preset, ...later]
+    );
+  }
+
+  <span class="cmt">// make `new Bound()` produce something instanceof the ORIGINAL</span>
+  if (target.prototype) bound.prototype = Object.create(target.prototype);
+  return bound;
+};</code></pre>
+            <p>What is being scored, in the order a reviewer notices:</p>
+            <ul>
+              <li><strong><code>new.target</code></strong> is the clean way to detect construction. The older trick is <code>this instanceof bound</code>, which works but is fragile; saying you know both is the strong answer.</li>
+              <li><strong><code>Object.create(target.prototype)</code></strong> rather than <code>bound.prototype = target.prototype</code>. Assigning directly means mutating <code>Bound.prototype</code> would corrupt <code>Widget.prototype</code> for every instance.</li>
+              <li><strong>A <code>Symbol</code> key plus <code>finally { delete }</code></strong> in <code>myCall</code>. The common version does <code>thisArg.fn = this</code>, which can overwrite a real property named <code>fn</code> and leaks it if the call throws.</li>
+              <li><strong>Spec fidelity you should mention even if you skip it:</strong> the real <code>bind</code> also sets <code>name</code> to <code>"bound " + fn.name</code> and <code>length</code> to <code>max(0, fn.length - preset.length)</code>, and a genuine bound function exotic object has no <code>prototype</code> property at all. Our polyfill cannot reproduce that last part in plain JavaScript; saying so out loud is better than pretending.</li>
+            </ul>
+          </div>
+        </details>
+
+        <p class="qlabel">Cross-questions</p>
+        <div class="xq">
+
+          <div class="xq-item">
+            <p class="xq-q">Can you un-bind or re-bind a bound function?</p>
+            <p class="xq-why">Testing: a small fact with a big consequence in React class code.</p>
+            <p class="ans bad">"Yes, just call <code>bind</code> again with the new object."</p>
+            <p class="ans good">"No. Rebinding creates a new wrapper whose target is already bound, so the new <code>thisArg</code> is ignored &mdash; MDN's example makes the point in three lines. The only way to 'change' it is to bind the original function again. This matters because it means <code>this.handleClick = this.handleClick.bind(this)</code> in a constructor is safe to call once and pointless to call twice."</p>
+          </div>
+
+          <div class="xq-item">
+            <p class="xq-q">What happens with <code>new</code> on a bound function?</p>
+            <p class="xq-why">Testing: the hard half of the polyfill.</p>
+            <p class="ans good">"The bound <code>this</code> is ignored, because construction prepares its own <code>this</code>. Pre-filled arguments are still applied, and the result is an instance of the original target. That is precisely why the polyfill has to branch on <code>new.target</code> &mdash; a naive implementation returns an object bound to the wrong thing and fails <code>instanceof</code>."</p>
+          </div>
+
+          <div class="xq-item">
+            <p class="xq-q">Is <code>bind</code> free? Would you use it in a render path?</p>
+            <p class="xq-why">Testing: performance judgement in React terms.</p>
+            <p class="ans good">"It allocates a new function object every call, so <code>onClick={this.save.bind(this)}</code> inside <code>render</code> creates a new prop identity on every render and defeats <code>memo</code> or <code>PureComponent</code> on the child. Bind once in the constructor, or use a class field arrow. Outside a render path the cost is irrelevant and I would not think about it."</p>
+          </div>
+
+          <div class="xq-item">
+            <p class="xq-q">How would you borrow an array method for a NodeList?</p>
+            <p class="xq-why">Testing: the classic real use of <code>call</code>.</p>
+            <p class="ans good">"Historically <code>Array.prototype.slice.call(nodeList)</code> or <code>[].forEach.call(...)</code>, because array-likes have <code>length</code> and indices but no array methods. Today I would use <code>Array.from(nodeList)</code> or spread, which are clearer &mdash; and modern <code>NodeList</code> has <code>forEach</code> anyway. Worth knowing the old form because it still appears in legacy code."</p>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <div class="practice">
+      <span class="pt">Practice &mdash; Session 1</span>
+      <h4>Score yourself honestly</h4>
+      <ol>
+        <li>Re-run the ten-line harness from memory tomorrow morning. Ten out of ten or it goes into the next day's set too.</li>
+        <li>Grep your own codebase for <code>.bind(</code>. For each hit, decide: is it in a render path? Could a class field arrow replace it? Write the answer next to it in <code>answers.md</code>.</li>
+        <li>Write the four precedence rules on a card, in order, from memory. <code>new</code> &rarr; explicit &rarr; method &rarr; plain, with arrows outside the whole system.</li>
+      </ol>
+    </div>
+
+    <!-- ================================================================= -->
+    <div class="session">
+      <span class="sn">Session 2</span>
+      <span class="st">Arrow functions, and losing this</span>
+      <span class="sd">~75 min</span>
+    </div>
+
+    <h2>3 &middot; Arrow vs regular functions</h2>
+
+    <div class="qblock">
+      <div class="q-head">
+        <span class="q-n">Question 3</span>
+        <span class="q-t">What's actually different about an arrow function?</span>
+        <span class="q-freq">Very common &middot; most candidates give one difference and stop</span>
+      </div>
+      <div class="q-body">
+
+        <div class="saythis">
+          <span class="st-lab">Say this</span>
+          <p>
+            Arrow functions are not just shorter syntax &mdash; they are missing several things a
+            normal function has, deliberately. They have <strong>no own <code>this</code></strong>,
+            so <code>this</code> resolves lexically and <code>call</code>, <code>apply</code> and
+            <code>bind</code> cannot change it. They have <strong>no
+            <code>arguments</code> object</strong>, so you use rest parameters. They
+            <strong>cannot be used with <code>new</code></strong> &mdash; they are not
+            constructors and have no <code>prototype</code> property. They have <strong>no own
+            <code>super</code> or <code>new.target</code></strong>, both of which are also
+            lexical. And they cannot be generators.
+          </p>
+          <p>
+            The design intent is one sentence: an arrow is meant to be a <em>callback</em>, not a
+            <em>method</em>. Every difference follows from that.
+          </p>
+        </div>
+
+        <div class="tbl">
+          <table>
+            <thead><tr><th>Feature</th><th><code>function</code></th><th><code>=&gt;</code></th><th>Consequence</th></tr></thead>
+            <tbody>
+              <tr><td>own <code>this</code></td><td>Yes, per call</td><td>No &mdash; lexical</td><td>Great inside methods, wrong as methods</td></tr>
+              <tr><td><code>call</code>/<code>apply</code>/<code>bind</code> can set <code>this</code></td><td>Yes</td><td><b>No</b> &mdash; silently ignored</td><td><code>arrowFn.call(obj)</code> does nothing</td></tr>
+              <tr><td><code>arguments</code></td><td>Yes</td><td>No &mdash; outer one</td><td>Use <code>(...args)</code></td></tr>
+              <tr><td><code>new</code></td><td>Yes</td><td>No &mdash; <code>TypeError</code></td><td>Never a constructor</td></tr>
+              <tr><td><code>prototype</code> property</td><td>Yes</td><td>No</td><td>Cannot hold shared methods</td></tr>
+              <tr><td><code>super</code>, <code>new.target</code></td><td>Own</td><td>Lexical</td><td>Arrows in methods can still call <code>super</code></td></tr>
+              <tr><td>Hoisted as a value</td><td>Yes (declaration)</td><td>No</td><td>TDZ &mdash; Chapter 1, row 7</td></tr>
+              <tr><td>Can be a generator</td><td>Yes</td><td>No</td><td>No <code>function*</code> arrow</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <p class="qlabel">Example &mdash; where each one is correct</p>
+
+<pre><code>class SlideCanvas {
+  widgets = [];
+
+  <span class="cmt">// METHOD → normal function. It needs its own `this` from the call.</span>
+  renderAll() {
+    <span class="cmt">// CALLBACK → arrow. It should keep renderAll's `this`.</span>
+    this.widgets.forEach((w) =&gt; this.drawWidget(w));
+
+    <span class="cmt">// the pre-arrow workarounds you will still meet in old code:</span>
+    this.widgets.forEach(function (w) { this.drawWidget(w); }, this);   <span class="cmt">// thisArg</span>
+    const self = this;                                                   <span class="cmt">// var self = this</span>
+    this.widgets.forEach(function (w) { self.drawWidget(w); });
+  }
+
+  <span class="cmt">// CLASS FIELD ARROW → bound to the instance, one copy per instance.
+  // Use when the method will be detached and passed around.</span>
+  handlePointerDown = (e) =&gt; { this.select(e.target.dataset.id); };
+}</code></pre>
+
+        <div class="hing">
+          <span class="h-lab">Seedhi baat</span>
+          <p>
+            Rule of thumb yaad rakho: <strong>method banana ho to normal function, callback dena
+            ho to arrow.</strong> Object literal ke andar arrow mat likho &mdash; wahan
+            <code>this</code> object nahi banta. Aur class ke andar agar method kahin pass karke
+            bhejna hai (event handler ki tarah), to class field arrow sabse safe hai.
+          </p>
+        </div>
+
+        <div class="drill">
+          <div class="d-head"><span>Now you code</span><span>AI off &middot; autocomplete off</span><span class="clock">12 min</span></div>
+          <div class="d-body">
+            <h4>Convert and predict</h4>
+            <p>
+              Type this out. For each of the six marked lines, write down whether it works, and if
+              not, the exact error. Then rewrite the object so that every method works correctly,
+              changing only function forms.
+            </p>
+<pre><code>const captionTrack = {
+  cues: [{ t: 0, text: "Hi" }, { t: 5, text: "Bye" }],
+  prefix: "&gt;&gt; ",
+
+  formatAll: () =&gt; this.cues.map(c =&gt; this.prefix + c.text),     <span class="cmt">// 1</span>
+
+  formatAll2() { return this.cues.map(c =&gt; this.prefix + c.text); },  <span class="cmt">// 2</span>
+
+  formatAll3() {
+    return this.cues.map(function (c) { return this.prefix + c.text; }); <span class="cmt">// 3</span>
+  },
+
+  count() { return arguments.length; },                          <span class="cmt">// 4</span>
+  countArrow: (...args) =&gt; args.length,                          <span class="cmt">// 5</span>
+};
+
+const T = captionTrack.formatAll2;
+T();                                                             <span class="cmt">// 6</span></code></pre>
+          </div>
+        </div>
+
+        <details class="solution">
+          <summary>Solution &mdash; open only after the timer</summary>
+          <div class="sol-in">
+            <ol>
+              <li><strong>Throws.</strong> The arrow captured the module's <code>this</code> (<code>undefined</code>), so <code>this.cues</code> is <code>Cannot read properties of undefined</code>. Object literals do not create a <code>this</code> scope.</li>
+              <li><strong>Works.</strong> Method shorthand gets <code>this === captionTrack</code>; the inner arrow inherits it. This is the correct shape.</li>
+              <li><strong>Throws.</strong> The inner <code>function</code> is called by <code>map</code> as a plain call, so <code>this</code> is <code>undefined</code> in strict mode. Fix with an arrow, or pass <code>this</code> as <code>map</code>'s second argument.</li>
+              <li><strong>Works</strong> &mdash; a normal function has its own <code>arguments</code>.</li>
+              <li><strong>Works</strong> &mdash; rest parameters are the arrow-compatible replacement. <code>arguments</code> inside an arrow would refer to an enclosing function's, or throw at the top level.</li>
+              <li><strong>Throws.</strong> Detached; the dot is gone. <code>T.call(captionTrack)</code> or <code>captionTrack.formatAll2.bind(captionTrack)</code> fixes it.</li>
+            </ol>
+            <p>
+              The rule the exercise is teaching: <strong>arrows are correct one level in, and wrong
+              at the top level of an object literal.</strong> If you can state that, you have the
+              whole topic.
+            </p>
+          </div>
+        </details>
+
+        <p class="qlabel">Cross-questions</p>
+        <div class="xq">
+
+          <div class="xq-item">
+            <p class="xq-q">Are arrow functions faster?</p>
+            <p class="xq-why">Testing: myth resistance.</p>
+            <p class="ans bad">"Yes, they're lighter because they don't bind <code>this</code>."</p>
+            <p class="ans good">"Not meaningfully. Engines optimise both. The real cost difference in React code is not arrow versus function &mdash; it is creating a <em>new function identity on every render</em>, which breaks memoisation on children. That is about where you define it, not which syntax you use."</p>
+          </div>
+
+          <div class="xq-item">
+            <p class="xq-q">Can an arrow function be recursive?</p>
+            <p class="xq-why">Testing: do you understand that the name comes from the binding?</p>
+            <p class="ans good">"Yes, if it is assigned to a name it can reference &mdash; <code>const walk = (n) =&gt; n.children.forEach(walk)</code>. What it lacks is a <em>self-reference of its own</em>: a named function expression can call itself by its internal name even if the outer binding is reassigned. An arrow has no such name, so if the variable is reassigned, the recursion breaks."</p>
+          </div>
+
+          <div class="xq-item">
+            <p class="xq-q">Why can't arrows be constructors?</p>
+            <p class="xq-why">Testing: mechanism, not rule-recitation.</p>
+            <p class="ans good">"<code>new</code> needs two things the arrow does not have: a <code>prototype</code> property to use as the instance's prototype, and the ability to receive its own <code>this</code>. An arrow has neither by design, so it is not a constructor and <code>new (() =&gt; {})</code> is a <code>TypeError</code>."</p>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <h2>4 &middot; Losing this, and the three fixes</h2>
+
+    <div class="qblock">
+      <div class="q-head">
+        <span class="q-n">Question 4</span>
+        <span class="q-t">This handler logs undefined. Why, and give me three different fixes.</span>
+        <span class="q-freq">Very common &middot; often given as live debugging rather than a question</span>
+      </div>
+      <div class="q-body">
+
+<pre><code>class WidgetToolbar {
+  constructor(widgets) { this.widgets = widgets; }
+
+  handleClick(e) {
+    console.log(this.widgets.length);   <span class="cmt">// TypeError: Cannot read properties of undefined</span>
+  }
+
+  mount(el) {
+    el.addEventListener("click", this.handleClick);
+  }
+}</code></pre>
+
+        <div class="saythis">
+          <span class="st-lab">Say this</span>
+          <p>
+            <code>this.handleClick</code> evaluates to a plain function value &mdash; the
+            <code>this</code> binding lives in the call expression, not in the function, so passing
+            it to <code>addEventListener</code> strips it. When the listener fires, the DOM calls
+            it with <code>this</code> set to the element. Class bodies are always strict, and the
+            element has no <code>widgets</code>, so it fails.
+          </p>
+          <p>
+            Three fixes, and I would pick based on how many instances exist.
+            <strong>Bind once in the constructor</strong> &mdash;
+            <code>this.handleClick = this.handleClick.bind(this)</code> &mdash; keeps the method on
+            the prototype and creates one bound copy per instance.
+            <strong>A class field arrow</strong> &mdash; <code>handleClick = (e) =&gt; {}</code>
+            &mdash; is the cleanest to read, but it is an instance field, so each instance carries
+            its own function and it is no longer on the prototype.
+            <strong>Wrap at the call site</strong> &mdash;
+            <code>el.addEventListener("click", (e) =&gt; this.handleClick(e))</code> &mdash; leaves
+            the class untouched but you must keep the wrapper's reference if you ever want to
+            remove the listener.
+          </p>
+        </div>
+
+        <div class="trap">
+          <span class="t-lab">Trap</span>
+          <div class="t-in">
+            <p>
+              Fix three has a cleanup bug that interviewers love:
+              <code>removeEventListener</code> compares by identity. If you pass a fresh arrow to
+              <code>addEventListener</code> and another fresh arrow to
+              <code>removeEventListener</code>, nothing is removed &mdash; and you have the exact
+              closure leak from Chapter 1, question 8. Mention it unprompted.
+            </p>
+          </div>
+        </div>
+
+        <div class="tbl">
+          <table>
+            <thead><tr><th>Fix</th><th>Lives on</th><th>Per-instance cost</th><th>Removable listener?</th><th>Use when</th></tr></thead>
+            <tbody>
+              <tr><td>bind in constructor</td><td>instance (bound copy)</td><td>1 function</td><td>Yes &mdash; stable reference</td><td>Many instances, need prototype method too</td></tr>
+              <tr><td>class field arrow</td><td>instance</td><td>1 function</td><td>Yes &mdash; stable reference</td><td>Default choice for handlers; clearest to read</td></tr>
+              <tr><td>arrow at call site</td><td>nothing</td><td>1 per call site</td><td>Only if you store it</td><td>One-off, or the class is not yours</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="drill">
+          <div class="d-head"><span>Now you code</span><span>AI off &middot; autocomplete off</span><span class="clock">15 min</span></div>
+          <div class="d-body">
+            <h4>Fix it three ways, then make it unmountable</h4>
+            <ol>
+              <li>Write all three fixes as three separate versions of <code>WidgetToolbar</code>.</li>
+              <li>Add an <code>unmount(el)</code> to each that actually removes the listener. One of the three will force you to restructure &mdash; that is the point.</li>
+              <li>
+                Then answer in a comment: if the editor creates 500 widget toolbars, which fix
+                allocates 500 extra functions, and does it matter?
+              </li>
+            </ol>
+          </div>
+        </div>
+
+        <details class="solution">
+          <summary>Solution &mdash; open only after the timer</summary>
+          <div class="sol-in">
+<pre><code><span class="cmt">// FIX 1 — bind in the constructor</span>
+class ToolbarA {
+  constructor(widgets) {
+    this.widgets = widgets;
+    this.handleClick = this.handleClick.bind(this);  <span class="cmt">// own prop shadows the prototype method</span>
+  }
+  handleClick(e) { console.log(this.widgets.length); }
+  mount(el)   { el.addEventListener("click", this.handleClick); }
+  unmount(el) { el.removeEventListener("click", this.handleClick); }   <span class="cmt">// same reference ✓</span>
+}
+
+<span class="cmt">// FIX 2 — class field arrow (bound to the instance at construction)</span>
+class ToolbarB {
+  constructor(widgets) { this.widgets = widgets; }
+  handleClick = (e) =&gt; { console.log(this.widgets.length); };
+  mount(el)   { el.addEventListener("click", this.handleClick); }
+  unmount(el) { el.removeEventListener("click", this.handleClick); }   <span class="cmt">// ✓</span>
+}
+
+<span class="cmt">// FIX 3 — wrap at the call site; you MUST keep the wrapper</span>
+class ToolbarC {
+  constructor(widgets) { this.widgets = widgets; this._onClick = null; }
+  handleClick(e) { console.log(this.widgets.length); }
+  mount(el) {
+    this._onClick = (e) =&gt; this.handleClick(e);    <span class="cmt">// store it or you can never remove it</span>
+    el.addEventListener("click", this._onClick);
+  }
+  unmount(el) { el.removeEventListener("click", this._onClick); this._onClick = null; }
+}</code></pre>
+            <p>
+              <strong>The 500-instance question.</strong> Fixes 1 and 2 each allocate one extra
+              function per instance, so 500 instances means 500 functions either way &mdash; the
+              difference between them is <em>readability</em>, not memory. Only a plain prototype
+              method is genuinely shared, and a plain prototype method is exactly what cannot be
+              detached. So the honest answer is: the cost is real but tiny, it is identical for
+              both idiomatic fixes, and a few hundred closures is nothing next to the widgets
+              themselves. If you were rendering 50,000 rows it would be worth one delegated
+              listener on the container instead &mdash; which is the same conclusion as Chapter 1,
+              question 7.
+            </p>
+            <p>
+              One more fact worth volunteering: with a class field arrow, <code>handleClick</code>
+              is <em>not</em> on <code>Toolbar.prototype</code>, so a subclass cannot override it
+              with a prototype method and <code>super.handleClick()</code> does not exist. That is
+              the real trade-off, and it is not about memory.
+            </p>
+          </div>
+        </details>
+
+        <p class="qlabel">Cross-questions</p>
+        <div class="xq">
+
+          <div class="xq-item">
+            <p class="xq-q">Why does a class field arrow get the right <code>this</code> at all?</p>
+            <p class="xq-why">Testing: do you know when field initialisers run?</p>
+            <p class="ans good">"Instance field initialisers are evaluated with <code>this</code> set to the instance being constructed &mdash; at the start of the constructor for a base class, or immediately after <code>super()</code> returns for a derived one. So the arrow closes over the instance at construction time. MDN states it directly, and it is also why a <em>static</em> field arrow captures the class instead."</p>
+          </div>
+
+          <div class="xq-item">
+            <p class="xq-q">React hooks made this obsolete, didn't they?</p>
+            <p class="xq-why">Testing: whether you can connect eras rather than dismiss one.</p>
+            <p class="ans good">"In function components there is no <code>this</code>, so this exact bug is gone. The <em>shape</em> is not: instead of losing <code>this</code>, you capture stale state in a closure. Both are 'the function was created in one context and ran in another'. And class components still exist in real codebases &mdash; error boundaries are still class-only."</p>
+          </div>
+
+          <div class="xq-item">
+            <p class="xq-q">Show me a fourth fix.</p>
+            <p class="xq-why">Testing: breadth, and whether you know the platform.</p>
+            <p class="ans good">"Implement the <code>EventListener</code> interface: pass the object itself, and the DOM will call <code>obj.handleEvent(e)</code> as a method, so <code>this</code> is the object. <code>el.addEventListener('click', this)</code> with a <code>handleEvent(e)</code> method. It is rarely used and it is very clean for a class that manages its own listeners &mdash; removal is <code>removeEventListener('click', this)</code>."</p>
+          </div>
+
+          <div class="xq-item">
+            <p class="xq-q">Would you ever deliberately not bind?</p>
+            <p class="xq-why">Testing: judgement over ritual.</p>
+            <p class="ans good">"Yes &mdash; when the handler does not need the instance. If it only needs the event, a static method or a module-level function is better: nothing to bind, nothing retained, trivially testable. Binding everything by reflex is how you end up retaining a component from a listener you forgot to remove."</p>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <div class="practice">
+      <span class="pt">Practice &mdash; Session 2</span>
+      <h4>Audit your own handlers</h4>
+      <ol>
+        <li>Find every <code>addEventListener</code> in your canvas editor. For each: is the handler removable? Is the same reference used for add and remove? Write down any that are not &mdash; those are leaks.</li>
+        <li>Find one place using <code>const self = this</code> or a <code>.bind(this)</code> chain and modernise it. Note in <code>answers.md</code> why the old form existed.</li>
+        <li>Say the three fixes out loud with their trade-offs in under sixty seconds. That is the real answer length.</li>
+      </ol>
+    </div>
+
+    <!-- ================================================================= -->
+    <div class="session">
+      <span class="sn">Session 3</span>
+      <span class="st">The prototype chain</span>
+      <span class="sd">~75 min</span>
+    </div>
+
+    <h2>5 &middot; The prototype chain</h2>
+
+    <div class="qblock">
+      <div class="q-head">
+        <span class="q-n">Question 5</span>
+        <span class="q-t">What is the prototype chain, and what's the difference between __proto__ and prototype?</span>
+        <span class="q-freq">Near-certain &middot; the __proto__ half is where most answers collapse</span>
+      </div>
+      <div class="q-body">
+
+        <div class="saythis">
+          <span class="st-lab">Say this</span>
+          <p>
+            Every object has an internal link to another object called its prototype, and that one
+            has a prototype of its own, until something reaches <code>null</code>. When you read a
+            property, the engine looks on the object itself, then walks that chain until it finds
+            the name or runs out &mdash; in which case you get <code>undefined</code>. That walk
+            is the prototype chain, and it is how inheritance works in JavaScript: there are no
+            classes underneath, only objects linked to other objects.
+          </p>
+          <p>
+            <code>__proto__</code> and <code>prototype</code> are different things with
+            confusingly similar names. <strong><code>__proto__</code></strong> &mdash; properly
+            <code>Object.getPrototypeOf(obj)</code> &mdash; is the link on <em>an object</em>
+            pointing at what it inherits from. <strong><code>prototype</code></strong> is a
+            property on <em>a constructor function</em> holding the object that will become the
+            <code>__proto__</code> of every instance it creates. So
+            <code>Object.getPrototypeOf(new Widget()) === Widget.prototype</code>. One is the link;
+            the other is the template for the link.
+          </p>
+          <p>
+            Two consequences worth stating. Writes never walk the chain &mdash; assigning to a
+            property always creates an own property that <strong>shadows</strong> the inherited
+            one. And when an inherited method runs, <code>this</code> is the object you called it
+            on, not the prototype it was found on.
+          </p>
+        </div>
+
+        <p class="qlabel">Example &mdash; and this one is literally your day job</p>
+
+        <p>
+          You already implement a prototype chain by hand. In the <code>.pptx</code> pipeline, a
+          shape's properties resolve through <em>shape &rarr; slide &rarr; layout &rarr;
+          master</em>: if the shape has no explicit fill, you look at the layout; if the layout has
+          none, you fall back to the master. That is exactly the algorithm below, and it is the
+          most convincing way you can explain prototypes in an interview, because it is yours.
+        </p>
+
+<pre><code><span class="cmt">// the real thing, expressed as prototypes</span>
+const master = { fill: "#ffffff", fontFamily: "Calibri", fontSize: 18 };
+const layout = Object.create(master);          <span class="cmt">// layout.__proto__ === master</span>
+layout.fontSize = 24;                          <span class="cmt">// layouts override some of the master</span>
+
+const slide = Object.create(layout);
+const shape = Object.create(slide);
+shape.text = "Q3 revenue";
+
+shape.text;         <span class="cmt">// "Q3 revenue"  — own property</span>
+shape.fontSize;     <span class="cmt">// 24            — found on layout, two links up</span>
+shape.fontFamily;   <span class="cmt">// "Calibri"     — found on master, three links up</span>
+shape.shadow;       <span class="cmt">// undefined     — walked the whole chain, found nothing</span>
+
+<span class="cmt">// writes do NOT walk the chain — they shadow</span>
+shape.fontSize = 32;
+layout.fontSize;    <span class="cmt">// still 24 — the layout was never touched</span>
+delete shape.fontSize;
+shape.fontSize;     <span class="cmt">// 24 again — the inherited value reappears</span></code></pre>
+
+        <figure class="diagram">
+          <svg viewBox="0 0 700 250" role="img" aria-label="Prototype chain from an instance up to null, and the difference between proto and prototype">
+            <defs>
+              <marker id="c1" markerWidth="8" markerHeight="8" refX="6.4" refY="2.9" orient="auto">
+                <path d="M0,0 L6.4,2.9 L0,5.8 z" fill="var(--muted)"/>
+              </marker>
+              <marker id="c2" markerWidth="8" markerHeight="8" refX="6.4" refY="2.9" orient="auto">
+                <path d="M0,0 L6.4,2.9 L0,5.8 z" fill="var(--accent)"/>
+              </marker>
+            </defs>
+            <g font-family="var(--ui)" font-size="11.5">
+              <text x="14" y="16" font-size="10.5" font-weight="700" fill="var(--muted)" letter-spacing="1.3">LOOKUP WALKS UP — WRITES NEVER DO</text>
+
+              <rect x="14" y="26" width="140" height="48" rx="8" fill="var(--paper)" stroke="var(--ink)" stroke-width="1.6"/>
+              <text x="84" y="45" text-anchor="middle" font-weight="700" fill="var(--ink)">shape</text>
+              <text x="84" y="62" text-anchor="middle" fill="var(--muted)" font-size="10.5">text: "Q3 revenue"</text>
+
+              <line x1="84" y1="74" x2="84" y2="94" stroke="var(--muted)" stroke-width="1.3" marker-end="url(#c1)"/>
+              <text x="96" y="90" font-size="10" fill="var(--muted)">[[Prototype]]</text>
+
+              <rect x="14" y="98" width="140" height="40" rx="8" fill="var(--paper)" stroke="var(--line)"/>
+              <text x="84" y="123" text-anchor="middle" fill="var(--ink-2)">slide</text>
+
+              <line x1="84" y1="138" x2="84" y2="156" stroke="var(--muted)" stroke-width="1.3" marker-end="url(#c1)"/>
+
+              <rect x="14" y="160" width="140" height="40" rx="8" fill="var(--warn-soft)" stroke="var(--warn-line)"/>
+              <text x="84" y="179" text-anchor="middle" fill="var(--warn)" font-weight="700">layout</text>
+              <text x="84" y="193" text-anchor="middle" fill="var(--ink-2)" font-size="10.5">fontSize: 24 ✓ found</text>
+
+              <line x1="154" y1="180" x2="196" y2="180" stroke="var(--muted)" stroke-width="1.3" marker-end="url(#c1)"/>
+              <rect x="202" y="160" width="130" height="40" rx="8" fill="var(--paper)" stroke="var(--line)"/>
+              <text x="267" y="179" text-anchor="middle" fill="var(--ink-2)">master</text>
+              <text x="267" y="193" text-anchor="middle" fill="var(--muted)" font-size="10.5">fontFamily</text>
+
+              <line x1="332" y1="180" x2="372" y2="180" stroke="var(--muted)" stroke-width="1.3" marker-end="url(#c1)"/>
+              <rect x="378" y="160" width="142" height="40" rx="8" fill="var(--bg-2)" stroke="var(--line)"/>
+              <text x="449" y="185" text-anchor="middle" fill="var(--muted)">Object.prototype</text>
+              <line x1="520" y1="180" x2="556" y2="180" stroke="var(--muted)" stroke-width="1.3" marker-end="url(#c1)"/>
+              <text x="586" y="185" fill="var(--danger)" font-weight="700">null</text>
+
+              <line x1="360" y1="20" x2="360" y2="140" stroke="var(--line)"/>
+
+              <text x="376" y="16" font-size="10.5" font-weight="700" fill="var(--accent)" letter-spacing="1.3">__proto__  vs  prototype</text>
+              <rect x="376" y="26" width="132" height="42" rx="8" fill="var(--accent-soft)" stroke="var(--accent-line)"/>
+              <text x="442" y="44" text-anchor="middle" font-weight="700" fill="var(--accent)">Widget</text>
+              <text x="442" y="59" text-anchor="middle" fill="var(--ink-2)" font-size="10.5">a function</text>
+              <line x1="508" y1="47" x2="548" y2="47" stroke="var(--accent)" stroke-width="1.3" marker-end="url(#c2)"/>
+              <text x="528" y="41" text-anchor="middle" font-size="9.5" fill="var(--accent)">.prototype</text>
+              <rect x="554" y="26" width="132" height="42" rx="8" fill="var(--paper)" stroke="var(--accent-line)"/>
+              <text x="620" y="44" text-anchor="middle" fill="var(--ink)" font-weight="700">Widget.prototype</text>
+              <text x="620" y="59" text-anchor="middle" fill="var(--muted)" font-size="10.5">render(), move()</text>
+
+              <rect x="376" y="86" width="132" height="42" rx="8" fill="var(--paper)" stroke="var(--line)"/>
+              <text x="442" y="104" text-anchor="middle" font-weight="700" fill="var(--ink)">new Widget()</text>
+              <text x="442" y="119" text-anchor="middle" fill="var(--muted)" font-size="10.5">an instance</text>
+              <path d="M508 107 L530 107 L530 68" fill="none" stroke="var(--accent)" stroke-width="1.3" marker-end="url(#c2)"/>
+              <text x="560" y="107" font-size="10" fill="var(--accent)">its [[Prototype]] IS that object</text>
+            </g>
+          </svg>
+          <figcaption><code>prototype</code> lives on the function. <code>[[Prototype]]</code> lives on the object. <code>new</code> is what connects them.</figcaption>
+        </figure>
+
+        <div class="hing">
+          <span class="h-lab">Seedhi baat</span>
+          <p>
+            Property dhoondhne ka tareeka bilkul aapke <code>.pptx</code> resolver jaisa hai:
+            pehle shape pe dekho, na mile to slide, phir layout, phir master. Jahan pehli baar
+            mile, wahin ruk jao. Kahin na mile to <code>undefined</code>.
+          </p>
+          <p>
+            Aur <strong>likhte waqt ye chain nahi chalti</strong> &mdash; likhne par hamesha
+            apni khud ki property banti hai, jo upar wali ko dhak deti hai. Isliye
+            <code>shape.fontSize = 32</code> layout ko kabhi nahi badalta. Ye ek line bahut se
+            "ye kaise change ho gaya" wale bugs samjha deti hai.
+          </p>
+          <p>
+            Naam yaad rakhne ka shortcut: <code>prototype</code> <em>function</em> par hota hai,
+            <code>__proto__</code> <em>object</em> par. Function se banne wale har object ka
+            <code>__proto__</code> us function ka <code>prototype</code> ban jata hai.
+          </p>
+        </div>
+
+        <div class="drill">
+          <div class="d-head"><span>Now you code</span><span>AI off &middot; autocomplete off</span><span class="clock">12 min</span></div>
+          <div class="d-body">
+            <h4>protoChain and whoOwns</h4>
+<pre><code><span class="cmt">// 1. protoChain(obj) -> array of every object in the chain, ending at null
+//    protoChain([])  ->  [Array.prototype, Object.prototype, null]
+//
+// 2. whoOwns(obj, prop) -> WHERE a property is found:
+//      "own" | "prototype chain, N links up" | "not found"
+//    Must not be fooled by inherited properties and must handle
+//    Object.create(null) objects (no Object.prototype, no hasOwnProperty).</span>
+
+function protoChain(obj) { <span class="cmt">/* you */</span> }
+function whoOwns(obj, prop) { <span class="cmt">/* you */</span> }
+
+<span class="cmt">// then run it on YOUR data and explain each line of the output:</span>
+console.log(protoChain(document.createElement("canvas")).map(o =&gt; o?.constructor?.name));</code></pre>
+          </div>
+        </div>
+
+        <details class="solution">
+          <summary>Solution &mdash; open only after the timer</summary>
+          <div class="sol-in">
+<pre><code>function protoChain(obj) {
+  const chain = [];
+  let cur = obj;
+  while ((cur = Object.getPrototypeOf(cur)) !== null) chain.push(cur);
+  chain.push(null);
+  return chain;
+}
+
+function whoOwns(obj, prop) {
+  <span class="cmt">// Object.hasOwn is the modern, null-prototype-safe check (ES2022).
+  // The old form — Object.prototype.hasOwnProperty.call(obj, prop) — also works.</span>
+  if (Object.hasOwn(obj, prop)) return "own";
+  let cur = obj, depth = 0;
+  while ((cur = Object.getPrototypeOf(cur)) !== null) {
+    depth++;
+    if (Object.hasOwn(cur, prop)) return `prototype chain, ${depth} link(s) up`;
+  }
+  return "not found";
+}
+
+<span class="cmt">// canvas element →
+// ["HTMLCanvasElement", "HTMLElement", "Element", "Node", "EventTarget", "Object", undefined]</span></code></pre>
+            <p>
+              Two things to say out loud when you show this. First, <strong>the DOM is prototypes
+              all the way down</strong> &mdash; that chain is why <code>canvas.addEventListener</code>
+              works: it is found five links up on <code>EventTarget.prototype</code>. Pointing at
+              that is a much better demonstration than a toy <code>Animal</code>/<code>Dog</code>
+              example.
+            </p>
+            <p>
+              Second, <strong><code>obj.hasOwnProperty(prop)</code> called directly is a bug
+              waiting to happen</strong>: an object created with <code>Object.create(null)</code>
+              does not have it, and any object can shadow it with its own property named
+              <code>hasOwnProperty</code>. Use <code>Object.hasOwn(obj, prop)</code>. Knowing why
+              that method was added is a genuinely senior signal.
+            </p>
+          </div>
+        </details>
+
+        <p class="qlabel">Cross-questions</p>
+        <div class="xq">
+
+          <div class="xq-item">
+            <p class="xq-q">What is <code>Object.prototype.__proto__</code> actually, and should I use it?</p>
+            <p class="xq-why">Testing: do you know it is a legacy accessor, not a real slot?</p>
+            <p class="ans bad">"It's the internal prototype of the object."</p>
+            <p class="ans good">"The internal slot is <code>[[Prototype]]</code>. <code>__proto__</code> is a legacy getter/setter defined on <code>Object.prototype</code> that exposes it &mdash; it was standardised in an annex only because the web already depended on it. In code I use <code>Object.getPrototypeOf</code> and <code>Object.create</code>. The one place <code>__proto__</code> is still legitimate is as a key in an object literal, where it sets the prototype at creation time rather than mutating it later."</p>
+          </div>
+
+          <div class="xq-item">
+            <p class="xq-q">Why is <code>Object.setPrototypeOf</code> discouraged?</p>
+            <p class="xq-why">Testing: do you know the performance reason, or just the folklore?</p>
+            <p class="ans good">"Because engines optimise property access around an object's shape and its prototype chain. Changing the prototype after creation invalidates those optimisations &mdash; MDN says it disrupts them and can force de-optimisation and recompilation. If I need a particular prototype, I set it at creation with <code>Object.create</code> or a <code>__proto__</code> key in the literal, which costs nothing."</p>
+          </div>
+
+          <div class="xq-item">
+            <p class="xq-q">If <code>shape.fontSize = 32</code> shadows, what happens with a setter on the prototype?</p>
+            <p class="xq-why">Testing: the one real exception to "writes never walk the chain".</p>
+            <p class="ans good">"Then the write <em>does</em> go up. The assignment algorithm looks for an accessor on the chain first: if it finds a setter, that setter runs with <code>this</code> as the original object and no own property is created. Same for a non-writable data property, where the assignment silently fails in sloppy mode and throws in strict. So the accurate version is: plain data properties shadow; accessors and non-writable properties intercept."</p>
+          </div>
+
+          <div class="xq-item">
+            <p class="xq-q">What is <code>Object.create(null)</code> for?</p>
+            <p class="xq-why">Testing: practical knowledge of dictionaries and prototype pollution.</p>
+            <p class="ans good">"A dictionary with no inherited keys at all. If I key a map by user-supplied strings, a plain object already 'has' <code>toString</code>, <code>constructor</code> and <code>__proto__</code>, so lookups can hit inherited junk and writes to <code>__proto__</code> are a prototype-pollution vector. <code>Object.create(null)</code> removes the whole chain. A <code>Map</code> is usually the better answer now &mdash; real keys, any type, correct <code>size</code>, iteration order guaranteed."</p>
+          </div>
+
+          <div class="xq-item">
+            <p class="xq-q">Does a deep prototype chain cost performance?</p>
+            <p class="xq-why">Testing: proportion.</p>
+            <p class="ans good">"Lookups that resolve high up the chain are slower, and a miss always walks the entire chain before returning <code>undefined</code> &mdash; MDN calls this out. In practice inline caches make it a non-issue for normal depths. It would only matter in something like a per-frame canvas render loop touching a deeply inherited property thousands of times, and then I would hoist the value into a local variable rather than restructure the hierarchy."</p>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <h2>6 &middot; What new actually does</h2>
+
+    <div class="qblock">
+      <div class="q-head">
+        <span class="q-n">Question 6</span>
+        <span class="q-t">What does the new operator do? Implement it.</span>
+        <span class="q-freq">Very common &middot; the classic polyfill pairing with bind</span>
+      </div>
+      <div class="q-body">
+
+        <div class="saythis">
+          <span class="st-lab">Say this</span>
+          <p>
+            <code>new Fn(args)</code> does four things. It <strong>creates a new empty
+            object</strong>. It <strong>sets that object's prototype</strong> to
+            <code>Fn.prototype</code>. It <strong>calls <code>Fn</code> with <code>this</code>
+            bound to the new object</strong>, passing the arguments through. And it
+            <strong>returns that object</strong> &mdash; unless the constructor explicitly returns
+            an object of its own, in which case that one wins. A returned primitive is ignored.
+          </p>
+          <p>
+            That last clause is the whole interview. Returning an object from a constructor
+            overrides the instance; returning a number, string or <code>undefined</code> does not.
+          </p>
+        </div>
+
+        <div class="drill">
+          <div class="d-head"><span>Now you code</span><span>AI off &middot; autocomplete off</span><span class="clock">15 min</span></div>
+          <div class="d-body">
+            <h4>myNew(Ctor, ...args)</h4>
+<pre><code><span class="cmt">// Behave exactly like `new Ctor(...args)`.
+// Must handle:
+//   - prototype methods work on the result
+//   - a constructor that returns an OBJECT   → that object is the result
+//   - a constructor that returns a PRIMITIVE → ignored, instance returned
+//   - Ctor.prototype being null or a primitive (fall back to Object.prototype)
+//   - a non-function first argument → TypeError</span>
+
+function myNew(Ctor, ...args) { <span class="cmt">/* you */</span> }
+
+function Widget(id) { this.id = id; }
+Widget.prototype.render = function () { return "&lt;" + this.id + "&gt;"; };
+
+function Sneaky(id) { this.id = id; return { id: "hijacked" }; }
+function Harmless(id) { this.id = id; return 42; }
+
+myNew(Widget, "w1").render();   <span class="cmt">// "&lt;w1&gt;"</span>
+myNew(Sneaky, "w1").id;         <span class="cmt">// "hijacked"</span>
+myNew(Harmless, "w1").id;       <span class="cmt">// "w1"</span></code></pre>
+          </div>
+        </div>
+
+        <details class="solution">
+          <summary>Solution &mdash; open only after the timer</summary>
+          <div class="sol-in">
+<pre><code>function myNew(Ctor, ...args) {
+  if (typeof Ctor !== "function") throw new TypeError(`${Ctor} is not a constructor`);
+
+  <span class="cmt">// 1 + 2: create the object with the right prototype, in one step.
+  // Guard: Ctor.prototype can be null or a primitive if someone reassigned it.</span>
+  const proto = (Ctor.prototype !== null &amp;&amp; typeof Ctor.prototype === "object")
+    ? Ctor.prototype
+    : Object.prototype;
+  const instance = Object.create(proto);
+
+  <span class="cmt">// 3: run the constructor with `this` = the new object</span>
+  const result = Ctor.apply(instance, args);
+
+  <span class="cmt">// 4: an OBJECT return wins; anything else is ignored.
+  // typeof null === "object", so exclude it explicitly.
+  // Functions count as objects here too.</span>
+  return (result !== null &amp;&amp; (typeof result === "object" || typeof result === "function"))
+    ? result
+    : instance;
+}</code></pre>
+            <p>Grading notes:</p>
+            <ul>
+              <li><strong><code>Object.create(Ctor.prototype)</code></strong> rather than <code>{}</code> plus <code>setPrototypeOf</code> &mdash; one step, and it avoids the de-optimisation MDN warns about.</li>
+              <li><strong>The object-return check must exclude <code>null</code></strong> and must include functions. Missing the <code>null</code> case is the single most common bug in this polyfill.</li>
+              <li><strong>Reading <code>Ctor.prototype</code> once</strong> into a local is not just style &mdash; it mirrors what the spec does, and it makes the null-prototype guard readable.</li>
+              <li><strong>What this cannot do:</strong> it does not set <code>new.target</code>, so a constructor that checks <code>new.target</code> (or an ES2015 <code>class</code>, which throws when called without <code>new</code>) will not work. Say that &mdash; <code>myNew(class A {})</code> throwing is expected behaviour, not a bug in your answer.</li>
+            </ul>
+            <p>
+              The last bullet is the difference between a candidate who memorised four steps and
+              one who understands that <code>new</code> is a syntactic operation the language does
+              not fully expose.
+            </p>
+          </div>
+        </details>
+
+        <p class="qlabel">Cross-questions</p>
+        <div class="xq">
+
+          <div class="xq-item">
+            <p class="xq-q">Why does the object-return rule exist at all?</p>
+            <p class="xq-why">Testing: can you find the use case, or is it trivia?</p>
+            <p class="ans good">"It lets a constructor act as a factory &mdash; returning a cached instance, a proxy-wrapped object, or a singleton. It is also what makes derived classes able to return a different object from their constructor. The cost is that a stray <code>return someObject</code> in a constructor silently discards everything <code>this</code> was given, which is a genuinely confusing bug."</p>
+          </div>
+
+          <div class="xq-item">
+            <p class="xq-q">What is <code>new.target</code>?</p>
+            <p class="xq-why">Testing: modern knowledge; also the key to the bind polyfill.</p>
+            <p class="ans good">"A meta-property that is <code>undefined</code> when a function is called normally and the constructor reference when called with <code>new</code>. It is how you write a function that refuses to run without <code>new</code>, how abstract base classes detect direct instantiation via <code>new.target === Abstract</code>, and how my <code>bind</code> polyfill knows to ignore the bound <code>this</code>."</p>
+          </div>
+
+          <div class="xq-item">
+            <p class="xq-q">Can you call a <code>class</code> without <code>new</code>?</p>
+            <p class="xq-why">Testing: one of the real, non-sugar differences.</p>
+            <p class="ans good">"No &mdash; it throws <code>TypeError: Class constructor X cannot be invoked without 'new'</code>. A <code>function</code> constructor called without <code>new</code> just runs with <code>this</code> as <code>undefined</code> and silently produces nothing, which is exactly the class of bug the restriction removes. This is one of the differences that proves <code>class</code> is not purely sugar."</p>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <div class="practice">
+      <span class="pt">Practice &mdash; Session 3</span>
+      <h4>Draw the chain for your own code</h4>
+      <ol>
+        <li>Take one real class from your editor &mdash; a widget, a command, a parser node. Draw its prototype chain up to <code>null</code> on paper, including <code>Object.prototype</code>.</li>
+        <li>Run <code>protoChain</code> on an instance and check your drawing. Fix the drawing, not the code.</li>
+        <li>Write the four steps of <code>new</code> on the same card as the four <code>this</code> rules. Those eight lines cover a large share of every JS round you will sit.</li>
+      </ol>
+    </div>
+
+    <!-- ================================================================= -->
+    <div class="session">
+      <span class="sn">Session 4</span>
+      <span class="st">Classes, inheritance and instanceof</span>
+      <span class="sd">~75 min</span>
+    </div>
+
+    <h2>7 &middot; What class desugars to</h2>
+
+    <div class="qblock">
+      <div class="q-head">
+        <span class="q-n">Question 7</span>
+        <span class="q-t">Is class just syntactic sugar over prototypes?</span>
+        <span class="q-freq">Common &middot; "yes" is the wrong answer and they are waiting for it</span>
+      </div>
+      <div class="q-body">
+
+        <div class="saythis">
+          <span class="st-lab">Say this</span>
+          <p>
+            Mostly, but not entirely &mdash; and the exceptions are the interesting part. The
+            sugar is real: methods go on <code>Class.prototype</code>, <code>extends</code> wires
+            the prototype chains, and instances get their prototype from
+            <code>Class.prototype</code> just as with a constructor function.
+          </p>
+          <p>
+            What is <strong>not</strong> sugar: a class body is always strict mode; class
+            declarations are in a temporal dead zone rather than value-hoisted like function
+            declarations; a class constructor <strong>cannot be called without
+            <code>new</code></strong>; prototype methods are
+            <strong>non-enumerable</strong>, so they do not show up in <code>for…in</code>;
+            derived constructors have <strong>no <code>this</code> until
+            <code>super()</code> runs</strong>; and private <code>#</code> fields are not
+            properties at all &mdash; they are a separate mechanism with no prototype involvement
+            and a real brand check.
+          </p>
+          <p>
+            So the accurate answer is: <em>the inheritance is sugar, the semantics are not.</em>
+          </p>
+        </div>
+
+        <p class="qlabel">Example &mdash; the same thing written both ways</p>
+
+<pre><code><span class="cmt">// modern</span>
+class Widget {
+  static count = 0;            <span class="cmt">// on the CLASS</span>
+  selected = false;            <span class="cmt">// on each INSTANCE, before the constructor body</span>
+  #secret = "internal";        <span class="cmt">// not a property at all</span>
+
+  constructor(id) { this.id = id; Widget.count++; }
+  render() { return `&lt;${this.id}&gt;`; }          <span class="cmt">// on the PROTOTYPE, non-enumerable</span>
+  get area() { return this.w * this.h; }       <span class="cmt">// accessor on the prototype</span>
+}
+
+<span class="cmt">// the ES5 equivalent — note how much the class form is doing for you</span>
+function Widget(id) {
+  if (!new.target) throw new TypeError("Class constructor cannot be invoked without 'new'");
+  this.selected = false;                        <span class="cmt">// fields run before the body</span>
+  this.id = id;
+  Widget.count++;
+}
+Widget.count = 0;
+Object.defineProperty(Widget.prototype, "render", {
+  value: function () { return "&lt;" + this.id + "&gt;"; },
+  writable: true, configurable: true, enumerable: false,   <span class="cmt">// ← the important bit</span>
+});
+Object.defineProperty(Widget.prototype, "area", {
+  get: function () { return this.w * this.h; },
+  configurable: true, enumerable: false,
+});
+<span class="cmt">// #secret has NO ES5 equivalent. The closest is a module-scoped WeakMap.</span></code></pre>
+
+        <div class="callout key">
+          <span class="ct">Where each thing physically lives</span>
+          <p>
+            Say this as a list and you will sound like you have debugged it, because you have:
+            <strong>instance fields and anything assigned to <code>this</code></strong> live on the
+            instance; <strong>methods, getters and setters</strong> live on
+            <code>Class.prototype</code>, shared by every instance;
+            <strong>static members</strong> live on the class itself;
+            <strong><code>#private</code> fields</strong> live on the instance but are not
+            properties &mdash; you cannot see them with <code>Object.keys</code>,
+            <code>getOwnPropertyNames</code> or a debugger's property list in the usual way.
+          </p>
+        </div>
+
+        <div class="drill">
+          <div class="d-head"><span>Now you code</span><span>AI off &middot; autocomplete off</span><span class="clock">18 min</span></div>
+          <div class="d-body">
+            <h4>Desugar it, then prove it</h4>
+            <ol>
+              <li>
+                Write the ES5 equivalent of this class by hand &mdash; constructor function,
+                prototype methods, static, and a getter. No <code>class</code> keyword anywhere.
+              </li>
+              <li>
+                Then write assertions proving your version matches on <em>five</em> observable
+                points: <code>Object.keys(instance)</code>, <code>"render" in instance</code>,
+                <code>Object.keys(Widget.prototype)</code>,
+                <code>instance.hasOwnProperty("render")</code>, and what happens when you call it
+                without <code>new</code>.
+              </li>
+            </ol>
+<pre><code>class Command {
+  static registry = new Map();
+  applied = false;
+
+  constructor(label) { this.label = label; }
+  apply() { this.applied = true; return this; }
+  get name() { return this.label.toUpperCase(); }
+  static register(kind, ctor) { Command.registry.set(kind, ctor); }
+}</code></pre>
+          </div>
+        </div>
+
+        <details class="solution">
+          <summary>Solution &mdash; open only after the timer</summary>
+          <div class="sol-in">
+<pre><code>function Command(label) {
+  if (!new.target) throw new TypeError("Class constructor Command cannot be invoked without 'new'");
+  this.applied = false;          <span class="cmt">// instance field, before the body</span>
+  this.label = label;
+}
+
+Command.registry = new Map();    <span class="cmt">// static field</span>
+Command.register = function (kind, ctor) { Command.registry.set(kind, ctor); };
+
+Object.defineProperties(Command.prototype, {
+  apply: { value: function () { this.applied = true; return this; },
+           writable: true, configurable: true, enumerable: false },
+  name:  { get: function () { return this.label.toUpperCase(); },
+           configurable: true, enumerable: false },
+});
+
+<span class="cmt">// the five proofs</span>
+const c = new Command("move");
+Object.keys(c);                          <span class="cmt">// ["applied", "label"]  — fields are enumerable own props</span>
+"apply" in c;                            <span class="cmt">// true  — found via the prototype chain</span>
+Object.keys(Command.prototype);          <span class="cmt">// []    — methods are NON-enumerable</span>
+Object.hasOwn(c, "apply");               <span class="cmt">// false — it is on the prototype, not the instance</span>
+Command("move");                         <span class="cmt">// TypeError</span></code></pre>
+            <p>
+              The <code>Object.keys(Command.prototype) === []</code> line is the one to point at.
+              If you had written <code>Command.prototype.apply = function(){}</code> the plain
+              way, that key <em>would</em> be enumerable, and it would show up in a
+              <code>for…in</code> over an instance. That is precisely the ES5 bug
+              <code>for…in</code> + <code>hasOwnProperty</code> guards existed to work around, and
+              it is why class methods were specified as non-enumerable.
+            </p>
+            <p>
+              One honest gap to state: your ES5 version still differs. A real class body is strict
+              regardless of the surrounding file, and a real class constructor cannot be called
+              without <code>new</code> even via <code>Reflect.apply</code>. The
+              <code>new.target</code> guard approximates it; it is not identical.
+            </p>
+          </div>
+        </details>
+
+        <p class="qlabel">Cross-questions</p>
+        <div class="xq">
+
+          <div class="xq-item">
+            <p class="xq-q">Are class declarations hoisted?</p>
+            <p class="xq-why">Testing: consistency with your Chapter 1 answer &mdash; and MDN contradicts itself here.</p>
+            <p class="ans bad">"No, classes aren't hoisted."</p>
+            <p class="ans good">"Same as <code>let</code> and <code>const</code>: the binding is created when the scope is entered but left uninitialised, so using the class before its declaration throws a <code>ReferenceError</code> rather than finding nothing. MDN's classes page words it as 'behave as if they are not hoisted', while the hoisting glossary lists them as hoisted with temporal-dead-zone behaviour. 'Hoisted but uninitialised' is the description that survives both."</p>
+          </div>
+
+          <div class="xq-item">
+            <p class="xq-q">Instance field versus prototype method &mdash; when does it matter?</p>
+            <p class="xq-why">Testing: the practical consequence, not the definition.</p>
+            <p class="ans good">"Three ways. Memory: a field arrow is one function per instance, a prototype method is one function total. Overriding: a subclass can override a prototype method and call <code>super.method()</code>, but a field is just an own property that shadows and has no <code>super</code>. And ordering: fields are initialised before the constructor body, so a field initialiser cannot read something the constructor sets later."</p>
+          </div>
+
+          <div class="xq-item">
+            <p class="xq-q">How do <code>#private</code> fields actually work &mdash; can I get at them?</p>
+            <p class="xq-why">Testing: whether you know it is a real brand, not a naming convention.</p>
+            <p class="ans good">"They are genuinely inaccessible &mdash; not a convention like <code>_name</code>. They are not properties, so <code>Object.keys</code> and <code>getOwnPropertyNames</code> do not see them, and reading <code>obj.#x</code> on an object whose class did not declare it is a <code>TypeError</code>, not <code>undefined</code>. That makes them a brand check: <code>static isCommand(o) { return #applied in o; }</code> is the ergonomic form, and it is the only reliable way to test 'was this really made by my class' &mdash; <code>instanceof</code> can be faked, prototypes can be swapped. They are also not inherited by subclasses, and two different classes can use the same private name with no collision."</p>
+          </div>
+
+          <div class="xq-item">
+            <p class="xq-q">Why can't I use <code>this</code> before <code>super()</code>?</p>
+            <p class="xq-why">Testing: do you know derived constructors are genuinely different?</p>
+            <p class="ans good">"Because a derived constructor does not create its own <code>this</code> &mdash; the base constructor does, and <code>super()</code> is what runs it and hands the object back. Until that happens there is literally nothing to reference, so it is a <code>ReferenceError</code>. It is also why instance fields of a derived class are initialised immediately after <code>super()</code> returns rather than at the top of the constructor."</p>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <h2>8 &middot; Inheritance, super and instanceof</h2>
+
+    <div class="qblock">
+      <div class="q-head">
+        <span class="q-n">Question 8</span>
+        <span class="q-t">How does inheritance work, and how would you implement instanceof yourself?</span>
+        <span class="q-freq">Common pairing &middot; the composition follow-up is where seniority shows</span>
+      </div>
+      <div class="q-body">
+
+        <div class="saythis">
+          <span class="st-lab">Say this</span>
+          <p>
+            <code>class B extends A</code> wires up <strong>two</strong> chains, and that is the
+            part people miss. <code>B.prototype</code>'s prototype becomes
+            <code>A.prototype</code>, so instances inherit instance methods. And
+            <code>B</code> itself gets <code>A</code> as <em>its</em> prototype, so static methods
+            are inherited too. <code>super()</code> calls the parent constructor;
+            <code>super.method()</code> looks the method up starting one level above the current
+            object's home, not on <code>this</code>.
+          </p>
+          <p>
+            <code>instanceof</code> is simpler than it looks: it walks the object's prototype
+            chain and asks whether <code>Ctor.prototype</code> appears anywhere in it. It does not
+            compare constructors or names &mdash; which is why an object from a different iframe
+            or a different copy of a library fails <code>instanceof</code> even though it looks
+            identical.
+          </p>
+        </div>
+
+        <p class="qlabel">Example &mdash; both chains, drawn in code</p>
+
+<pre><code>class Widget {
+  constructor(id) { this.id = id; }
+  render() { return `&lt;widget ${this.id}&gt;`; }
+  static from(json) { return new this(json.id); }   <span class="cmt">// `this` is the subclass when inherited</span>
+}
+
+class TextWidget extends Widget {
+  constructor(id, text) {
+    super(id);                 <span class="cmt">// must come before any use of `this`</span>
+    this.text = text;
+  }
+  render() {
+    return super.render() + `[${this.text}]`;   <span class="cmt">// explicit parent lookup</span>
+  }
+}
+
+<span class="cmt">// chain 1 — instances</span>
+Object.getPrototypeOf(TextWidget.prototype) === Widget.prototype;   <span class="cmt">// true</span>
+<span class="cmt">// chain 2 — the classes themselves (this is the one people forget)</span>
+Object.getPrototypeOf(TextWidget) === Widget;                        <span class="cmt">// true</span>
+
+TextWidget.from({ id: "t1" }) instanceof TextWidget;                 <span class="cmt">// true — `this` was TextWidget</span></code></pre>
+
+        <div class="trap">
+          <span class="t-lab">Trap</span>
+          <div class="t-in">
+            <p>
+              <code>super.render()</code> is <em>not</em> <code>this.__proto__.render()</code>. It
+              is resolved from the <strong>home object</strong> of the method &mdash; the object
+              the method was defined on &mdash; which is what stops infinite recursion when a
+              three-level hierarchy calls <code>super</code> at each level. If you "desugar" it to
+              <code>this.__proto__</code>, a three-level chain loops forever. That is a favourite
+              whiteboard trap.
+            </p>
+          </div>
+        </div>
+
+        <div class="drill">
+          <div class="d-head"><span>Now you code</span><span>AI off &middot; autocomplete off</span><span class="clock">18 min</span></div>
+          <div class="d-body">
+            <h4>myInstanceof, then a mixin</h4>
+<pre><code><span class="cmt">// 1. Implement instanceof.
+//    myInstanceof(obj, Ctor) -> boolean
+//    - primitives are always false
+//    - must walk the whole chain
+//    - must respect Symbol.hasInstance if the constructor defines it
+//    - must throw TypeError if Ctor is not callable</span>
+function myInstanceof(obj, Ctor) { <span class="cmt">/* you */</span> }
+
+<span class="cmt">// 2. Composition instead of inheritance.
+//    Write two mixins and apply them to a base class. Each must be usable
+//    independently and both together, and `super` must still work.
+//      const Selectable = (Base) => class extends Base { ... }
+//    Give Selectable: select(), deselect(), isSelected
+//    Give Resizable:  resize(w, h), and override render() to call super.render()</span>
+
+class Widget { constructor(id) { this.id = id; } render() { return `&lt;${this.id}&gt;`; } }
+
+class PictureWidget extends Resizable(Selectable(Widget)) {}   <span class="cmt">// must work</span></code></pre>
+          </div>
+        </div>
+
+        <details class="solution">
+          <summary>Solution &mdash; open only after the timer</summary>
+          <div class="sol-in">
+<pre><code>function myInstanceof(obj, Ctor) {
+  if (typeof Ctor !== "function") throw new TypeError("Right-hand side is not callable");
+
+  <span class="cmt">// the real operator checks this first — Promise, Array and others use it</span>
+  const custom = Ctor[Symbol.hasInstance];
+  if (typeof custom === "function") return Boolean(custom.call(Ctor, obj));
+
+  if (obj === null || (typeof obj !== "object" &amp;&amp; typeof obj !== "function")) return false;
+
+  const target = Ctor.prototype;
+  let cur = Object.getPrototypeOf(obj);
+  while (cur !== null) {
+    if (cur === target) return true;
+    cur = Object.getPrototypeOf(cur);
+  }
+  return false;
+}
+
+<span class="cmt">// mixins: functions from a class to a subclass</span>
+const Selectable = (Base) =&gt; class extends Base {
+  #selected = false;
+  select()   { this.#selected = true;  return this; }
+  deselect() { this.#selected = false; return this; }
+  get isSelected() { return this.#selected; }
+};
+
+const Resizable = (Base) =&gt; class extends Base {
+  resize(w, h) { this.w = w; this.h = h; return this; }
+  render() { return super.render() + `[${this.w}x${this.h}]`; }   <span class="cmt">// super works ✓</span>
+};
+
+class PictureWidget extends Resizable(Selectable(Widget)) {}
+
+const p = new PictureWidget("p1");
+p.select().resize(10, 20).render();   <span class="cmt">// "&lt;p1&gt;[10x20]"</span>
+p instanceof Widget;                  <span class="cmt">// true — real prototype chain, not copying</span></code></pre>
+            <p>
+              Two points to make out loud. First, <strong>a mixin that returns a subclass keeps
+              the prototype chain intact</strong>, so <code>instanceof</code> and
+              <code>super</code> both still work. The older approach &mdash;
+              <code>Object.assign(Widget.prototype, behaviours)</code> &mdash; copies methods and
+              gives you neither: no <code>super</code>, no <code>instanceof</code>, and silent
+              collisions when two mixins define the same name.
+            </p>
+            <p>
+              Second, <strong><code>Symbol.hasInstance</code></strong> is why a hand-rolled
+              <code>instanceof</code> that only walks prototypes is incomplete. It is also the
+              answer to "can <code>instanceof</code> lie?" &mdash; yes, any class can define that
+              symbol and decide for itself.
+            </p>
+          </div>
+        </details>
+
+        <p class="qlabel">Cross-questions</p>
+        <div class="xq">
+
+          <div class="xq-item">
+            <p class="xq-q">When does <code>instanceof</code> give the wrong answer?</p>
+            <p class="xq-why">Testing: real-world breakage, not theory.</p>
+            <p class="ans good">"Across realms &mdash; an array from an iframe or a worker fails <code>arr instanceof Array</code> because that realm has its own <code>Array</code> with a different <code>prototype</code> object. Same with two copies of a library in one bundle. For those cases I use <code>Array.isArray</code>, or <code>Object.prototype.toString.call(x)</code>, or duck typing. It also lies whenever a class defines <code>Symbol.hasInstance</code> or someone reassigns a prototype."</p>
+          </div>
+
+          <div class="xq-item">
+            <p class="xq-q">Inheritance or composition &mdash; which would you use for widget types?</p>
+            <p class="xq-why">Testing: design judgement. This is the question behind the question.</p>
+            <p class="ans good">"Composition, for the reason I actually hit: widget capabilities do not form a tree. A picture is resizable and selectable; a text box is selectable and editable; a chart is all three. Single inheritance forces me to pick one axis and duplicate the rest, and that is how you get <code>ResizableSelectableWidget</code> classes. I would use a shallow base for the shared lifecycle and compose capabilities &mdash; mixins, or plain objects of behaviour, or just functions taking a widget. I keep inheritance to one level where there is a genuine is-a relationship."</p>
+          </div>
+
+          <div class="xq-item">
+            <p class="xq-q">What does <code>super</code> resolve against?</p>
+            <p class="xq-why">Testing: the home-object detail from the trap above.</p>
+            <p class="ans good">"The method's home object &mdash; the object the method was defined on &mdash; not <code>this</code>. The engine takes the home object's prototype and looks the name up there, then calls it with the current <code>this</code>. If it resolved through <code>this</code> instead, a three-level hierarchy where each level calls <code>super.render()</code> would recurse forever."</p>
+          </div>
+
+          <div class="xq-item">
+            <p class="xq-q">Can you extend built-ins like <code>Array</code> or <code>Error</code>?</p>
+            <p class="xq-why">Testing: practical knowledge, including the transpilation landmine.</p>
+            <p class="ans good">"Yes in modern engines &mdash; <code>class MyError extends Error</code> works, and subclassed arrays keep array behaviour because <code>super()</code> creates the exotic object. The classic pitfall is transpiling to ES5, where <code>super()</code> cannot create a real exotic object and <code>instanceof</code> silently breaks; that is why older code does the <code>Object.setPrototypeOf(this, new.target.prototype)</code> dance in custom error constructors. Worth knowing because you still meet it in older builds."</p>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <div class="practice">
+      <span class="pt">Practice &mdash; Session 4</span>
+      <h4>Refactor one real hierarchy</h4>
+      <ol>
+        <li>Find the deepest inheritance chain in your editor's widget code. Write down every level and what each adds.</li>
+        <li>If it is three or more levels, sketch the composition version &mdash; which capabilities are independent axes? Do not refactor the code; produce the argument. This is a system design answer in miniature and Chapter 29 will use it.</li>
+        <li>Write the inheritance-versus-composition answer out loud, using <em>your widgets</em> as the example, in under ninety seconds.</li>
+      </ol>
+    </div>
+
+    <!-- ================================================================= -->
+    <div class="session">
+      <span class="sn">Session 5</span>
+      <span class="st">The object machinery: descriptors, Symbol, Proxy, WeakMap</span>
+      <span class="sd">~75 min</span>
+    </div>
+
+    <h2>9 &middot; Property descriptors and Object.create</h2>
+
+    <div class="qblock">
+      <div class="q-head">
+        <span class="q-n">Question 9</span>
+        <span class="q-t">How would you make a property read-only, or computed? And what is Object.create for?</span>
+        <span class="q-freq">Moderate &middot; but it is the foundation under freeze, Vue 2 reactivity and immutability talk</span>
+      </div>
+      <div class="q-body">
+
+        <div class="saythis">
+          <span class="st-lab">Say this</span>
+          <p>
+            Every property is described by a descriptor, and there are two kinds. A
+            <strong>data descriptor</strong> has <code>value</code> and <code>writable</code>. An
+            <strong>accessor descriptor</strong> has <code>get</code> and <code>set</code> instead
+            &mdash; that is a computed property. Both also have <code>enumerable</code>, which
+            controls whether it appears in <code>Object.keys</code>, <code>for…in</code> and
+            spread, and <code>configurable</code>, which controls whether the descriptor can be
+            changed or the property deleted.
+          </p>
+          <p>
+            The default matters: properties created by assignment are writable, enumerable and
+            configurable, but properties created by <code>Object.defineProperty</code> default to
+            <strong>false for all three</strong>. That asymmetry catches people.
+          </p>
+          <p>
+            <code>Object.create(proto, descriptors)</code> creates an object with an explicit
+            prototype and optional descriptors in one step. It is how you build a prototype chain
+            without a constructor, and <code>Object.create(null)</code> gives you a genuinely
+            empty dictionary with no inherited keys at all.
+          </p>
+        </div>
+
+        <p class="qlabel">Example</p>
+
+<pre><code>const cue = {};
+
+<span class="cmt">// data descriptor — note every flag defaults to FALSE here</span>
+Object.defineProperty(cue, "id", { value: "c1", enumerable: true });
+cue.id = "c2";              <span class="cmt">// silently ignored in sloppy mode, TypeError in strict</span>
+Object.keys(cue);           <span class="cmt">// ["id"]  — because we opted into enumerable</span>
+
+<span class="cmt">// accessor descriptor — a computed property</span>
+Object.defineProperty(cue, "duration", {
+  get() { return this.end - this.start; },
+  enumerable: false,        <span class="cmt">// hidden from Object.keys, spread and JSON</span>
+  configurable: true,
+});
+
+<span class="cmt">// the same thing in literal syntax</span>
+const cue2 = {
+  start: 0, end: 4,
+  get duration() { return this.end - this.start; },
+  set duration(d) { this.end = this.start + d; },
+};
+
+<span class="cmt">// inspect rather than guess</span>
+Object.getOwnPropertyDescriptor(cue, "id");
+<span class="cmt">// { value: "c1", writable: false, enumerable: true, configurable: false }</span></code></pre>
+
+        <div class="trap">
+          <span class="t-lab">Trap</span>
+          <div class="t-in">
+            <p>
+              A non-enumerable property is invisible to <code>Object.keys</code>, the spread
+              operator, <code>Object.assign</code> and <code>JSON.stringify</code> &mdash; so a
+              computed <code>duration</code> defined this way <strong>disappears when you clone
+              or serialise the object</strong>. That is a real bug in editors that round-trip
+              state through <code>JSON.parse(JSON.stringify(x))</code>. Getters are computed at
+              read time; they are not data.
+            </p>
+          </div>
+        </div>
+
+        <div class="drill">
+          <div class="d-head"><span>Now you code</span><span>AI off &middot; autocomplete off</span><span class="clock">15 min</span></div>
+          <div class="d-body">
+            <h4>myObjectCreate, and a constant that cannot be touched</h4>
+<pre><code><span class="cmt">// 1. Implement Object.create(proto, descriptors) using only
+//    a constructor function + new, and Object.defineProperties.
+//    Must support proto === null.</span>
+function myObjectCreate(proto, descriptors) { <span class="cmt">/* you */</span> }
+
+<span class="cmt">// 2. defineConstant(obj, key, value)
+//    - readable, enumerable
+//    - assignment must THROW in strict mode, not fail silently
+//    - delete must fail
+//    - redefining it with defineProperty must throw</span>
+function defineConstant(obj, key, value) { <span class="cmt">/* you */</span> }
+
+<span class="cmt">// 3. Then: given an object with a getter, show two ways to copy it
+//    that PRESERVE the getter, and one common way that destroys it.</span></code></pre>
+          </div>
+        </div>
+
+        <details class="solution">
+          <summary>Solution &mdash; open only after the timer</summary>
+          <div class="sol-in">
+<pre><code>function myObjectCreate(proto, descriptors) {
+  if (typeof proto !== "object" &amp;&amp; typeof proto !== "function")
+    throw new TypeError("Object prototype may only be an Object or null");
+
+  function F() {}
+  F.prototype = proto;             <span class="cmt">// new F() gets proto as its [[Prototype]]</span>
+  const obj = new F();
+
+  <span class="cmt">// F.prototype = null does NOT work — new falls back to Object.prototype —
+  // so the null case needs an explicit fix-up</span>
+  if (proto === null) Object.setPrototypeOf(obj, null);
+
+  if (descriptors) Object.defineProperties(obj, descriptors);
+  return obj;
+}
+
+function defineConstant(obj, key, value) {
+  return Object.defineProperty(obj, key, {
+    value,
+    writable: false,       <span class="cmt">// assignment throws in strict mode</span>
+    enumerable: true,      <span class="cmt">// still shows in Object.keys / JSON</span>
+    configurable: false,   <span class="cmt">// cannot delete, cannot redefine</span>
+  });
+}
+
+<span class="cmt">// 3 — copying an object that has a getter</span>
+const src = { a: 1, get double() { return this.a * 2; } };
+
+const bad  = { ...src };                       <span class="cmt">// ✗ getter INVOKED, result frozen as data (2)</span>
+const bad2 = Object.assign({}, src);           <span class="cmt">// ✗ same — assign reads values</span>
+
+const ok  = Object.create(                     <span class="cmt">// ✓ descriptors preserved</span>
+  Object.getPrototypeOf(src),
+  Object.getOwnPropertyDescriptors(src)
+);
+const ok2 = Object.defineProperties({}, Object.getOwnPropertyDescriptors(src));  <span class="cmt">// ✓</span>
+
+src.a = 10;
+bad.double;   <span class="cmt">// 2  — stale: it was evaluated at copy time</span>
+ok.double;    <span class="cmt">// 20 — still a live getter</span></code></pre>
+            <p>
+              Part 3 is the part worth remembering, because it is a real bug rather than trivia:
+              <strong>spread and <code>Object.assign</code> read values, so they convert getters
+              into frozen data</strong>. <code>Object.getOwnPropertyDescriptors</code> was added
+              in ES2017 specifically to make faithful copies possible. If someone in a code review
+              says "spread is a shallow copy", the more precise statement is "spread copies
+              enumerable own <em>values</em>, invoking getters, and drops the prototype".
+            </p>
+          </div>
+        </details>
+
+        <p class="qlabel">Cross-questions</p>
+        <div class="xq">
+
+          <div class="xq-item">
+            <p class="xq-q">What does spread actually copy?</p>
+            <p class="xq-why">Testing: precision. Everyone uses it; few can define it.</p>
+            <p class="ans good">"Enumerable own properties, by value, invoking getters, and it does not copy the prototype &mdash; the result is a plain object. So a class instance spread into a literal loses all its methods, and any computed getter becomes a static value. For a faithful copy you need <code>Object.create</code> plus <code>getOwnPropertyDescriptors</code>, and for a deep copy <code>structuredClone</code>."</p>
+          </div>
+
+          <div class="xq-item">
+            <p class="xq-q">Getter versus a method versus a stored value &mdash; how do you choose?</p>
+            <p class="xq-why">Testing: API design sense.</p>
+            <p class="ans good">"A getter should be cheap and side-effect free &mdash; it reads like a property, so if it does real work, callers will accidentally put it in a render loop. If it is expensive or takes arguments, make it a method so the cost is visible at the call site. If it is derived but hot, cache it and invalidate explicitly. In the caption editor, <code>cue.duration</code> is a getter; <code>track.renderToCanvas()</code> is emphatically a method."</p>
+          </div>
+
+          <div class="xq-item">
+            <p class="xq-q">How does <code>Object.freeze</code> relate to descriptors?</p>
+            <p class="xq-why">Testing: whether the Chapter 1 answer connects to this one.</p>
+            <p class="ans good">"<code>freeze</code> sets <code>writable: false</code> and <code>configurable: false</code> on every own property and marks the object non-extensible. That is exactly why it is shallow &mdash; it changes descriptors on that object only, and nested objects have their own. <code>seal</code> is the weaker version: non-extensible and non-configurable, but values can still change."</p>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <h2>10 &middot; Symbol, Proxy, Reflect and WeakMap</h2>
+
+    <div class="qblock">
+      <div class="q-head">
+        <span class="q-n">Question 10</span>
+        <span class="q-t">What are Symbol, Proxy and WeakMap for? Where would you actually use them?</span>
+        <span class="q-freq">Occasional &middot; strong differentiator when it comes up, because most answers are theoretical</span>
+      </div>
+      <div class="q-body">
+
+        <div class="saythis">
+          <span class="st-lab">Say this</span>
+          <p>
+            <strong><code>Symbol</code></strong> is a unique, non-string property key. Two symbols
+            are never equal even with the same description, so they cannot collide &mdash; useful
+            for attaching metadata to objects you do not own. <strong>Well-known symbols</strong>
+            are the language's hook points: <code>Symbol.iterator</code> makes an object
+            work with <code>for…of</code> and spread, <code>Symbol.hasInstance</code> customises
+            <code>instanceof</code>, <code>Symbol.toPrimitive</code> controls coercion.
+          </p>
+          <p>
+            <strong><code>Proxy</code></strong> wraps an object and intercepts the fundamental
+            operations on it &mdash; get, set, has, delete, ownKeys and about a dozen more &mdash;
+            via handler traps. <strong><code>Reflect</code></strong> is the matching set of
+            functions that perform those same operations with the default behaviour, so inside a
+            trap you call <code>Reflect.get(...)</code> to do the normal thing after your extra
+            logic.
+          </p>
+          <p>
+            <strong><code>WeakMap</code></strong> holds keys weakly: if nothing else references a
+            key object, the entry can be collected. That makes it the correct place for metadata
+            keyed by DOM nodes or component instances, because you cannot leak by forgetting to
+            delete. Its keys must be objects, and it is not iterable &mdash; deliberately, since
+            enumeration would expose garbage collection timing.
+          </p>
+        </div>
+
+        <div class="hing">
+          <span class="h-lab">Seedhi baat</span>
+          <p>
+            <code>Proxy</code> ko aise socho: object aur uske users ke beech mein ek
+            <em>bich ka aadmi</em> khada kar diya. Har <code>get</code>, <code>set</code>,
+            <code>delete</code> pehle us aadmi ke paas jata hai &mdash; wo chahe to log kare,
+            validate kare, ya default kaam <code>Reflect</code> se karwa de.
+          </p>
+          <p>
+            Isi cheez par Vue 3 ki reactivity bani hai: <code>get</code> par "kaun padh raha hai"
+            note karo, <code>set</code> par "jo padh rahe the unhe dobara chalao". Aap already
+            samajhte ho &mdash; bas naam nahi pata tha.
+          </p>
+        </div>
+
+        <p class="qlabel">Example &mdash; three uses you can defend</p>
+
+<pre><code><span class="cmt">// 1. Symbol.iterator — make your own type work with for…of and spread</span>
+class CaptionTrack {
+  constructor(cues) { this.cues = cues; }
+  *[Symbol.iterator]() { yield* this.cues; }
+}
+const track = new CaptionTrack([{ t: 0 }, { t: 5 }]);
+[...track];                       <span class="cmt">// works — because of the symbol, not a method name</span>
+
+<span class="cmt">// 2. Proxy — validation at the boundary, without touching the object</span>
+const validated = new Proxy({ w: 100, h: 100 }, {
+  set(target, prop, value, receiver) {
+    if ((prop === "w" || prop === "h") &amp;&amp; (typeof value !== "number" || value &lt;= 0))
+      throw new RangeError(`${prop} must be a positive number, got ${value}`);
+    return Reflect.set(target, prop, value, receiver);   <span class="cmt">// then do the normal thing</span>
+  },
+});
+validated.w = 0;                  <span class="cmt">// RangeError</span>
+
+<span class="cmt">// 3. WeakMap — per-node metadata that cannot leak</span>
+const hitAreas = new WeakMap();
+function cacheHitArea(node, rect) { hitAreas.set(node, rect); }
+<span class="cmt">// when the node is removed from the DOM and dropped, the entry goes with it.
+// A plain Map here would retain every node you ever measured.</span></code></pre>
+
+        <div class="drill">
+          <div class="d-head"><span>Now you code</span><span>AI off &middot; autocomplete off</span><span class="clock">18 min</span></div>
+          <div class="d-body">
+            <h4>Three small builds</h4>
+<pre><code><span class="cmt">// 1. negativeIndex(arr) — a Proxy so arr[-1] returns the last element,
+//    while every other array operation (push, length, for…of, map)
+//    still behaves exactly as normal.</span>
+
+<span class="cmt">// 2. withDefaults(obj, fallback) — a Proxy where reading a missing key
+//    returns `fallback` instead of undefined, but `in` and Object.keys
+//    are NOT affected.</span>
+
+<span class="cmt">// 3. Private state without #: rewrite this class so `secret` is
+//    genuinely inaccessible from outside, using a module-scoped WeakMap.
+class Session {
+  constructor(token) { this.secret = token; }
+  isValid() { return this.secret.length &gt; 10; }
+}</span></code></pre>
+            <p>
+              For 3, then answer in a comment: what does the <code>WeakMap</code> version give you
+              that <code>#private</code> does not, and vice versa?
+            </p>
+          </div>
+        </div>
+
+        <details class="solution">
+          <summary>Solution &mdash; open only after the timer</summary>
+          <div class="sol-in">
+<pre><code><span class="cmt">// 1 — negative indices</span>
+function negativeIndex(arr) {
+  return new Proxy(arr, {
+    get(target, prop, receiver) {
+      if (typeof prop === "string" &amp;&amp; /^-\d+$/.test(prop)) {
+        const i = target.length + Number(prop);
+        return i &gt;= 0 ? target[i] : undefined;
+      }
+      return Reflect.get(target, prop, receiver);
+    },
+  });
+}
+const a = negativeIndex([10, 20, 30]);
+a[-1];        <span class="cmt">// 30</span>
+a.length;     <span class="cmt">// 3   — untouched</span>
+[...a];       <span class="cmt">// [10,20,30]</span>
+
+<span class="cmt">// 2 — defaults on read only</span>
+function withDefaults(obj, fallback) {
+  return new Proxy(obj, {
+    get(target, prop, receiver) {
+      return Reflect.has(target, prop) ? Reflect.get(target, prop, receiver) : fallback;
+    },
+    <span class="cmt">// deliberately NO `has` or `ownKeys` trap, so `in` and Object.keys stay honest</span>
+  });
+}
+
+<span class="cmt">// 3 — WeakMap privacy (the pre-#private idiom, still useful)</span>
+const secrets = new WeakMap();          <span class="cmt">// module scope — not exported</span>
+
+export class Session {
+  constructor(token) { secrets.set(this, { token }); }
+  isValid() { return secrets.get(this).token.length &gt; 10; }
+}</code></pre>
+            <p>
+              <strong>The comparison.</strong> <code>#private</code> is simpler, is enforced by the
+              language, gives a real brand check with <code>#x in obj</code>, and shows clear
+              intent. The <code>WeakMap</code> version can be <em>shared between a class and
+              module-level helper functions</em> that are not part of the class, works on objects
+              you did not construct, and can attach state to instances of a class you do not own
+              &mdash; which <code>#private</code> can never do. Default to <code>#</code>; reach
+              for the <code>WeakMap</code> when the state has to be reachable from outside the
+              class body but still invisible to callers.
+            </p>
+            <p>
+              Two Proxy details worth saying: always finish a trap with the matching
+              <code>Reflect</code> call rather than touching <code>target</code> directly, because
+              <code>Reflect</code> forwards the <code>receiver</code> and so keeps getters and
+              inheritance correct. And Proxy has a genuine cost &mdash; every operation goes
+              through a trap, so it is right for a validation boundary or a devtools-only wrapper,
+              and wrong inside a canvas render loop.
+            </p>
+          </div>
+        </details>
+
+        <p class="qlabel">Cross-questions</p>
+        <div class="xq">
+
+          <div class="xq-item">
+            <p class="xq-q">Map versus WeakMap &mdash; when do you choose which?</p>
+            <p class="xq-why">Testing: do you know the trade-off is memory, not features?</p>
+            <p class="ans good">"<code>WeakMap</code> when the key is an object whose lifetime I do not control &mdash; DOM nodes, component instances, third-party objects &mdash; because entries disappear with the key and I cannot leak by forgetting to clean up. <code>Map</code> when I need iteration, <code>size</code>, primitive keys, or when I genuinely want the entries to outlive their keys, like a cache. The cost of <code>WeakMap</code> is that you can never enumerate it, and that is deliberate: enumeration would let you observe when GC ran."</p>
+          </div>
+
+          <div class="xq-item">
+            <p class="xq-q">Where have you seen Proxy in real libraries?</p>
+            <p class="xq-why">Testing: is this theoretical for you?</p>
+            <p class="ans good">"Vue 3's reactivity is built on it &mdash; the <code>get</code> trap tracks which effect is reading a property and the <code>set</code> trap re-runs those effects; that is why Vue 3 handles added properties and arrays correctly where Vue 2's <code>defineProperty</code> approach could not. Immer uses proxies to record mutations on a draft and produce an immutable next state. MobX uses them for observables. Knowing <em>why</em> Vue 3 switched is the version of this answer that lands."</p>
+          </div>
+
+          <div class="xq-item">
+            <p class="xq-q">What is <code>Symbol.for</code> and how is it different from <code>Symbol()</code>?</p>
+            <p class="xq-why">Testing: depth on a small API.</p>
+            <p class="ans good">"<code>Symbol()</code> always creates a brand-new unique symbol, even with the same description. <code>Symbol.for('key')</code> looks up a global registry shared across the whole realm and returns the same symbol every time &mdash; so two independent scripts can agree on a key. Use <code>Symbol()</code> for privacy-ish local metadata and <code>Symbol.for</code> for cross-library protocols."</p>
+          </div>
+
+          <div class="xq-item">
+            <p class="xq-q">Are symbol-keyed properties private?</p>
+            <p class="xq-why">Testing: precision about what "hidden" means.</p>
+            <p class="ans good">"Hidden, not private. They are skipped by <code>Object.keys</code>, <code>for…in</code> and <code>JSON.stringify</code>, but <code>Object.getOwnPropertySymbols</code> and <code>Reflect.ownKeys</code> expose them, so anyone determined can read them. For real privacy the tools are <code>#</code> fields or a closure or a <code>WeakMap</code>. Symbols solve <em>collision</em>, not access control."</p>
+          </div>
+
+          <div class="xq-item">
+            <p class="xq-q">What is <code>WeakRef</code>, and would you use it?</p>
+            <p class="xq-why">Testing: honesty about advanced features.</p>
+            <p class="ans good">"A <code>WeakRef</code> holds a single object weakly and you call <code>.deref()</code> to try to get it back, which may return <code>undefined</code> if it has been collected. <code>FinalizationRegistry</code> lets you register a cleanup callback. Both come with an explicit warning in the spec against relying on them, because GC timing is not observable behaviour you should build on. I have not needed either in product code &mdash; the honest use cases are caches of expensive objects that can be rebuilt. I would not introduce one in an interview answer unless asked."</p>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <div class="practice">
+      <span class="pt">Practice &mdash; Session 5</span>
+      <h4>The consolidation set &mdash; 50 minutes, timer visible, no AI</h4>
+      <p>Blank file. From memory, in this order:</p>
+      <ol>
+        <li><code>myCall</code> and <code>myApply</code> &mdash; 6 min</li>
+        <li><code>myBind</code>, new-correct &mdash; 12 min</li>
+        <li><code>myNew</code> &mdash; 10 min</li>
+        <li><code>myInstanceof</code> with <code>Symbol.hasInstance</code> &mdash; 8 min</li>
+        <li><code>protoChain</code> and <code>whoOwns</code> &mdash; 6 min</li>
+        <li>A <code>Selectable</code> mixin that keeps <code>super</code> working &mdash; 8 min</li>
+      </ol>
+      <p>
+        Then say, out loud, for each one: what breaks if you get it slightly wrong. If you cannot
+        name the failure mode, you have memorised a shape rather than understood a mechanism.
+        Repeat this set on day 3 and day 10 alongside Chapter 1's.
+      </p>
+    </div>
+
+    <h2>Rapid fire</h2>
+
+    <p>
+      Cover the answers. Fifteen seconds each, out loud, in a full sentence. Anything you hesitate
+      on goes into tomorrow's set.
+    </p>
+
+    <div class="rapid">
+      <div class="r-head"><span>Chapter 2 &mdash; this, prototypes, classes</span><span class="rc">26 questions</span></div>
+
+      <details><summary>What decides the value of <code>this</code>?</summary><p class="ra">How the function is called, not where it is written. Four rules in order: <code>new</code>, explicit binding, method call, plain call.</p></details>
+      <details><summary>What is <code>this</code> in a plain call?</summary><p class="ra"><code>undefined</code> in strict mode; <code>globalThis</code> in sloppy mode via this-substitution.</p></details>
+      <details><summary>What is <code>this</code> at the top of an ES module?</summary><p class="ra"><code>undefined</code>. In a classic script it is <code>globalThis</code>; in CommonJS it is <code>module.exports</code>.</p></details>
+      <details><summary>Why does <code>const f = obj.method; f()</code> break?</summary><p class="ra">The binding lives in the call expression, not the function. You took the function and left the dot behind.</p></details>
+      <details><summary>Can <code>call</code> change an arrow function's <code>this</code>?</summary><p class="ra">No. The <code>thisArg</code> is silently ignored — an arrow has no own <code>this</code> to set.</p></details>
+      <details><summary>Arrow inside an object literal — what is <code>this</code>?</summary><p class="ra">Whatever it was outside the literal. Object literals do not create a <code>this</code> scope, so it is <em>not</em> the object.</p></details>
+      <details><summary>Five things arrows lack.</summary><p class="ra">Own <code>this</code>, <code>arguments</code>, <code>new</code>/constructability, a <code>prototype</code> property, own <code>super</code> and <code>new.target</code>. Also cannot be generators.</p></details>
+      <details><summary><code>call</code> vs <code>apply</code>?</summary><p class="ra">Identical except argument form — individually vs an array. Spread has largely retired <code>apply</code>.</p></details>
+      <details><summary>Can you rebind a bound function?</summary><p class="ra">No. The second <code>thisArg</code> is ignored because the target is already bound.</p></details>
+      <details><summary><code>new</code> on a bound function?</summary><p class="ra">The bound <code>this</code> is ignored; construction makes its own. Pre-filled arguments still apply.</p></details>
+      <details><summary>What is <code>new.target</code>?</summary><p class="ra"><code>undefined</code> on a normal call, the constructor on a <code>new</code> call. How you detect construction.</p></details>
+      <details><summary><code>bound.name</code> and <code>bound.length</code>?</summary><p class="ra"><code>"bound " + name</code>, and the original <code>length</code> minus the number of pre-filled arguments, floored at 0.</p></details>
+      <details><summary><code>__proto__</code> vs <code>prototype</code>?</summary><p class="ra"><code>__proto__</code> is the link on an object; <code>prototype</code> is the property on a constructor holding the object instances will link to.</p></details>
+      <details><summary>Do writes walk the prototype chain?</summary><p class="ra">No — a plain assignment creates an own property that shadows. The exception is a setter or a non-writable property found on the chain.</p></details>
+      <details><summary>What is <code>this</code> inside an inherited method?</summary><p class="ra">The object you called it on, not the prototype it was found on.</p></details>
+      <details><summary>Why avoid <code>Object.setPrototypeOf</code>?</summary><p class="ra">It invalidates engine optimisations built on the object's shape and chain. Set the prototype at creation instead.</p></details>
+      <details><summary>The four steps of <code>new</code>.</summary><p class="ra">Create an object; set its prototype to <code>Fn.prototype</code>; call <code>Fn</code> with <code>this</code> as that object; return it unless the constructor returned an object.</p></details>
+      <details><summary>What if a constructor returns a primitive?</summary><p class="ra">Ignored — the instance is returned. Only an object (or function) return overrides it.</p></details>
+      <details><summary>Is <code>class</code> pure sugar?</summary><p class="ra">No. Always strict, TDZ rather than value hoisting, cannot be called without <code>new</code>, methods non-enumerable, no <code>this</code> before <code>super()</code>, and <code>#</code> fields are a separate mechanism.</p></details>
+      <details><summary>Where do class methods live? And instance fields?</summary><p class="ra">Methods on <code>Class.prototype</code>, shared. Fields on each instance, initialised before the constructor body (or right after <code>super()</code>).</p></details>
+      <details><summary>Why can't you use <code>this</code> before <code>super()</code>?</summary><p class="ra">A derived constructor has no <code>this</code> of its own — <code>super()</code> is what creates it. Touching it first is a <code>ReferenceError</code>.</p></details>
+      <details><summary>How do you brand-check a private field?</summary><p class="ra"><code>#x in obj</code> inside the class body — returns a boolean instead of throwing. Reading <code>obj.#x</code> on a foreign object is a <code>TypeError</code>.</p></details>
+      <details><summary>What does <code>extends</code> actually link?</summary><p class="ra">Two chains: <code>B.prototype</code> → <code>A.prototype</code> for instance methods, and <code>B</code> → <code>A</code> for statics.</p></details>
+      <details><summary>What does <code>super.m()</code> resolve against?</summary><p class="ra">The method's home object's prototype — not <code>this</code>. Otherwise three-level hierarchies would recurse forever.</p></details>
+      <details><summary>When does <code>instanceof</code> lie?</summary><p class="ra">Across realms (iframes, workers), with two copies of a library, and whenever a class defines <code>Symbol.hasInstance</code>.</p></details>
+      <details><summary>Spread — what exactly does it copy?</summary><p class="ra">Enumerable own properties by value, invoking getters, dropping the prototype. Use <code>getOwnPropertyDescriptors</code> for a faithful copy.</p></details>
+    </div>
+
+    <div class="checkpoint">
+      <span class="pt">Before moving on &mdash; you should be able to</span>
+      <ul>
+        <li>State the three-sentence frame: names from the scope chain, properties from the prototype chain, <code>this</code> from the call.</li>
+        <li>Give the four <code>this</code> rules in precedence order, and say where arrows sit relative to them.</li>
+        <li>Predict <code>this</code> correctly in all ten harness cases, including the object-literal arrow and the <code>forEach</code> <code>thisArg</code>.</li>
+        <li>Explain <code>call</code>, <code>apply</code> and <code>bind</code> including permanence, the <code>new</code> interaction, and the missing <code>prototype</code>.</li>
+        <li>Write <code>myCall</code>, <code>myApply</code>, <code>myBind</code>, <code>myNew</code> and <code>myInstanceof</code> from memory in under 40 minutes.</li>
+        <li>Explain the prototype chain using your own <code>.pptx</code> master/layout resolver as the example, and say why writes shadow instead of walking up.</li>
+        <li>List four things <code>class</code> does that are not sugar, and say where fields, methods, statics and privates each physically live.</li>
+        <li>Explain <code>super</code>'s home-object resolution and why <code>this.__proto__.method()</code> is not equivalent.</li>
+        <li>Argue inheritance versus composition using your widget types, in ninety seconds, and write a mixin that keeps <code>super</code> and <code>instanceof</code> intact.</li>
+        <li>Say what Proxy, Reflect, Symbol and WeakMap are each genuinely for, with one real library that uses each.</li>
+      </ul>
+    </div>
+
+    <h2>What's next</h2>
+
+    <p>
+      Chapters 1 and 2 covered the two lookup chains and the call-time binding &mdash; everything
+      about how JavaScript resolves what you wrote. Chapter 3 moves to <em>when</em> it runs it:
+      the event loop, the task and microtask queues, promise resolution ordering, and the
+      output-prediction puzzles that show up on whiteboards more reliably than any other category
+      of JavaScript question.
+    </p>
+    <p>
+      It also closes a loop from this chapter. The reason <code>setTimeout(obj.method)</code>
+      loses <code>this</code> and the reason <code>await</code> resumes after a microtask are the
+      same kind of fact: <strong>the code that runs later is not running in the context you wrote
+      it in.</strong> Chapter 3 makes the timing half of that precise.
+    </p>
 
     <div class="ch-nav" id="chnav"></div>
 
@@ -44,7 +2071,7 @@
 
 <footer class="site-foot">
   <div class="site-foot-in">
-    <span>Chapter 2 &middot; not written yet</span>
+    <span>Chapter 2 &middot; this, Prototypes, Objects &amp; Classes</span>
     <span class="sp"></span>
     <span>Use &larr; and &rarr; to move between chapters</span>
   </div>

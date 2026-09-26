@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Chapter 5</title>
+<title>Arrays, Strings, Pointers, Hashmaps &amp; Stacks — Chapter 5</title>
 <link rel="stylesheet" href="../assets/book.css">
 </head>
 <body data-chapter="5">
@@ -12,7 +12,7 @@
   <div class="site-head-in">
     <a class="logo" href="../index.html"><span class="logo-mark">DM</span> Dev Mastery</a>
     <span class="head-sp"></span>
-    <span class="head-meta">Chapter 5 of 30</span>
+    <span class="head-meta">Part II &middot; Chapter 5 of 30</span>
   </div>
   <div class="readbar" id="readbar"></div>
 </header>
@@ -22,12 +22,2414 @@
   <main class="ch-main">
 
     <div class="ch-hero">
-      <p class="ch-kicker" id="stub-kicker">Chapter 5</p>
-      <h1 id="stub-title">Chapter 5</h1>
-      <p class="lede" id="stub-lede"></p>
+      <p class="ch-kicker">Part II &middot; DSA in JavaScript: The Screen &middot; Chapter Five</p>
+      <h1>Arrays, Strings, Pointers, Hashmaps &amp; Stacks</h1>
+      <p class="lede">
+        Five patterns cover the overwhelming majority of easy and medium array and string problems
+        you will be given. This chapter teaches the <em>triggers</em> &mdash; what in the problem
+        statement tells you which pattern to reach for &mdash; and then drills roughly
+        thirty-three problems against a clock.
+      </p>
+      <div class="ch-facts">
+        <span><b>6</b> sessions</span>
+        <span><b>~7.5</b> hours</span>
+        <span><b>12</b> Q-blocks</span>
+        <span><b>33</b> problems</span>
+        <span>Prerequisites: <b>Part I</b></span>
+      </div>
     </div>
 
-    <div id="stub"></div>
+    <div class="callout key">
+      <span class="ct">Read this framing before the first problem</span>
+      <p>
+        DSA is a <strong>gate, not a band-setter</strong>. It gets you through the screening round
+        at product companies and contributes almost nothing to your number after that &mdash; the
+        machine coding round and the React depth round decide whether you get &#8377;12L or
+        &#8377;18L. So the goal here is <em>competence at speed</em>, not mastery.
+      </p>
+      <p>
+        Which means: aim to solve easy problems in 10 minutes and mediums in 25, reliably, while
+        talking. Do not grind hard problems. Do not chase 500 solved. Thirty-three well-understood
+        problems across five patterns, plus the ability to narrate, clears the gate.
+      </p>
+    </div>
+
+    <div class="hing">
+      <span class="h-lab">Seedhi baat</span>
+      <p>
+        DSA round mein do cheezein dekhi jaati hain: <strong>pattern pehchanna</strong> aur
+        <strong>bolte hue code karna</strong>. Optimal solution yaad hona teesre number pe aata
+        hai.
+      </p>
+      <p>
+        Isliye is chapter mein har pattern ka ek <em>trigger</em> diya hai &mdash; problem mein
+        kya dikhe to kaunsa pattern uthao. Wahi cheez asli round mein kaam aati hai, kyunki
+        interviewer problem naya dega, par pattern purana hi hoga.
+      </p>
+    </div>
+
+    <!-- ================================================================= -->
+    <div class="session">
+      <span class="sn">Session 1</span>
+      <span class="st">Complexity, and the first five minutes</span>
+      <span class="sd">~75 min</span>
+    </div>
+
+    <h2>1 &middot; Stating complexity without hedging</h2>
+
+    <div class="qblock">
+      <div class="q-head">
+        <span class="q-n">Question 1</span>
+        <span class="q-t">What's the time and space complexity of your solution?</span>
+        <span class="q-freq">Asked after every single problem &middot; hedging here undoes a correct solution</span>
+      </div>
+      <div class="q-body">
+
+        <div class="saythis">
+          <span class="st-lab">Say this &mdash; the shape of a complete answer</span>
+          <p>
+            <strong>"Time is O(n), because I make a single pass over the array and every operation
+            inside the loop is constant. Space is O(k) where k is the number of distinct
+            characters &mdash; bounded by 26 here, so effectively O(1) &mdash; because I only
+            store the frequency map."</strong>
+          </p>
+          <p>
+            Three parts, always: the <em>bound</em>, the <em>reason</em>, and what
+            <em>n</em> and any other variable actually refer to. Never say "I think it's
+            probably O(n)". If two inputs matter, name both &mdash; O(n + m), not O(n).
+          </p>
+        </div>
+
+        <div class="tbl">
+          <table>
+            <thead><tr><th>Operation</th><th>Cost</th><th>The trap</th></tr></thead>
+            <tbody>
+              <tr><td><code>arr.push</code> / <code>pop</code></td><td>O(1) amortised</td><td>&mdash;</td></tr>
+              <tr><td><code>arr.shift</code> / <code>unshift</code></td><td><b>O(n)</b></td><td>Using <code>shift()</code> in a BFS loop makes it O(n&sup2;). Use an index pointer.</td></tr>
+              <tr><td><code>arr.splice(i, 1)</code></td><td>O(n)</td><td>Inside a loop, that is O(n&sup2;) &mdash; the classic "remove while iterating" bug.</td></tr>
+              <tr><td><code>arr.includes</code> / <code>indexOf</code></td><td>O(n)</td><td>Inside a loop it is O(n&sup2;). A <code>Set</code> makes it O(1).</td></tr>
+              <tr><td><code>arr.sort()</code></td><td>O(n log n)</td><td>Sorting to "help" often costs more than the hashmap solution it replaces.</td></tr>
+              <tr><td><code>[...acc, x]</code> in a reduce</td><td>O(n) per step &rarr; <b>O(n&sup2;)</b></td><td>The most common accidental quadratic in modern JS.</td></tr>
+              <tr><td><code>str += x</code> in a loop</td><td>Amortised O(1) in practice</td><td>Engines use ropes, but say "I'd push to an array and <code>join</code>" &mdash; it is the safe answer.</td></tr>
+              <tr><td><code>Map</code>/<code>Set</code> get/set/has</td><td>O(1) average</td><td>&mdash;</td></tr>
+              <tr><td><code>Object.keys(o)</code></td><td>O(n)</td><td>Calling it inside a loop over the same object is O(n&sup2;).</td></tr>
+              <tr><td><code>str.split("")</code></td><td>O(n) time and space</td><td>Breaks on emoji &mdash; see question 11.</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="trap">
+          <span class="t-lab">Trap</span>
+          <div class="t-in">
+            <p>
+              The recursion space answer. A recursive solution's space is
+              <strong>O(depth of the call stack)</strong>, not O(1), even if it allocates nothing.
+              A tree recursion is O(h); an unbalanced tree makes that O(n). Candidates routinely
+              claim O(1) space for recursive solutions, and it is an easy correction for an
+              interviewer to make.
+            </p>
+          </div>
+        </div>
+
+        <div class="drill">
+          <div class="d-head"><span>Now you code</span><span>AI off &middot; autocomplete off</span><span class="clock">15 min</span></div>
+          <div class="d-body">
+            <h4>Find and fix five accidental quadratics</h4>
+<pre><code><span class="cmt">// Each of these is O(n²) or worse. Rewrite each as O(n),
+// and state the before and after complexity in a comment.</span>
+
+<span class="cmt">// A</span>
+const unique = (arr) =&gt; arr.filter((x, i) =&gt; arr.indexOf(x) === i);
+
+<span class="cmt">// B</span>
+const groupByType = (widgets) =&gt;
+  widgets.reduce((acc, w) =&gt; ({ ...acc, [w.type]: [...(acc[w.type] ?? []), w] }), {});
+
+<span class="cmt">// C</span>
+function processQueue(queue) {
+  while (queue.length) { const job = queue.shift(); run(job); }
+}
+
+<span class="cmt">// D</span>
+const common = (a, b) =&gt; a.filter((x) =&gt; b.includes(x));
+
+<span class="cmt">// E</span>
+function removeInactive(widgets) {
+  for (let i = 0; i &lt; widgets.length; i++) {
+    if (!widgets[i].active) { widgets.splice(i, 1); i--; }
+  }
+  return widgets;
+}</code></pre>
+          </div>
+        </div>
+
+        <details class="solution">
+          <summary>Solution &mdash; open only after the timer</summary>
+          <div class="sol-in">
+<pre><code><span class="cmt">// A  O(n²) → O(n)   — indexOf inside filter is a nested scan</span>
+const unique = (arr) =&gt; [...new Set(arr)];
+
+<span class="cmt">// B  O(n²) → O(n)   — spreading the accumulator copies it every step</span>
+const groupByType = (widgets) =&gt; {
+  const out = new Map();
+  for (const w of widgets) {
+    if (!out.has(w.type)) out.set(w.type, []);
+    out.get(w.type).push(w);           <span class="cmt">// mutate the accumulator, don't rebuild it</span>
+  }
+  return out;
+};
+
+<span class="cmt">// C  O(n²) → O(n)   — shift() re-indexes the whole array each time</span>
+function processQueue(queue) {
+  for (let head = 0; head &lt; queue.length; head++) run(queue[head]);
+}
+
+<span class="cmt">// D  O(n·m) → O(n + m)</span>
+const common = (a, b) =&gt; { const s = new Set(b); return a.filter((x) =&gt; s.has(x)); };
+
+<span class="cmt">// E  O(n²) → O(n)   — splice shifts elements; filter or a write pointer does not</span>
+const removeInactive = (widgets) =&gt; widgets.filter((w) =&gt; w.active);
+<span class="cmt">// in-place version, if the original array must be mutated:</span>
+function removeInactiveInPlace(widgets) {
+  let write = 0;
+  for (let read = 0; read &lt; widgets.length; read++)
+    if (widgets[read].active) widgets[write++] = widgets[read];
+  widgets.length = write;              <span class="cmt">// truncate — setting length deletes the rest</span>
+  return widgets;
+}</code></pre>
+            <p>
+              B is the one worth internalising, because it is idiomatic-looking modern JavaScript
+              that is quietly quadratic. Every <code>{ ...acc }</code> inside a
+              <code>reduce</code> copies the whole accumulator. Reviewers love it; profilers hate
+              it. E's in-place version is also your first read/write two-pointer, which is
+              session 2.
+            </p>
+          </div>
+        </details>
+
+        <p class="qlabel">Cross-questions</p>
+        <div class="xq">
+          <div class="xq-item">
+            <p class="xq-q">What does "amortised O(1)" mean?</p>
+            <p class="xq-why">Testing: do you use the word or understand it?</p>
+            <p class="ans good">"That an individual operation may occasionally be expensive, but the average over a sequence is constant. <code>push</code> is the example: when the backing store is full the engine reallocates and copies, which is O(n), but it grows geometrically so that cost is spread across the next n pushes. So n pushes are O(n) total even though one of them was O(n)."</p>
+          </div>
+          <div class="xq-item">
+            <p class="xq-q">Is <code>Map.get</code> really O(1)?</p>
+            <p class="xq-why">Testing: precision about average versus worst case.</p>
+            <p class="ans good">"O(1) average. It is a hash table, so a pathological set of colliding keys degrades it &mdash; in theory to O(n). In interview terms I state O(1) average and note the assumption. Engines also use insertion-ordered structures for <code>Map</code>, which is why iteration order is guaranteed and why it is slightly heavier than a plain object for small string-keyed data."</p>
+          </div>
+          <div class="xq-item">
+            <p class="xq-q">Object or Map for a frequency count?</p>
+            <p class="xq-why">Testing: a small, practical judgement they often probe.</p>
+            <p class="ans good">"<code>Map</code> by default: any key type, guaranteed iteration order, a real <code>size</code>, no inherited keys, and no surprise when a key is called <code>constructor</code> or <code>__proto__</code>. A plain object is fine for known string keys and is marginally faster for small counts, but <code>Object.create(null)</code> is then worth it to avoid prototype keys. For character counts I often use a 26-slot array, which is fastest and makes the O(1) space claim obvious."</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <h2>2 &middot; The first five minutes</h2>
+
+    <div class="qblock">
+      <div class="q-head">
+        <span class="q-n">Question 2</span>
+        <span class="q-t">Here's the problem. Take it away.</span>
+        <span class="q-freq">Every round &middot; and how you spend the first five minutes sets the tone</span>
+      </div>
+      <div class="q-body">
+
+        <div class="saythis">
+          <span class="st-lab">The script &mdash; memorise the order, not the words</span>
+          <p>
+            <strong>1. Restate it in one sentence.</strong> "So I'm given an unsorted array of
+            integers and a target, and I need to return the indices of the two numbers that add
+            to it." This catches misunderstandings before they cost you twenty minutes.
+          </p>
+          <p>
+            <strong>2. Ask two or three clarifying questions.</strong> Size of the input?
+            Duplicates possible? Negative numbers? Is the array sorted? Can I mutate it? Exactly
+            one answer or all of them? Is the input guaranteed valid?
+          </p>
+          <p>
+            <strong>3. Give one small example and one edge case, out loud.</strong> Write them
+            down. This is where you will test at the end, so write them once.
+          </p>
+          <p>
+            <strong>4. State the brute force and its complexity, then say you can do better.</strong>
+            "Nested loops would be O(n&sup2;). I think I can get it to O(n) with a hashmap
+            &mdash; let me talk that through." Never skip this. Stating the brute force proves you
+            understand the problem; jumping to the optimal without it looks memorised.
+          </p>
+          <p>
+            <strong>5. Describe the approach fully before typing.</strong> Get agreement. Then
+            code, narrating as you go.
+          </p>
+          <p>
+            <strong>6. Trace your own code on the example, out loud, before saying you are
+            done.</strong> Find your own bug. That is worth more than not having one.
+          </p>
+        </div>
+
+        <div class="tbl">
+          <table>
+            <thead><tr><th>Signal in the problem</th><th>Reach for</th></tr></thead>
+            <tbody>
+              <tr><td>Array is <b>sorted</b>, find a pair or triplet</td><td>Two pointers from both ends</td></tr>
+              <tr><td>"contiguous subarray" or "substring"</td><td>Sliding window</td></tr>
+              <tr><td>Fixed length k mentioned</td><td>Fixed-size sliding window</td></tr>
+              <tr><td>"longest" / "shortest" + a constraint</td><td>Variable sliding window</td></tr>
+              <tr><td>Count, group, or "have I seen this"</td><td>Hashmap or Set</td></tr>
+              <tr><td>Subarray <b>sum</b> equals k, unsorted, negatives allowed</td><td>Prefix sum + hashmap</td></tr>
+              <tr><td>Matching, nesting, "valid", undo</td><td>Stack</td></tr>
+              <tr><td>"next greater / smaller element"</td><td>Monotonic stack</td></tr>
+              <tr><td>In-place removal or partition</td><td>Read/write two pointers</td></tr>
+              <tr><td>Top k / k most frequent</td><td>Hashmap + sort, or bucket sort</td></tr>
+              <tr><td>Input is huge and only one pass is allowed</td><td>Streaming: single pass, O(1) state</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="drill">
+          <div class="d-head"><span>Now you code</span><span>AI off &middot; speak out loud, record yourself</span><span class="clock">20 min</span></div>
+          <div class="d-body">
+            <h4>Two Sum, done properly &mdash; the whole script</h4>
+            <p>
+              Record audio on your phone. Solve this while narrating all six steps. Then listen
+              back. It will be uncomfortable and it is the highest-value twenty minutes in this
+              chapter.
+            </p>
+<pre><code><span class="cmt">// Given an array of integers and a target, return the INDICES of the
+// two numbers that add up to the target. Exactly one solution exists.
+// You may not use the same element twice.
+//
+//   twoSum([2, 7, 11, 15], 9)   →  [0, 1]
+//   twoSum([3, 2, 4], 6)        →  [1, 2]
+//   twoSum([3, 3], 6)           →  [0, 1]      ← duplicates
+//
+// Narrate: restate, clarify, example, brute force + complexity,
+// approach, code, trace.</span>
+
+function twoSum(nums, target) { <span class="cmt">/* you */</span> }</code></pre>
+          </div>
+        </div>
+
+        <details class="solution">
+          <summary>Solution &mdash; open only after the timer</summary>
+          <div class="sol-in">
+<pre><code>function twoSum(nums, target) {
+  const seen = new Map();                  <span class="cmt">// value -> index</span>
+
+  for (let i = 0; i &lt; nums.length; i++) {
+    const need = target - nums[i];
+    if (seen.has(need)) return [seen.get(need), i];   <span class="cmt">// check BEFORE inserting</span>
+    seen.set(nums[i], i);
+  }
+  return [];                               <span class="cmt">// unreachable given the guarantee</span>
+}
+<span class="cmt">// Time O(n) — one pass, O(1) map operations.
+// Space O(n) — worst case every element is stored.</span></code></pre>
+            <p>
+              <strong>The one line that matters:</strong> check for the complement
+              <em>before</em> inserting the current element. Insert first and
+              <code>twoSum([3, 3], 6)</code> matches index 0 against itself and returns
+              <code>[0, 0]</code>. That is the test case an interviewer adds after you say you are
+              done, and handling it unprompted is worth more than the solution itself.
+            </p>
+            <p>
+              Things a strong candidate says here without being asked: "I return indices so I
+              cannot sort the array &mdash; sorting would give me the two-pointer solution at
+              O(n log n) and O(1) space, but it destroys the indices, so I'd have to store pairs.
+              The hashmap is better here. If the array <em>were</em> sorted, two pointers would be
+              the right answer because of the space."
+            </p>
+          </div>
+        </details>
+
+        <p class="qlabel">Cross-questions</p>
+        <div class="xq">
+          <div class="xq-item">
+            <p class="xq-q">What if there is no solution, or more than one?</p>
+            <p class="xq-why">Testing: whether you noticed the problem's guarantee.</p>
+            <p class="ans good">"With the stated guarantee neither happens, which is why I return an empty array as an unreachable fallback rather than throwing. Without the guarantee I'd ask which behaviour is wanted &mdash; return null, throw, or return all pairs. All pairs changes the approach: I'd keep a list of indices per value in the map and be careful about double-counting."</p>
+          </div>
+          <div class="xq-item">
+            <p class="xq-q">Now the array is sorted. Does your answer change?</p>
+            <p class="xq-why">Testing: the trigger table. This exact follow-up is near-universal.</p>
+            <p class="ans good">"Yes &mdash; two pointers from both ends, O(n) time and O(1) space, which beats the hashmap on space. Sum too small, move left in; too big, move right in. I'd only keep the hashmap if I needed the original indices and the sort was mine."</p>
+          </div>
+          <div class="xq-item">
+            <p class="xq-q">Why talk before coding? Isn't the code the answer?</p>
+            <p class="xq-why">Testing: do you understand what is being scored?</p>
+            <p class="ans good">"Because the rubric is mostly communication and problem-solving, not typing. A candidate who explains the trade-off between the hashmap and the two-pointer version and then writes slightly imperfect code scores better than one who silently types the optimal solution &mdash; the first one is demonstrably someone you can work with on an unfamiliar problem."</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ================================================================= -->
+    <div class="session">
+      <span class="sn">Session 2</span>
+      <span class="st">Two pointers</span>
+      <span class="sd">~75 min</span>
+    </div>
+
+    <h2>3 &middot; Two pointers from both ends</h2>
+
+    <div class="qblock">
+      <div class="q-head">
+        <span class="q-n">Question 3</span>
+        <span class="q-t">Given a sorted array, find two numbers that sum to the target. O(1) space.</span>
+        <span class="q-freq">The canonical opposite-ends problem &middot; everything else in this family is a variation</span>
+      </div>
+      <div class="q-body">
+
+        <div class="saythis">
+          <span class="st-lab">Say this &mdash; the trigger and the invariant</span>
+          <p>
+            <strong>Trigger:</strong> the array is sorted (or can be sorted), and I need a pair,
+            triplet, or a comparison between the two ends. Sorted plus "find a pair" is almost
+            always two pointers.
+          </p>
+          <p>
+            <strong>The invariant:</strong> start one pointer at each end. If the current sum is
+            too small, the only way to increase it is to move the left pointer right. If it is too
+            big, move the right pointer left. Each step eliminates one candidate permanently, so
+            the whole search is one pass &mdash; O(n) time, O(1) space.
+          </p>
+          <p>
+            Say the elimination argument out loud. "Moving left inward discards every pair
+            involving the old left element, and I know none of them can work because they are all
+            even smaller." That is the proof of correctness, and offering it unprompted is what
+            makes this answer strong rather than memorised.
+          </p>
+        </div>
+
+        <p class="qlabel">Example &mdash; traced</p>
+
+<pre><code>nums = [2, 7, 11, 15, 19],  target = 26
+
+ L              R     sum = 2 + 19 = 21   too small → L++
+    L           R     sum = 7 + 19 = 26   found → [1, 4]
+
+<span class="cmt">// and if the target were 20:
+//   2+19=21 too big  → R--
+//   2+15=17 too small→ L++
+//   7+15=22 too big  → R--
+//   7+11=18 too small→ L++   L === R → stop, not found</span></code></pre>
+
+<pre><code>function twoSumSorted(nums, target) {
+  let left = 0, right = nums.length - 1;
+
+  while (left &lt; right) {                     <span class="cmt">// strict: never pair an element with itself</span>
+    const sum = nums[left] + nums[right];
+    if (sum === target) return [left, right];
+    if (sum &lt; target) left++;                <span class="cmt">// need bigger → only left can help</span>
+    else right--;                            <span class="cmt">// need smaller → only right can help</span>
+  }
+  return [];
+}
+<span class="cmt">// Time O(n), Space O(1)</span></code></pre>
+
+        <div class="drill">
+          <div class="d-head"><span>Problem set &mdash; opposite ends</span><span>AI off &middot; autocomplete off</span><span class="clock">45 min for 5</span></div>
+          <div class="d-body">
+            <h4>Five problems, 8&ndash;10 minutes each</h4>
+            <ol>
+              <li>
+                <strong>Valid palindrome</strong> &mdash; ignoring non-alphanumerics and case,
+                is the string a palindrome? <code>"A man, a plan, a canal: Panama"</code> &rarr;
+                <code>true</code>. <em>Do not build a cleaned copy &mdash; skip in place, O(1)
+                space.</em>
+              </li>
+              <li>
+                <strong>Reverse only the vowels</strong> of a string.
+                <code>"leetcode"</code> &rarr; <code>"leotcede"</code>.
+              </li>
+              <li>
+                <strong>Container with most water</strong> &mdash; given heights, pick two lines
+                that with the x-axis hold the most water. <code>[1,8,6,2,5,4,8,3,7]</code> &rarr;
+                <code>49</code>. <em>The hard part is arguing which pointer to move.</em>
+              </li>
+              <li>
+                <strong>Three sum</strong> &mdash; all unique triplets summing to zero.
+                <code>[-1,0,1,2,-1,-4]</code> &rarr; <code>[[-1,-1,2],[-1,0,1]]</code>.
+                <em>Sort, fix one, two-pointer the rest, and skip duplicates carefully.</em>
+              </li>
+              <li>
+                <strong>Sort colors</strong> &mdash; sort an array of 0s, 1s and 2s in one pass,
+                in place. <em>Three pointers, not two. This is the Dutch national flag problem.</em>
+              </li>
+            </ol>
+          </div>
+        </div>
+
+        <details class="solution">
+          <summary>Solutions &mdash; open only after all five timers</summary>
+          <div class="sol-in">
+<pre><code><span class="cmt">// 1 — valid palindrome, O(n) time, O(1) space</span>
+function isPalindrome(s) {
+  const ok = (c) =&gt; /[a-z0-9]/i.test(c);
+  let l = 0, r = s.length - 1;
+  while (l &lt; r) {
+    while (l &lt; r &amp;&amp; !ok(s[l])) l++;              <span class="cmt">// skip junk, don't rebuild</span>
+    while (l &lt; r &amp;&amp; !ok(s[r])) r--;
+    if (s[l].toLowerCase() !== s[r].toLowerCase()) return false;
+    l++; r--;
+  }
+  return true;
+}
+
+<span class="cmt">// 2 — reverse vowels</span>
+function reverseVowels(s) {
+  const V = new Set("aeiouAEIOU");
+  const a = [...s];                              <span class="cmt">// strings are immutable</span>
+  let l = 0, r = a.length - 1;
+  while (l &lt; r) {
+    if (!V.has(a[l])) { l++; continue; }
+    if (!V.has(a[r])) { r--; continue; }
+    [a[l], a[r]] = [a[r], a[l]];
+    l++; r--;
+  }
+  return a.join("");
+}
+
+<span class="cmt">// 3 — container with most water</span>
+function maxArea(h) {
+  let l = 0, r = h.length - 1, best = 0;
+  while (l &lt; r) {
+    best = Math.max(best, (r - l) * Math.min(h[l], h[r]));
+    <span class="cmt">// move the SHORTER side: the width can only shrink, so keeping the
+    // shorter line can never produce a bigger area — it is dominated.</span>
+    if (h[l] &lt; h[r]) l++; else r--;
+  }
+  return best;
+}
+
+<span class="cmt">// 4 — three sum, O(n²) time, O(1) extra space beyond the output</span>
+function threeSum(nums) {
+  nums.sort((a, b) =&gt; a - b);                    <span class="cmt">// numeric comparator — see Ch6</span>
+  const out = [];
+
+  for (let i = 0; i &lt; nums.length - 2; i++) {
+    if (nums[i] &gt; 0) break;                      <span class="cmt">// sorted: no triplet can reach 0</span>
+    if (i &gt; 0 &amp;&amp; nums[i] === nums[i - 1]) continue;   <span class="cmt">// skip duplicate anchors</span>
+
+    let l = i + 1, r = nums.length - 1;
+    while (l &lt; r) {
+      const sum = nums[i] + nums[l] + nums[r];
+      if (sum === 0) {
+        out.push([nums[i], nums[l], nums[r]]);
+        while (l &lt; r &amp;&amp; nums[l] === nums[l + 1]) l++;  <span class="cmt">// skip duplicate pairs</span>
+        while (l &lt; r &amp;&amp; nums[r] === nums[r - 1]) r--;
+        l++; r--;
+      } else if (sum &lt; 0) l++;
+      else r--;
+    }
+  }
+  return out;
+}
+
+<span class="cmt">// 5 — sort colors / Dutch national flag, one pass</span>
+function sortColors(nums) {
+  let low = 0, mid = 0, high = nums.length - 1;
+  while (mid &lt;= high) {
+    if (nums[mid] === 0) { [nums[low], nums[mid]] = [nums[mid], nums[low]]; low++; mid++; }
+    else if (nums[mid] === 2) { [nums[mid], nums[high]] = [nums[high], nums[mid]]; high--; }
+    <span class="cmt">// do NOT advance mid here — the value swapped in from `high` is unexamined</span>
+    else mid++;
+  }
+  return nums;
+}</code></pre>
+            <p>
+              <strong>Problem 3 is the one to be able to argue.</strong> "Move the shorter side"
+              needs a justification, not an assertion: the area is limited by the shorter line, and
+              moving the taller one inward can only reduce the width while the height stays capped
+              by the same short line &mdash; so every pair involving the shorter line is already
+              dominated by the one we just measured. Interviewers ask "why is that safe?" and a
+              shrug undoes the solution.
+            </p>
+            <p>
+              <strong>Problem 5's subtlety</strong> is not advancing <code>mid</code> after
+              swapping with <code>high</code>, because the incoming value has not been classified
+              yet. Get that wrong and it fails on <code>[2,0,1]</code>. Say it out loud as you
+              write it.
+            </p>
+          </div>
+        </details>
+
+        <p class="qlabel">Cross-questions</p>
+        <div class="xq">
+          <div class="xq-item">
+            <p class="xq-q">Why is <code>while (left &lt; right)</code> and not <code>&lt;=</code>?</p>
+            <p class="xq-why">Testing: do you know your own loop bounds?</p>
+            <p class="ans good">"Because <code>left === right</code> means both pointers are on the same element, and pairing an element with itself is not allowed. For a palindrome check it also means the middle character of an odd-length string needs no comparison. If a problem <em>did</em> allow reusing one element, <code>&lt;=</code> would be correct &mdash; so it is worth stating which one the problem wants."</p>
+          </div>
+          <div class="xq-item">
+            <p class="xq-q">Three sum is O(n&sup2;). Can it be faster?</p>
+            <p class="xq-why">Testing: honesty about known bounds.</p>
+            <p class="ans good">"Not meaningfully. There are sub-quadratic results for special cases, but O(n&sup2;) is the accepted bound for the general problem and is what is expected. The sort is O(n log n) so it disappears into the n&sup2;. What I <em>can</em> talk about is the constant factor: the <code>nums[i] &gt; 0</code> early break and the duplicate skips cut real work substantially."</p>
+          </div>
+          <div class="xq-item">
+            <p class="xq-q">Would two pointers work if the array were not sorted?</p>
+            <p class="xq-why">Testing: the boundary of the pattern.</p>
+            <p class="ans good">"No &mdash; the whole technique depends on knowing that moving a pointer inward changes the sum in a known direction. Without order, moving either pointer could do anything, so there is no elimination argument. Unsorted means hashmap. That is the fork in the trigger table, and it is the first thing I check."</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <h2>4 &middot; Read and write pointers</h2>
+
+    <div class="qblock">
+      <div class="q-head">
+        <span class="q-n">Question 4</span>
+        <span class="q-t">Remove duplicates from a sorted array in place, and return the new length.</span>
+        <span class="q-freq">The canonical same-direction problem &middot; in-place is the point</span>
+      </div>
+      <div class="q-body">
+
+        <div class="saythis">
+          <span class="st-lab">Say this &mdash; the trigger and the invariant</span>
+          <p>
+            <strong>Trigger:</strong> remove, filter, partition or compact <em>in place</em>, with
+            O(1) extra space. Also any problem where a fast pointer explores and a slow pointer
+            marks a boundary.
+          </p>
+          <p>
+            <strong>The invariant:</strong> two pointers move in the same direction at different
+            speeds. <code>read</code> scans every element; <code>write</code> marks the end of the
+            region that is already correct. Everything before <code>write</code> is the answer;
+            everything from <code>read</code> onward is unexamined. You only copy when the element
+            qualifies.
+          </p>
+          <p>
+            Saying "everything left of <code>write</code> is finished" is the whole technique.
+            Once you can state the invariant, the code writes itself and you stop making
+            off-by-one errors.
+          </p>
+        </div>
+
+<pre><code>function removeDuplicates(nums) {
+  if (nums.length === 0) return 0;
+  let write = 1;                              <span class="cmt">// nums[0] is trivially kept</span>
+
+  for (let read = 1; read &lt; nums.length; read++) {
+    if (nums[read] !== nums[write - 1]) {     <span class="cmt">// compare to the last KEPT value</span>
+      nums[write] = nums[read];
+      write++;
+    }
+  }
+  return write;                               <span class="cmt">// nums[0..write-1] is the answer</span>
+}
+<span class="cmt">// Time O(n), Space O(1)</span></code></pre>
+
+        <div class="drill">
+          <div class="d-head"><span>Problem set &mdash; same direction</span><span>AI off &middot; autocomplete off</span><span class="clock">40 min for 5</span></div>
+          <div class="d-body">
+            <h4>Five problems, 8 minutes each</h4>
+            <ol>
+              <li>
+                <strong>Move zeroes</strong> &mdash; move all 0s to the end, keeping the relative
+                order of the non-zero elements, in place.
+                <code>[0,1,0,3,12]</code> &rarr; <code>[1,3,12,0,0]</code>.
+              </li>
+              <li>
+                <strong>Remove element</strong> &mdash; remove all occurrences of a value in
+                place, return the new length. Order of the remaining elements does not matter
+                <em>&mdash; so there is a version that does fewer writes.</em>
+              </li>
+              <li>
+                <strong>Merge two sorted arrays</strong> &mdash; merge <code>b</code> into
+                <code>a</code>, which has space at the end.
+                <code>a=[1,2,3,0,0,0], m=3, b=[2,5,6], n=3</code>.
+                <em>Fill from the back. Filling from the front overwrites unread data.</em>
+              </li>
+              <li>
+                <strong>Remove duplicates II</strong> &mdash; allow each value at most twice.
+                <code>[1,1,1,2,2,3]</code> &rarr; length 5, <code>[1,1,2,2,3]</code>.
+                <em>One character changes from the canonical solution.</em>
+              </li>
+              <li>
+                <strong>Backspace string compare</strong> &mdash; do two strings with
+                <code>#</code> as backspace produce the same result?
+                <code>"ab#c"</code> vs <code>"ad#c"</code> &rarr; <code>true</code>.
+                <em>Build strings first, then do it again in O(1) space scanning backwards.</em>
+              </li>
+            </ol>
+          </div>
+        </div>
+
+        <details class="solution">
+          <summary>Solutions &mdash; open only after all five timers</summary>
+          <div class="sol-in">
+<pre><code><span class="cmt">// 1 — move zeroes: write pointer marks the end of the non-zero prefix</span>
+function moveZeroes(nums) {
+  let write = 0;
+  for (let read = 0; read &lt; nums.length; read++)
+    if (nums[read] !== 0) nums[write++] = nums[read];
+  while (write &lt; nums.length) nums[write++] = 0;
+  return nums;
+}
+
+<span class="cmt">// 2 — remove element; order-free version swaps from the end,
+// doing O(k) writes instead of O(n) when matches are rare</span>
+function removeElement(nums, val) {
+  let n = nums.length, i = 0;
+  while (i &lt; n) {
+    if (nums[i] === val) nums[i] = nums[--n];   <span class="cmt">// pull the last element in</span>
+    else i++;
+  }
+  return n;
+}
+
+<span class="cmt">// 3 — merge from the BACK, so we never overwrite unread elements of `a`</span>
+function merge(a, m, b, n) {
+  let i = m - 1, j = n - 1, write = m + n - 1;
+  while (j &gt;= 0) {
+    a[write--] = (i &gt;= 0 &amp;&amp; a[i] &gt; b[j]) ? a[i--] : b[j--];
+  }
+  return a;
+}
+
+<span class="cmt">// 4 — at most twice: compare against write - 2 instead of write - 1</span>
+function removeDuplicatesII(nums) {
+  let write = 0;
+  for (const x of nums) {
+    if (write &lt; 2 || x !== nums[write - 2]) nums[write++] = x;
+  }
+  return write;
+}
+
+<span class="cmt">// 5a — build then compare, O(n) space</span>
+const applyBackspaces = (s) =&gt; {
+  const out = [];
+  for (const c of s) c === "#" ? out.pop() : out.push(c);
+  return out.join("");
+};
+
+<span class="cmt">// 5b — O(1) space, scanning from the back with skip counters</span>
+function backspaceCompare(s, t) {
+  let i = s.length - 1, j = t.length - 1;
+
+  const nextValid = (str, k) =&gt; {
+    let skip = 0;
+    while (k &gt;= 0) {
+      if (str[k] === "#") { skip++; k--; }
+      else if (skip &gt; 0) { skip--; k--; }
+      else break;                              <span class="cmt">// k is a surviving character</span>
+    }
+    return k;
+  };
+
+  while (true) {
+    i = nextValid(s, i);
+    j = nextValid(t, j);
+    if (i &lt; 0 &amp;&amp; j &lt; 0) return true;           <span class="cmt">// both exhausted together</span>
+    if (i &lt; 0 || j &lt; 0) return false;           <span class="cmt">// one ran out first</span>
+    if (s[i] !== t[j]) return false;
+    i--; j--;
+  }
+}</code></pre>
+            <p>
+              <strong>Problem 3's "fill from the back" is a transferable idea</strong>, not a
+              trick: when an in-place merge would overwrite data you still need, reverse the
+              direction so you always write into space that is already dead. Say that as a
+              principle and it will serve you in other problems.
+            </p>
+            <p>
+              <strong>Problem 4 is the one to notice.</strong> Going from "at most once" to "at
+              most twice" is a single index change, <code>write - 1</code> to
+              <code>write - 2</code>, plus the <code>write &lt; 2</code> guard. Generalising to
+              "at most k" is the same code with <code>write - k</code>. Spotting that
+              generalisation out loud is a strong signal; an interviewer will often ask for it
+              directly.
+            </p>
+          </div>
+        </details>
+
+        <p class="qlabel">Cross-questions</p>
+        <div class="xq">
+          <div class="xq-item">
+            <p class="xq-q">Why not just use <code>filter</code>?</p>
+            <p class="xq-why">Testing: do you know why the constraint exists?</p>
+            <p class="ans good">"<code>filter</code> allocates a new array, so it is O(n) extra space. These problems specify in-place with O(1) space, which is what the write pointer buys. In production I would almost always write <code>filter</code> &mdash; it is clearer, and unless the array is enormous the allocation does not matter. The in-place version is worth knowing for the cases where it does: large typed arrays, per-frame canvas work, or memory-constrained environments."</p>
+          </div>
+          <div class="xq-item">
+            <p class="xq-q">Your move-zeroes solution does a lot of writes. Can you reduce them?</p>
+            <p class="xq-why">Testing: whether you can optimise constants, not just the bound.</p>
+            <p class="ans good">"Yes &mdash; swap instead of copy-then-fill: when <code>read</code> finds a non-zero, swap it with <code>write</code> and advance both. That does one pass instead of a pass plus a fill, and it never writes an element onto itself if I guard <code>read !== write</code>. Same O(n), fewer operations."</p>
+          </div>
+          <div class="xq-item">
+            <p class="xq-q">Fast and slow pointers also detect cycles. How?</p>
+            <p class="xq-why">Testing: the other branch of this family &mdash; Chapter 6 covers it.</p>
+            <p class="ans good">"Floyd's algorithm: move one pointer one step and the other two steps. If there is a cycle they must eventually meet, because the gap closes by one each iteration inside the loop. It finds the cycle in O(n) time and O(1) space, versus a <code>Set</code> of visited nodes which is O(n) space. The same idea finds the middle of a linked list in one pass."</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="practice">
+      <span class="pt">Practice &mdash; Sessions 1&ndash;2</span>
+      <h4>Build the pattern card and the log</h4>
+      <ol>
+        <li>Copy the trigger table onto one card. It is the single most useful artefact in this chapter &mdash; re-read it before every practice session until you do not need it.</li>
+        <li>Start a problem log in <code>answers.md</code>: problem, pattern, time taken, solved unaided yes/no, and the one insight you missed. Re-attempt anything marked "no" after three days.</li>
+        <li>Listen back to your Two Sum recording. Note every "um, let me think" gap longer than five seconds. Those gaps are where you need a scripted sentence.</li>
+      </ol>
+    </div>
+
+    <!-- ================================================================= -->
+    <div class="session">
+      <span class="sn">Session 3</span>
+      <span class="st">Sliding window</span>
+      <span class="sd">~75 min</span>
+    </div>
+
+    <h2>5 &middot; Fixed-size windows</h2>
+
+    <div class="qblock">
+      <div class="q-head">
+        <span class="q-n">Question 5</span>
+        <span class="q-t">Find the maximum sum of any contiguous subarray of size k.</span>
+        <span class="q-freq">The canonical fixed window &middot; usually a warm-up before the variable version</span>
+      </div>
+      <div class="q-body">
+
+        <div class="saythis">
+          <span class="st-lab">Say this &mdash; the trigger and the invariant</span>
+          <p>
+            <strong>Trigger:</strong> the words <em>contiguous</em>, <em>subarray</em> or
+            <em>substring</em>, plus a fixed length k. Contiguity is the signal &mdash; if the
+            elements need not be adjacent, this is not a window problem.
+          </p>
+          <p>
+            <strong>The invariant:</strong> instead of recomputing each window from scratch, which
+            is O(n&middot;k), maintain a running aggregate. Each step adds the incoming element
+            and removes the outgoing one, so every window costs O(1) and the whole scan is O(n).
+          </p>
+          <p>
+            State the brute force first &mdash; nested loops, O(n&middot;k) &mdash; then say
+            "but consecutive windows share k&minus;1 elements, so recomputing the overlap is
+            wasted work." That sentence <em>is</em> the sliding window insight, and saying it
+            shows you derived the technique rather than recalled it.
+          </p>
+        </div>
+
+<pre><code>function maxSumSubarray(nums, k) {
+  if (nums.length &lt; k) return null;
+
+  let sum = 0;
+  for (let i = 0; i &lt; k; i++) sum += nums[i];     <span class="cmt">// build the first window</span>
+  let best = sum;
+
+  for (let end = k; end &lt; nums.length; end++) {
+    sum += nums[end] - nums[end - k];             <span class="cmt">// add incoming, drop outgoing</span>
+    best = Math.max(best, sum);
+  }
+  return best;
+}
+<span class="cmt">// Time O(n), Space O(1)</span></code></pre>
+
+        <div class="drill">
+          <div class="d-head"><span>Problem set &mdash; fixed window</span><span>AI off &middot; autocomplete off</span><span class="clock">35 min for 4</span></div>
+          <div class="d-body">
+            <h4>Four problems, 8&ndash;10 minutes each</h4>
+            <ol>
+              <li>
+                <strong>Maximum average subarray</strong> of length k. Same shape as above; the
+                trap is floating-point comparison &mdash; track the sum, divide once at the end.
+              </li>
+              <li>
+                <strong>Find all anagrams</strong> of <code>p</code> in <code>s</code>, returning
+                start indices. <code>s="cbaebabacd", p="abc"</code> &rarr; <code>[0, 6]</code>.
+                <em>A fixed window of length <code>p.length</code> plus a frequency comparison
+                &mdash; but comparing two maps each step is O(26) per window. Can you make the
+                match check O(1)?</em>
+              </li>
+              <li>
+                <strong>Permutation in string</strong> &mdash; does <code>s2</code> contain a
+                permutation of <code>s1</code>? Same machinery as 2, returning a boolean.
+              </li>
+              <li>
+                <strong>Maximum number of vowels</strong> in any substring of length k.
+                The simplest possible window; write it in under four minutes.
+              </li>
+            </ol>
+          </div>
+        </div>
+
+        <details class="solution">
+          <summary>Solutions &mdash; open only after the timers</summary>
+          <div class="sol-in">
+<pre><code><span class="cmt">// 2 — find all anagrams, with an O(1) match check via a `matches` counter</span>
+function findAnagrams(s, p) {
+  if (p.length &gt; s.length) return [];
+  const need = new Array(26).fill(0);
+  const win  = new Array(26).fill(0);
+  const idx  = (c) =&gt; c.charCodeAt(0) - 97;
+
+  for (const c of p) need[idx(c)]++;
+
+  <span class="cmt">// how many of the 26 letters currently have the exact right count</span>
+  let matches = 0;
+  for (let i = 0; i &lt; 26; i++) if (need[i] === 0) matches++;
+
+  const out = [];
+  for (let end = 0; end &lt; s.length; end++) {
+    const inC = idx(s[end]);
+    win[inC]++;
+    if (win[inC] === need[inC]) matches++;
+    else if (win[inC] === need[inC] + 1) matches--;   <span class="cmt">// just went over</span>
+
+    if (end &gt;= p.length) {
+      const outC = idx(s[end - p.length]);
+      win[outC]--;
+      if (win[outC] === need[outC]) matches++;
+      else if (win[outC] === need[outC] - 1) matches--;  <span class="cmt">// just went under</span>
+    }
+
+    if (matches === 26) out.push(end - p.length + 1);   <span class="cmt">// O(1) check</span>
+  }
+  return out;
+}
+
+<span class="cmt">// 4 — maximum vowels, the minimal window</span>
+function maxVowels(s, k) {
+  const V = new Set("aeiou");
+  let count = 0;
+  for (let i = 0; i &lt; k; i++) if (V.has(s[i])) count++;
+  let best = count;
+  for (let end = k; end &lt; s.length; end++) {
+    if (V.has(s[end])) count++;
+    if (V.has(s[end - k])) count--;
+    best = Math.max(best, count);
+  }
+  return best;
+}</code></pre>
+            <p>
+              <strong>Problem 2's <code>matches</code> counter is the idea worth taking away.</strong>
+              The naive version compares two 26-element arrays at every position, which is
+              O(26n) &mdash; technically O(n), but you can do better and interviewers notice.
+              Tracking "how many letters are currently correct" turns the match test into a single
+              integer comparison. The fiddly part is updating it: a count becomes correct when it
+              <em>reaches</em> the needed value and becomes incorrect when it moves one step past
+              it in either direction. Write those four lines slowly.
+            </p>
+            <p>
+              If you are short on time in a real round, write the O(26n) version, say "this
+              compares the whole frequency table per step; I can reduce that to a counter if you
+              want it tighter", and move on. Offering the optimisation is worth nearly as much as
+              writing it.
+            </p>
+          </div>
+        </details>
+
+        <p class="qlabel">Cross-questions</p>
+        <div class="xq">
+          <div class="xq-item">
+            <p class="xq-q">What if the array contains negative numbers?</p>
+            <p class="xq-why">Testing: whether your window logic depends on monotonicity.</p>
+            <p class="ans good">"For a <em>fixed</em> window, nothing changes &mdash; I add and subtract regardless of sign. It matters for <em>variable</em> windows: shrinking only helps if removing an element moves the aggregate in a predictable direction, and with negatives it does not. That is why 'minimum subarray sum at least k' needs positive numbers for the window approach, and needs prefix sums plus a deque if negatives are allowed."</p>
+          </div>
+          <div class="xq-item">
+            <p class="xq-q">Why an array of 26 rather than a <code>Map</code>?</p>
+            <p class="xq-why">Testing: a small, practical optimisation choice.</p>
+            <p class="ans good">"Because the alphabet is fixed and known, an array indexed by <code>charCode - 97</code> is faster and makes the O(1) space claim concrete. I would use a <code>Map</code> the moment the input can be any Unicode character &mdash; and I would say so, because assuming lowercase ASCII without asking is a real mistake."</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <h2>6 &middot; Variable-size windows</h2>
+
+    <div class="qblock">
+      <div class="q-head">
+        <span class="q-n">Question 6</span>
+        <span class="q-t">Length of the longest substring without repeating characters.</span>
+        <span class="q-freq">One of the most-asked medium problems in frontend interviews</span>
+      </div>
+      <div class="q-body">
+
+        <div class="saythis">
+          <span class="st-lab">Say this &mdash; the trigger and the template</span>
+          <p>
+            <strong>Trigger:</strong> "longest" or "shortest" contiguous run subject to a
+            constraint, with no fixed length given.
+          </p>
+          <p>
+            <strong>The template, and it is the same every time:</strong> expand the window by
+            moving <code>end</code> forward one step at a time. After each expansion, while the
+            window <em>violates</em> the constraint, shrink from <code>start</code>. Then record
+            the answer. Every element enters the window once and leaves at most once, so despite
+            the nested loop it is <strong>O(n), not O(n&sup2;)</strong> &mdash; say that
+            explicitly, because the nested <code>while</code> makes interviewers ask.
+          </p>
+          <p>
+            The only thing that changes between problems is <em>what makes the window invalid</em>
+            and <em>what you record</em>. Learn the skeleton once.
+          </p>
+        </div>
+
+<pre><code><span class="cmt">// the skeleton — internalise this shape</span>
+function variableWindow(arr) {
+  let start = 0, best = 0;
+  const state = new Map();                    <span class="cmt">// whatever the constraint needs</span>
+
+  for (let end = 0; end &lt; arr.length; end++) {
+    <span class="cmt">// 1. include arr[end] in the state</span>
+
+    while (<span class="cmt">/* window is invalid */</span>) {
+      <span class="cmt">// 2. remove arr[start] from the state</span>
+      start++;
+    }
+
+    <span class="cmt">// 3. the window [start, end] is now valid — record</span>
+    best = Math.max(best, end - start + 1);
+  }
+  return best;
+}</code></pre>
+
+<pre><code><span class="cmt">// longest substring without repeating characters</span>
+function lengthOfLongestSubstring(s) {
+  const lastSeen = new Map();                 <span class="cmt">// char -> last index</span>
+  let start = 0, best = 0;
+
+  for (let end = 0; end &lt; s.length; end++) {
+    const c = s[end];
+    <span class="cmt">// jump start past the previous occurrence — but never backwards</span>
+    if (lastSeen.has(c) &amp;&amp; lastSeen.get(c) &gt;= start) {
+      start = lastSeen.get(c) + 1;
+    }
+    lastSeen.set(c, end);
+    best = Math.max(best, end - start + 1);
+  }
+  return best;
+}
+<span class="cmt">// Time O(n), Space O(min(n, alphabet))</span></code></pre>
+
+        <div class="trap">
+          <span class="t-lab">Trap</span>
+          <div class="t-in">
+            <p>
+              The <code>&gt;= start</code> guard. Without it, <code>"abba"</code> fails: when the
+              second <code>a</code> arrives, its last index is 0, and jumping
+              <code>start</code> to 1 moves it <em>backwards</em> from 2, re-admitting the
+              <code>b</code>. The start pointer must never decrease. This is the single most
+              common bug in this problem and it passes on most inputs.
+            </p>
+          </div>
+        </div>
+
+        <div class="drill">
+          <div class="d-head"><span>Problem set &mdash; variable window</span><span>AI off &middot; autocomplete off</span><span class="clock">50 min for 5</span></div>
+          <div class="d-body">
+            <h4>Five problems &mdash; all the same skeleton</h4>
+            <ol>
+              <li>
+                <strong>Minimum size subarray sum</strong> &mdash; smallest contiguous subarray
+                with sum &ge; target, or 0. <code>target=7, [2,3,1,2,4,3]</code> &rarr;
+                <code>2</code>. <em>Note this one records a <b>minimum</b>, so shrink greedily
+                while still valid.</em>
+              </li>
+              <li>
+                <strong>Longest repeating character replacement</strong> &mdash; you may change
+                at most k characters; find the longest run of one character.
+                <code>"AABABBA", k=1</code> &rarr; <code>4</code>.
+                <em>Invalid when <code>windowLength − maxFreq &gt; k</code>.</em>
+              </li>
+              <li>
+                <strong>Fruit into baskets</strong> &mdash; longest subarray containing at most
+                two distinct values. The generalisation is "at most k distinct", which is the
+                version to write.
+              </li>
+              <li>
+                <strong>Max consecutive ones III</strong> &mdash; longest run of 1s if you may
+                flip at most k zeroes. <em>Invalid when the window holds more than k zeroes.</em>
+              </li>
+              <li>
+                <strong>Minimum window substring</strong> &mdash; the smallest substring of
+                <code>s</code> containing every character of <code>t</code>, including
+                duplicates. <code>s="ADOBECODEBANC", t="ABC"</code> &rarr; <code>"BANC"</code>.
+                <em>This is a hard one. Give it fifteen minutes; if you do not get it, read the
+                solution and re-attempt in three days.</em>
+              </li>
+            </ol>
+          </div>
+        </div>
+
+        <details class="solution">
+          <summary>Solutions &mdash; open only after the timers</summary>
+          <div class="sol-in">
+<pre><code><span class="cmt">// 1 — minimum size subarray sum (records a MINIMUM)</span>
+function minSubArrayLen(target, nums) {
+  let start = 0, sum = 0, best = Infinity;
+  for (let end = 0; end &lt; nums.length; end++) {
+    sum += nums[end];
+    while (sum &gt;= target) {                  <span class="cmt">// shrink while STILL VALID</span>
+      best = Math.min(best, end - start + 1);
+      sum -= nums[start++];
+    }
+  }
+  return best === Infinity ? 0 : best;
+}
+
+<span class="cmt">// 2 — longest repeating character replacement</span>
+function characterReplacement(s, k) {
+  const count = new Map();
+  let start = 0, maxFreq = 0, best = 0;
+
+  for (let end = 0; end &lt; s.length; end++) {
+    count.set(s[end], (count.get(s[end]) ?? 0) + 1);
+    maxFreq = Math.max(maxFreq, count.get(s[end]));
+
+    <span class="cmt">// replacements needed = window length - most common character's count</span>
+    while (end - start + 1 - maxFreq &gt; k) {
+      count.set(s[start], count.get(s[start]) - 1);
+      start++;
+      <span class="cmt">// note: maxFreq is deliberately NOT recomputed — see the note below</span>
+    }
+    best = Math.max(best, end - start + 1);
+  }
+  return best;
+}
+
+<span class="cmt">// 3 — at most k distinct values</span>
+function longestKDistinct(arr, k) {
+  const count = new Map();
+  let start = 0, best = 0;
+  for (let end = 0; end &lt; arr.length; end++) {
+    count.set(arr[end], (count.get(arr[end]) ?? 0) + 1);
+    while (count.size &gt; k) {
+      const c = arr[start];
+      count.set(c, count.get(c) - 1);
+      if (count.get(c) === 0) count.delete(c);   <span class="cmt">// delete, or size lies</span>
+      start++;
+    }
+    best = Math.max(best, end - start + 1);
+  }
+  return best;
+}
+
+<span class="cmt">// 4 — max consecutive ones III</span>
+function longestOnes(nums, k) {
+  let start = 0, zeros = 0, best = 0;
+  for (let end = 0; end &lt; nums.length; end++) {
+    if (nums[end] === 0) zeros++;
+    while (zeros &gt; k) { if (nums[start] === 0) zeros--; start++; }
+    best = Math.max(best, end - start + 1);
+  }
+  return best;
+}
+
+<span class="cmt">// 5 — minimum window substring</span>
+function minWindow(s, t) {
+  if (t.length &gt; s.length) return "";
+  const need = new Map();
+  for (const c of t) need.set(c, (need.get(c) ?? 0) + 1);
+
+  let required = need.size;                  <span class="cmt">// distinct chars still unsatisfied</span>
+  let start = 0, bestLen = Infinity, bestStart = 0;
+  const win = new Map();
+
+  for (let end = 0; end &lt; s.length; end++) {
+    const c = s[end];
+    win.set(c, (win.get(c) ?? 0) + 1);
+    if (need.has(c) &amp;&amp; win.get(c) === need.get(c)) required--;
+
+    while (required === 0) {                 <span class="cmt">// valid → try to shrink</span>
+      if (end - start + 1 &lt; bestLen) { bestLen = end - start + 1; bestStart = start; }
+      const d = s[start];
+      win.set(d, win.get(d) - 1);
+      if (need.has(d) &amp;&amp; win.get(d) &lt; need.get(d)) required++;   <span class="cmt">// broke it</span>
+      start++;
+    }
+  }
+  return bestLen === Infinity ? "" : s.slice(bestStart, bestStart + bestLen);
+}</code></pre>
+            <p>
+              <strong>Two structural points worth saying out loud.</strong> When the answer is a
+              <em>maximum</em>, you shrink only while the window is invalid and record after the
+              shrink. When the answer is a <em>minimum</em>, you shrink while the window is still
+              valid and record <em>inside</em> the shrink loop. Getting those two shapes straight
+              removes most of the difficulty from this family.
+            </p>
+            <p>
+              <strong>Problem 2's non-decreasing <code>maxFreq</code> is the famous subtlety.</strong>
+              It looks like a bug: after shrinking, the real maximum frequency may be lower, and
+              we never reduce it. It is correct anyway, because a stale-high <code>maxFreq</code>
+              can only make the window look <em>more</em> valid than it is, so the window never
+              shrinks below the best length already found &mdash; and we only ever report lengths
+              that were genuinely achieved. Recomputing it each step would also be correct but
+              costs O(26) per step. If an interviewer challenges it, that two-sentence argument is
+              the answer; if you are not confident, recompute and say why you chose safety.
+            </p>
+          </div>
+        </details>
+
+        <p class="qlabel">Cross-questions</p>
+        <div class="xq">
+          <div class="xq-item">
+            <p class="xq-q">Your solution has a loop inside a loop. Isn't that O(n&sup2;)?</p>
+            <p class="xq-why">Testing: amortised analysis. This is asked nearly every time.</p>
+            <p class="ans good">"No &mdash; <code>start</code> only ever moves forward and never past <code>end</code>, so across the whole run the inner loop executes at most n times in total, not n times per outer iteration. Every element is added once and removed at most once. That is 2n operations, so O(n). The nested <code>while</code> is the giveaway that it is amortised rather than multiplicative."</p>
+          </div>
+          <div class="xq-item">
+            <p class="xq-q">When does a sliding window <em>not</em> work?</p>
+            <p class="xq-why">Testing: the boundary of the pattern.</p>
+            <p class="ans good">"When shrinking does not reliably move the aggregate the right way. Subarray sums with negative numbers are the classic case: removing an element can <em>increase</em> the sum, so there is no monotonic condition to shrink on. Then you need prefix sums with a hashmap, or a monotonic deque. It also does not apply when the elements need not be contiguous &mdash; that is usually a sort, a heap, or DP."</p>
+          </div>
+          <div class="xq-item">
+            <p class="xq-q">Can you return the substring itself rather than the length?</p>
+            <p class="xq-why">Testing: a tiny extension they add to check you are not reciting.</p>
+            <p class="ans good">"Yes &mdash; track <code>bestStart</code> alongside <code>bestLen</code> whenever I update the best, then <code>slice</code> at the end. I avoid slicing inside the loop because that would allocate a string on every improvement and turn an O(n) algorithm into O(n&middot;k) in practice."</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ================================================================= -->
+    <div class="session">
+      <span class="sn">Session 4</span>
+      <span class="st">Hashmaps</span>
+      <span class="sd">~75 min</span>
+    </div>
+
+    <h2>7 &middot; Frequency and grouping</h2>
+
+    <div class="qblock">
+      <div class="q-head">
+        <span class="q-n">Question 7</span>
+        <span class="q-t">Group a list of strings into anagrams.</span>
+        <span class="q-freq">Extremely common &middot; and the "can you avoid sorting" follow-up is standard</span>
+      </div>
+      <div class="q-body">
+
+        <div class="saythis">
+          <span class="st-lab">Say this &mdash; the trigger and the idea</span>
+          <p>
+            <strong>Trigger:</strong> count, group, "most frequent", "duplicate", or "are these
+            two things equivalent under some transformation".
+          </p>
+          <p>
+            <strong>The idea:</strong> grouping problems are about finding a
+            <strong>canonical key</strong> &mdash; a value that is identical for everything in the
+            same group and different otherwise. For anagrams the obvious key is the sorted
+            string, which costs O(k log k) per word. A better key is the 26-character count
+            signature, which is O(k). Both are correct; naming both and picking one is the
+            complete answer.
+          </p>
+        </div>
+
+<pre><code><span class="cmt">// version A — sorted key, O(n · k log k). Say this first, it is fine.</span>
+function groupAnagrams(words) {
+  const groups = new Map();
+  for (const w of words) {
+    const key = [...w].sort().join("");
+    if (!groups.has(key)) groups.set(key, []);
+    groups.get(key).push(w);
+  }
+  return [...groups.values()];
+}
+
+<span class="cmt">// version B — count signature, O(n · k). Offer this as the improvement.</span>
+function groupAnagramsFast(words) {
+  const groups = new Map();
+  for (const w of words) {
+    const counts = new Array(26).fill(0);
+    for (const c of w) counts[c.charCodeAt(0) - 97]++;
+    const key = counts.join(",");            <span class="cmt">// "," matters: [1,11] vs [11,1]</span>
+    if (!groups.has(key)) groups.set(key, []);
+    groups.get(key).push(w);
+  }
+  return [...groups.values()];
+}</code></pre>
+
+        <div class="trap">
+          <span class="t-lab">Trap</span>
+          <div class="t-in">
+            <p>
+              <code>counts.join("")</code> without a separator is a real bug:
+              <code>[1,11,0,...]</code> and <code>[11,1,0,...]</code> both produce
+              <code>"111..."</code>, so two different words collide. Any time you build a
+              composite key by concatenation, use a separator that cannot appear in the parts.
+              This generalises well beyond this problem.
+            </p>
+          </div>
+        </div>
+
+        <div class="drill">
+          <div class="d-head"><span>Problem set &mdash; frequency</span><span>AI off &middot; autocomplete off</span><span class="clock">45 min for 5</span></div>
+          <div class="d-body">
+            <h4>Five problems</h4>
+            <ol>
+              <li>
+                <strong>Valid anagram</strong> &mdash; are two strings anagrams? Do it in one
+                pass with a single counter map, incrementing for one string and decrementing for
+                the other.
+              </li>
+              <li>
+                <strong>Top k frequent elements</strong> &mdash; <code>[1,1,1,2,2,3], k=2</code>
+                &rarr; <code>[1,2]</code>. <em>The sort solution is O(n log n). Bucket sort by
+                frequency gets it to O(n) &mdash; write that one.</em>
+              </li>
+              <li>
+                <strong>First unique character</strong> in a string, return its index.
+                <em>Two passes, and say why two passes beats one.</em>
+              </li>
+              <li>
+                <strong>Isomorphic strings</strong> &mdash; can characters in <code>s</code> be
+                mapped one-to-one onto <code>t</code>? <code>"egg"/"add"</code> &rarr; true,
+                <code>"foo"/"bar"</code> &rarr; false. <em>You need <b>two</b> maps, not one.</em>
+              </li>
+              <li>
+                <strong>Ransom note</strong> &mdash; can note be built from the letters in
+                magazine? The simplest problem here; write it in three minutes.
+              </li>
+            </ol>
+          </div>
+        </div>
+
+        <details class="solution">
+          <summary>Solutions &mdash; open only after the timers</summary>
+          <div class="sol-in">
+<pre><code><span class="cmt">// 1 — valid anagram, single map, one pass each way</span>
+function isAnagram(s, t) {
+  if (s.length !== t.length) return false;       <span class="cmt">// cheap early exit</span>
+  const count = new Map();
+  for (const c of s) count.set(c, (count.get(c) ?? 0) + 1);
+  for (const c of t) {
+    const n = count.get(c);
+    if (!n) return false;                        <span class="cmt">// absent or already exhausted</span>
+    count.set(c, n - 1);
+  }
+  return true;                                   <span class="cmt">// lengths matched, so no leftovers</span>
+}
+
+<span class="cmt">// 2 — top k frequent, bucket sort: O(n) time and space</span>
+function topKFrequent(nums, k) {
+  const count = new Map();
+  for (const n of nums) count.set(n, (count.get(n) ?? 0) + 1);
+
+  <span class="cmt">// a frequency can be at most nums.length, so index buckets by count</span>
+  const buckets = Array.from({ length: nums.length + 1 }, () =&gt; []);
+  for (const [value, freq] of count) buckets[freq].push(value);
+
+  const out = [];
+  for (let f = buckets.length - 1; f &gt;= 0 &amp;&amp; out.length &lt; k; f--) {
+    for (const v of buckets[f]) {
+      out.push(v);
+      if (out.length === k) break;
+    }
+  }
+  return out;
+}
+
+<span class="cmt">// 3 — first unique character</span>
+function firstUniqChar(s) {
+  const count = new Map();
+  for (const c of s) count.set(c, (count.get(c) ?? 0) + 1);
+  for (let i = 0; i &lt; s.length; i++) if (count.get(s[i]) === 1) return i;
+  return -1;
+}
+
+<span class="cmt">// 4 — isomorphic strings: the mapping must be a BIJECTION</span>
+function isIsomorphic(s, t) {
+  if (s.length !== t.length) return false;
+  const sToT = new Map(), tToS = new Map();
+
+  for (let i = 0; i &lt; s.length; i++) {
+    const a = s[i], b = t[i];
+    if (sToT.has(a) &amp;&amp; sToT.get(a) !== b) return false;
+    if (tToS.has(b) &amp;&amp; tToS.get(b) !== a) return false;   <span class="cmt">// the reverse check</span>
+    sToT.set(a, b);
+    tToS.set(b, a);
+  }
+  return true;
+}
+
+<span class="cmt">// 5 — ransom note</span>
+function canConstruct(note, magazine) {
+  const have = new Map();
+  for (const c of magazine) have.set(c, (have.get(c) ?? 0) + 1);
+  for (const c of note) {
+    const n = have.get(c);
+    if (!n) return false;
+    have.set(c, n - 1);
+  }
+  return true;
+}</code></pre>
+            <p>
+              <strong>Problem 2's bucket sort is the insight to keep.</strong> When the values you
+              are sorting by are bounded small integers &mdash; here a frequency, which cannot
+              exceed n &mdash; you can index an array by them instead of comparing. That turns
+              O(n log n) into O(n). It is the same idea as counting sort and it comes up whenever
+              a problem says "k most frequent" or "sort by count".
+            </p>
+            <p>
+              <strong>Problem 4 is the one people get wrong.</strong> A single map accepts
+              <code>"badc"/"baba"</code>, because nothing stops two different source characters
+              mapping to the same target. The mapping must be injective in both directions, which
+              needs two maps &mdash; or one map plus a set of used targets. State it as "this must
+              be a bijection" and the second map becomes obvious rather than a patch.
+            </p>
+            <p>
+              <strong>Problem 3's two passes</strong> are better than one because a single pass
+              cannot know a character is unique until the string ends. Some candidates try to
+              track candidates in one pass with an ordered structure; it works but is more code
+              for the same O(n). Two clean passes is the right answer &mdash; say "two passes is
+              still O(n)" so the interviewer knows it is a choice.
+            </p>
+          </div>
+        </details>
+
+        <p class="qlabel">Cross-questions</p>
+        <div class="xq">
+          <div class="xq-item">
+            <p class="xq-q">Top k frequent &mdash; why not a heap?</p>
+            <p class="xq-why">Testing: knowing the alternatives and their trade-offs.</p>
+            <p class="ans good">"A min-heap of size k gives O(n log k), which is the standard answer and better than a full sort when k is small. Bucket sort gives O(n) because the frequencies are bounded by n, so it wins here. I would mention the heap because it is the general technique for streaming top-k where you cannot hold everything, and note that JavaScript has no built-in heap &mdash; I would have to write one, which is a reason to prefer buckets in an interview with a clock running."</p>
+          </div>
+          <div class="xq-item">
+            <p class="xq-q">Your anagram key assumes lowercase a&ndash;z. What if it is Unicode?</p>
+            <p class="xq-why">Testing: whether you noticed your own assumption.</p>
+            <p class="ans good">"Then the 26-array breaks and I would use a <code>Map</code> keyed by code point, building the key from sorted entries. I should also handle the fact that iterating a string by index splits surrogate pairs &mdash; <code>[...str]</code> iterates by code point, which is what I want. And strictly, comparing user-facing text needs normalisation with <code>String.prototype.normalize</code>, because the same visible character can have multiple encodings."</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <h2>8 &middot; Seen-sets and prefix sums</h2>
+
+    <div class="qblock">
+      <div class="q-head">
+        <span class="q-n">Question 8</span>
+        <span class="q-t">Count the subarrays whose sum equals k. The array can contain negatives.</span>
+        <span class="q-freq">Common medium &middot; the negatives clause is there to rule out sliding window</span>
+      </div>
+      <div class="q-body">
+
+        <div class="saythis">
+          <span class="st-lab">Say this &mdash; the trigger and the derivation</span>
+          <p>
+            <strong>Trigger:</strong> contiguous subarray <em>sum</em> with an exact target, and
+            negative numbers allowed. Negatives kill the sliding window, because removing an
+            element can increase the sum &mdash; so there is no monotonic shrink condition.
+          </p>
+          <p>
+            <strong>The derivation, and say it in this order:</strong> let
+            <code>prefix[i]</code> be the sum of everything up to index i. The sum of the
+            subarray from <code>j+1</code> to <code>i</code> is
+            <code>prefix[i] &minus; prefix[j]</code>. I want that to equal k, so
+            <code>prefix[j] = prefix[i] &minus; k</code>. So as I scan, I ask: how many earlier
+            prefixes had exactly that value? A hashmap of prefix sum to count answers it in O(1),
+            giving one pass overall.
+          </p>
+          <p>
+            The seed <code>map.set(0, 1)</code> is essential &mdash; it represents the empty
+            prefix, which is what makes subarrays starting at index 0 count.
+          </p>
+        </div>
+
+<pre><code>function subarraySum(nums, k) {
+  const counts = new Map([[0, 1]]);          <span class="cmt">// empty prefix — handles arrays</span>
+  let prefix = 0, total = 0;                 <span class="cmt">// that start at index 0</span>
+
+  for (const n of nums) {
+    prefix += n;
+    total += counts.get(prefix - k) ?? 0;    <span class="cmt">// count BEFORE inserting</span>
+    counts.set(prefix, (counts.get(prefix) ?? 0) + 1);
+  }
+  return total;
+}
+<span class="cmt">// Time O(n), Space O(n)</span></code></pre>
+
+        <div class="drill">
+          <div class="d-head"><span>Problem set &mdash; sets and prefixes</span><span>AI off &middot; autocomplete off</span><span class="clock">45 min for 5</span></div>
+          <div class="d-body">
+            <h4>Five problems</h4>
+            <ol>
+              <li>
+                <strong>Contains duplicate II</strong> &mdash; are there two equal values within
+                k indices of each other? <em>A sliding set of size k, or a map of last-seen
+                index.</em>
+              </li>
+              <li>
+                <strong>Longest consecutive sequence</strong> &mdash; longest run of consecutive
+                integers in an unsorted array, in <b>O(n)</b>.
+                <code>[100,4,200,1,3,2]</code> &rarr; <code>4</code>.
+                <em>Sorting is O(n log n) and disqualified. The trick is to only start counting
+                from a number that has no predecessor.</em>
+              </li>
+              <li>
+                <strong>Intersection of two arrays</strong>, unique values, then the version that
+                keeps duplicate counts. <em>Two different structures: a <code>Set</code> and a
+                <code>Map</code>.</em>
+              </li>
+              <li>
+                <strong>Subarray sums divisible by k</strong> &mdash; count subarrays whose sum
+                is divisible by k. <em>Same prefix technique, keyed by
+                <code>((prefix % k) + k) % k</code>. The double modulo is not optional &mdash;
+                JavaScript's <code>%</code> keeps the sign of the dividend.</em>
+              </li>
+              <li>
+                <strong>Product of array except self</strong> &mdash; without division, in O(n).
+                <em>Not a hashmap problem &mdash; it is prefix and suffix products, which is the
+                same "precompute one side" idea.</em>
+              </li>
+            </ol>
+          </div>
+        </div>
+
+        <details class="solution">
+          <summary>Solutions &mdash; open only after the timers</summary>
+          <div class="sol-in">
+<pre><code><span class="cmt">// 1 — contains duplicate within k</span>
+function containsNearbyDuplicate(nums, k) {
+  const lastIndex = new Map();
+  for (let i = 0; i &lt; nums.length; i++) {
+    if (lastIndex.has(nums[i]) &amp;&amp; i - lastIndex.get(nums[i]) &lt;= k) return true;
+    lastIndex.set(nums[i], i);
+  }
+  return false;
+}
+
+<span class="cmt">// 2 — longest consecutive sequence, O(n)</span>
+function longestConsecutive(nums) {
+  const set = new Set(nums);
+  let best = 0;
+
+  for (const n of set) {
+    if (set.has(n - 1)) continue;            <span class="cmt">// not a sequence start — skip.
+                                                    // THIS is what keeps it O(n): each
+                                                    // sequence is walked exactly once.</span>
+    let len = 1;
+    while (set.has(n + len)) len++;
+    best = Math.max(best, len);
+  }
+  return best;
+}
+
+<span class="cmt">// 3 — intersection, unique then with counts</span>
+const intersectionUnique = (a, b) =&gt; {
+  const sb = new Set(b);
+  return [...new Set(a)].filter((x) =&gt; sb.has(x));
+};
+
+function intersectWithCounts(a, b) {
+  const count = new Map();
+  for (const x of a) count.set(x, (count.get(x) ?? 0) + 1);
+  const out = [];
+  for (const x of b) {
+    const n = count.get(x);
+    if (n &gt; 0) { out.push(x); count.set(x, n - 1); }
+  }
+  return out;
+}
+
+<span class="cmt">// 4 — subarrays divisible by k; note the sign-safe modulo</span>
+function subarraysDivByK(nums, k) {
+  const counts = new Map([[0, 1]]);
+  let prefix = 0, total = 0;
+  for (const n of nums) {
+    prefix += n;
+    const key = ((prefix % k) + k) % k;      <span class="cmt">// -1 % 5 is -1 in JS, not 4</span>
+    total += counts.get(key) ?? 0;
+    counts.set(key, (counts.get(key) ?? 0) + 1);
+  }
+  return total;
+}
+
+<span class="cmt">// 5 — product except self, O(n) time, O(1) extra (output doesn't count)</span>
+function productExceptSelf(nums) {
+  const out = new Array(nums.length).fill(1);
+
+  let prefix = 1;
+  for (let i = 0; i &lt; nums.length; i++) {    <span class="cmt">// left pass: product of everything before i</span>
+    out[i] = prefix;
+    prefix *= nums[i];
+  }
+
+  let suffix = 1;
+  for (let i = nums.length - 1; i &gt;= 0; i--) {  <span class="cmt">// right pass: multiply in what's after</span>
+    out[i] *= suffix;
+    suffix *= nums[i];
+  }
+  return out;
+}</code></pre>
+            <p>
+              <strong>Problem 2 is the one to be able to justify.</strong> The loop looks
+              quadratic &mdash; a <code>while</code> inside a <code>for</code> &mdash; and it is
+              not, because the <code>if (set.has(n - 1)) continue</code> guard means only the
+              smallest element of each run ever enters the <code>while</code>. Every element is
+              visited at most twice overall: once by the outer loop, once by the walk of its own
+              sequence. Interviewers ask "isn't that O(n&sup2;)?" and that is the answer.
+            </p>
+            <p>
+              <strong>Problem 4's modulo is a genuine JavaScript trap.</strong>
+              <code>-1 % 5</code> is <code>-1</code>, not <code>4</code>, because
+              <code>%</code> is remainder, not modulo, and takes the sign of the dividend. Without
+              the <code>((x % k) + k) % k</code> normalisation, negative prefixes land in
+              different buckets from the positive ones they should match. It is a one-line fix
+              that fails silently on positive-only test data.
+            </p>
+          </div>
+        </details>
+
+        <p class="qlabel">Cross-questions</p>
+        <div class="xq">
+          <div class="xq-item">
+            <p class="xq-q">Why does <code>subarraySum</code> seed the map with <code>0 → 1</code>?</p>
+            <p class="xq-why">Testing: whether you understand it or transcribed it.</p>
+            <p class="ans good">"It represents the empty prefix before the array starts. Without it, a subarray beginning at index 0 whose sum is exactly k is missed, because I would be looking for a prefix of <code>k − k = 0</code> that was never recorded. Seeding it says 'there is one way to have summed nothing so far'."</p>
+          </div>
+          <div class="xq-item">
+            <p class="xq-q">Could you use a sliding window if all numbers were positive?</p>
+            <p class="xq-why">Testing: the fork in the trigger table, from the other direction.</p>
+            <p class="ans good">"Yes &mdash; with all positives the prefix sum is strictly increasing, so growing the window always increases the sum and shrinking always decreases it. That monotonicity is exactly what a window needs, and it gets you O(1) space instead of O(n). The moment negatives are allowed, that guarantee is gone and the prefix-sum hashmap is the only O(n) option."</p>
+          </div>
+          <div class="xq-item">
+            <p class="xq-q">When would you use a <code>Set</code> rather than a <code>Map</code>?</p>
+            <p class="xq-why">Testing: a small but revealing choice.</p>
+            <p class="ans good">"When I only need membership, not an associated value &mdash; 'have I seen this' rather than 'where did I see it' or 'how many times'. It signals intent to the reader, and it is slightly lighter. The moment I need an index or a count, it becomes a <code>Map</code>."</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="practice">
+      <span class="pt">Practice &mdash; Sessions 3&ndash;4</span>
+      <h4>Re-derive, do not re-read</h4>
+      <ol>
+        <li>Write the variable-window skeleton from memory. Then write, without looking, which of the five window problems record a maximum and which record a minimum &mdash; and where the recording line goes in each case.</li>
+        <li>Re-derive the prefix-sum identity on paper: sum of <code>(j, i]</code> equals <code>prefix[i] − prefix[j]</code>, therefore look up <code>prefix − k</code>. If you can derive it you never need to memorise the code.</li>
+        <li>Re-attempt minimum window substring in three days. It is the hardest problem in this chapter and it is worth one retry, not five.</li>
+      </ol>
+    </div>
+
+    <!-- ================================================================= -->
+    <div class="session">
+      <span class="sn">Session 5</span>
+      <span class="st">Stacks and monotonic stacks</span>
+      <span class="sd">~75 min</span>
+    </div>
+
+    <h2>9 &middot; Stacks</h2>
+
+    <div class="qblock">
+      <div class="q-head">
+        <span class="q-n">Question 9</span>
+        <span class="q-t">Check whether a string of brackets is balanced.</span>
+        <span class="q-freq">The canonical stack problem &middot; also a common machine-coding sub-task</span>
+      </div>
+      <div class="q-body">
+
+        <div class="saythis">
+          <span class="st-lab">Say this &mdash; the trigger</span>
+          <p>
+            <strong>Trigger:</strong> matching pairs, nesting, "valid", undo/redo, evaluating an
+            expression, or anything where the <em>most recent</em> unresolved thing is the one you
+            need next. That last phrasing is the real test &mdash; if the answer depends on the
+            most recently seen unfinished item, it is a stack.
+          </p>
+          <p>
+            In JavaScript a plain array is the stack: <code>push</code> and <code>pop</code> are
+            both O(1). Never use <code>shift</code> for this &mdash; it is O(n) and turns the
+            whole algorithm quadratic.
+          </p>
+          <p>
+            You have shipped this pattern already: the undo/redo command stack in the slide editor
+            is exactly this structure, and the <code>.pptx</code> XML parser matching open and
+            close tags is literally the bracket problem with longer names.
+          </p>
+        </div>
+
+<pre><code>function isValid(s) {
+  const pairs = { ")": "(", "]": "[", "}": "{" };
+  const stack = [];
+
+  for (const c of s) {
+    if (c === "(" || c === "[" || c === "{") {
+      stack.push(c);
+    } else if (c in pairs) {
+      if (stack.pop() !== pairs[c]) return false;   <span class="cmt">// pop on empty gives undefined,</span>
+    }                                               <span class="cmt">// which correctly fails the check</span>
+  }
+  return stack.length === 0;                        <span class="cmt">// unclosed brackets remain</span>
+}
+<span class="cmt">// Time O(n), Space O(n)</span></code></pre>
+
+        <div class="drill">
+          <div class="d-head"><span>Problem set &mdash; stacks</span><span>AI off &middot; autocomplete off</span><span class="clock">50 min for 5</span></div>
+          <div class="d-body">
+            <h4>Five problems</h4>
+            <ol>
+              <li>
+                <strong>Min stack</strong> &mdash; a stack supporting <code>push</code>,
+                <code>pop</code>, <code>top</code> and <code>getMin</code>, all in
+                <b>O(1)</b>. <em>You cannot scan for the minimum. Store something extra.</em>
+              </li>
+              <li>
+                <strong>Evaluate reverse Polish notation</strong> &mdash;
+                <code>["2","1","+","3","*"]</code> &rarr; <code>9</code>.
+                <em>Watch the operand order for <code>-</code> and <code>/</code>, and that
+                division truncates toward zero.</em>
+              </li>
+              <li>
+                <strong>Decode string</strong> &mdash; <code>"3[a2[c]]"</code> &rarr;
+                <code>"accaccacc"</code>. <em>Two stacks, or one stack of pairs. This is the
+                hardest of the five and it is a real interview favourite.</em>
+              </li>
+              <li>
+                <strong>Remove all adjacent duplicates</strong> &mdash;
+                <code>"abbaca"</code> &rarr; <code>"ca"</code>. <em>Four lines.</em>
+              </li>
+              <li>
+                <strong>Simplify path</strong> &mdash; <code>"/a/./b/../../c/"</code> &rarr;
+                <code>"/c"</code>. <em>Split on <code>/</code>, then a stack. This one shows up
+                disguised as a router or file-tree question.</em>
+              </li>
+            </ol>
+          </div>
+        </div>
+
+        <details class="solution">
+          <summary>Solutions &mdash; open only after the timers</summary>
+          <div class="sol-in">
+<pre><code><span class="cmt">// 1 — min stack: push the running minimum alongside each value</span>
+class MinStack {
+  #stack = [];                               <span class="cmt">// each entry: { value, min }</span>
+
+  push(value) {
+    const min = this.#stack.length === 0 ? value : Math.min(value, this.getMin());
+    this.#stack.push({ value, min });
+  }
+  pop()    { return this.#stack.pop()?.value; }
+  top()    { return this.#stack.at(-1)?.value; }
+  getMin() { return this.#stack.at(-1)?.min; }
+}
+<span class="cmt">// Alternative: a second stack holding only the minima, pushed when a new
+// value is <= current min and popped when that value is popped. Slightly
+// less memory, slightly more fiddly. Mention both.</span>
+
+<span class="cmt">// 2 — reverse Polish notation</span>
+function evalRPN(tokens) {
+  const stack = [];
+  const ops = {
+    "+": (a, b) =&gt; a + b,
+    "-": (a, b) =&gt; a - b,
+    "*": (a, b) =&gt; a * b,
+    "/": (a, b) =&gt; Math.trunc(a / b),        <span class="cmt">// trunc, NOT floor: -7/2 is -3</span>
+  };
+
+  for (const t of tokens) {
+    if (t in ops) {
+      const b = stack.pop(), a = stack.pop();  <span class="cmt">// order matters: second pop is LEFT</span>
+      stack.push(ops[t](a, b));
+    } else {
+      stack.push(Number(t));
+    }
+  }
+  return stack.pop();
+}
+
+<span class="cmt">// 3 — decode string</span>
+function decodeString(s) {
+  const countStack = [];
+  const strStack = [];
+  let current = "";
+  let count = 0;
+
+  for (const c of s) {
+    if (c &gt;= "0" &amp;&amp; c &lt;= "9") {
+      count = count * 10 + Number(c);        <span class="cmt">// multi-digit: "12[a]"</span>
+    } else if (c === "[") {
+      countStack.push(count);                <span class="cmt">// save the context and start fresh</span>
+      strStack.push(current);
+      count = 0;
+      current = "";
+    } else if (c === "]") {
+      const repeat = countStack.pop();
+      const previous = strStack.pop();
+      current = previous + current.repeat(repeat);   <span class="cmt">// restore and append</span>
+    } else {
+      current += c;
+    }
+  }
+  return current;
+}
+
+<span class="cmt">// 4 — remove adjacent duplicates</span>
+function removeDuplicates(s) {
+  const stack = [];
+  for (const c of s) {
+    if (stack.at(-1) === c) stack.pop();
+    else stack.push(c);
+  }
+  return stack.join("");
+}
+
+<span class="cmt">// 5 — simplify path</span>
+function simplifyPath(path) {
+  const stack = [];
+  for (const part of path.split("/")) {
+    if (part === "" || part === ".") continue;     <span class="cmt">// "" from // and trailing /</span>
+    if (part === "..") stack.pop();                <span class="cmt">// pop on empty is a safe no-op</span>
+    else stack.push(part);
+  }
+  return "/" + stack.join("/");
+}</code></pre>
+            <p>
+              <strong>Problem 3 is the one to understand structurally.</strong> The pattern is
+              "save the outer context on a stack, work on a fresh inner context, then on the
+              closing bracket restore the outer and merge the inner into it." That is exactly how
+              a recursive descent parser works iteratively &mdash; and it is what your
+              <code>.pptx</code> shape-group parser does when it encounters a nested group. Saying
+              that connection out loud turns a puzzle answer into evidence of real experience.
+            </p>
+            <p>
+              <strong>Problem 2's two traps</strong> are worth stating before you are caught by
+              them: the second value popped is the <em>left</em> operand, which matters for
+              <code>-</code> and <code>/</code>; and JavaScript division produces floats, so RPN
+              problems specifying integer division need <code>Math.trunc</code>, not
+              <code>Math.floor</code> &mdash; they differ for negatives.
+            </p>
+          </div>
+        </details>
+
+        <p class="qlabel">Cross-questions</p>
+        <div class="xq">
+          <div class="xq-item">
+            <p class="xq-q">Min stack &mdash; your version stores a min with every element. Isn't that wasteful?</p>
+            <p class="xq-why">Testing: whether you know the alternative and its trade-off.</p>
+            <p class="ans good">"It is O(n) extra in the worst case, same as the alternative. The second approach pushes onto a separate min-stack only when a value is less than or equal to the current minimum, which uses less memory on typical data but is the same worst case &mdash; a strictly decreasing sequence pushes every element. The <code>&le;</code> rather than <code>&lt;</code> matters there: with duplicates of the minimum, strict comparison pops the min too early."</p>
+          </div>
+          <div class="xq-item">
+            <p class="xq-q">Could you solve decode string recursively?</p>
+            <p class="xq-why">Testing: seeing the equivalence between a stack and the call stack.</p>
+            <p class="ans good">"Yes &mdash; recursion <em>is</em> a stack, so any explicit-stack solution has a recursive twin and vice versa. I'd parse with an index that the recursive calls advance, recursing on <code>[</code> and returning on <code>]</code>. It reads more naturally, and the trade-off is call-stack depth on pathological input versus heap usage for the explicit stack. For nested brackets a few levels deep either is fine."</p>
+          </div>
+          <div class="xq-item">
+            <p class="xq-q">Where have you used a stack in real work?</p>
+            <p class="xq-why">Testing: whether this is theory. You have two genuine answers.</p>
+            <p class="ans good">"Two places in the slide editor. Undo/redo is two stacks of command objects &mdash; apply pushes onto undo and clears redo, undo pops and pushes onto redo. And the <code>.pptx</code> parser matches nested XML elements and shape groups with a stack, which is the bracket problem with longer tag names. Both are the same 'most recent unresolved thing' shape."</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <h2>10 &middot; Monotonic stacks</h2>
+
+    <div class="qblock">
+      <div class="q-head">
+        <span class="q-n">Question 10</span>
+        <span class="q-t">For each day, how many days until a warmer temperature?</span>
+        <span class="q-freq">The canonical monotonic stack &middot; recognising the pattern is the whole battle</span>
+      </div>
+      <div class="q-body">
+
+        <div class="saythis">
+          <span class="st-lab">Say this &mdash; the trigger and the invariant</span>
+          <p>
+            <strong>Trigger:</strong> "next greater", "next smaller", "previous greater",
+            "how far until", "how many are visible", or any problem where each element needs to
+            find its nearest neighbour satisfying a comparison. If the brute force is "for each
+            element, scan forward until I find something bigger", it is a monotonic stack.
+          </p>
+          <p>
+            <strong>The invariant:</strong> keep a stack of <em>indices</em> whose values are in
+            monotonic order &mdash; decreasing if you are looking for the next greater element.
+            When a new element arrives that breaks the order, it <em>is</em> the answer for
+            everything you pop. Each index is pushed once and popped at most once, so the whole
+            thing is O(n) despite the inner loop.
+          </p>
+          <p>
+            Store <strong>indices, not values</strong>. You almost always need the distance or
+            the position, and you can always read the value back.
+          </p>
+        </div>
+
+<pre><code>function dailyTemperatures(temps) {
+  const answer = new Array(temps.length).fill(0);
+  const stack = [];                          <span class="cmt">// indices, decreasing temperature</span>
+
+  for (let i = 0; i &lt; temps.length; i++) {
+    <span class="cmt">// today is warmer than everything at the top → resolve those days</span>
+    while (stack.length &amp;&amp; temps[i] &gt; temps[stack.at(-1)]) {
+      const day = stack.pop();
+      answer[day] = i - day;
+    }
+    stack.push(i);
+  }
+  return answer;                             <span class="cmt">// anything still on the stack stays 0</span>
+}
+<span class="cmt">// Time O(n) — each index pushed once, popped once. Space O(n).</span></code></pre>
+
+        <div class="drill">
+          <div class="d-head"><span>Problem set &mdash; monotonic stack</span><span>AI off &middot; autocomplete off</span><span class="clock">50 min for 4</span></div>
+          <div class="d-body">
+            <h4>Four problems, increasing in difficulty</h4>
+            <ol>
+              <li>
+                <strong>Next greater element I</strong> &mdash; for each element of
+                <code>nums1</code> (a subset of <code>nums2</code>), find its next greater
+                element in <code>nums2</code>, or &minus;1. <em>Monotonic stack over
+                <code>nums2</code> into a map, then one lookup pass.</em>
+              </li>
+              <li>
+                <strong>Next greater element II</strong> &mdash; the array is
+                <em>circular</em>. <em>Iterate <code>2n</code> times using
+                <code>i % n</code>, and only push during the first pass.</em>
+              </li>
+              <li>
+                <strong>Trapping rain water</strong> &mdash; given heights, how much water is
+                trapped? <code>[0,1,0,2,1,0,1,3,2,1,2,1]</code> &rarr; <code>6</code>.
+                <em>Solve it three ways if you can: two-pass prefix maxima, two pointers O(1)
+                space, and a monotonic stack. Two pointers is the one to present.</em>
+              </li>
+              <li>
+                <strong>Largest rectangle in histogram</strong> &mdash;
+                <code>[2,1,5,6,2,3]</code> &rarr; <code>10</code>. <em>This is genuinely hard.
+                Give it twenty minutes, then read it. It is the archetype of the pattern and
+                worth one careful read even if you never solve it cold.</em>
+              </li>
+            </ol>
+          </div>
+        </div>
+
+        <details class="solution">
+          <summary>Solutions &mdash; open only after the timers</summary>
+          <div class="sol-in">
+<pre><code><span class="cmt">// 1 — next greater element I</span>
+function nextGreaterElement(nums1, nums2) {
+  const nextGreater = new Map();
+  const stack = [];
+  for (const n of nums2) {
+    while (stack.length &amp;&amp; n &gt; stack.at(-1)) nextGreater.set(stack.pop(), n);
+    stack.push(n);
+  }
+  return nums1.map((n) =&gt; nextGreater.get(n) ?? -1);
+}
+
+<span class="cmt">// 2 — circular: walk twice, push only on the first lap</span>
+function nextGreaterElements(nums) {
+  const n = nums.length;
+  const answer = new Array(n).fill(-1);
+  const stack = [];
+  for (let i = 0; i &lt; 2 * n; i++) {
+    const idx = i % n;
+    while (stack.length &amp;&amp; nums[idx] &gt; nums[stack.at(-1)]) answer[stack.pop()] = nums[idx];
+    if (i &lt; n) stack.push(idx);              <span class="cmt">// second lap only resolves</span>
+  }
+  return answer;
+}
+
+<span class="cmt">// 3 — trapping rain water, two pointers: O(n) time, O(1) space.
+// Water above a bar = min(tallest to its left, tallest to its right) - its height.</span>
+function trap(height) {
+  let l = 0, r = height.length - 1;
+  let leftMax = 0, rightMax = 0, total = 0;
+
+  while (l &lt; r) {
+    if (height[l] &lt; height[r]) {
+      <span class="cmt">// the left bar is the smaller side, so leftMax alone decides the
+      // water here — we know SOME bar on the right is at least as tall</span>
+      leftMax = Math.max(leftMax, height[l]);
+      total += leftMax - height[l];
+      l++;
+    } else {
+      rightMax = Math.max(rightMax, height[r]);
+      total += rightMax - height[r];
+      r--;
+    }
+  }
+  return total;
+}
+
+<span class="cmt">// 4 — largest rectangle in histogram</span>
+function largestRectangleArea(heights) {
+  const stack = [];                          <span class="cmt">// indices, increasing height</span>
+  let best = 0;
+
+  <span class="cmt">// the trailing 0 forces every remaining bar to be resolved</span>
+  for (let i = 0; i &lt;= heights.length; i++) {
+    const h = i === heights.length ? 0 : heights[i];
+
+    while (stack.length &amp;&amp; h &lt; heights[stack.at(-1)]) {
+      const height = heights[stack.pop()];
+      <span class="cmt">// the rectangle extends from just after the new stack top,
+      // to just before i — because those are the first shorter bars
+      // on each side</span>
+      const left = stack.length ? stack.at(-1) + 1 : 0;
+      const width = i - left;
+      best = Math.max(best, height * width);
+    }
+    stack.push(i);
+  }
+  return best;
+}</code></pre>
+            <p>
+              <strong>Problem 3's two-pointer argument is the part to rehearse.</strong> The water
+              above a bar is <code>min(maxLeft, maxRight) − height</code>. The two-pointer version
+              works because whenever <code>height[l] &lt; height[r]</code>, we know there exists
+              some bar on the right at least as tall as <code>height[r]</code>, hence at least as
+              tall as <code>height[l]</code> &mdash; so the right side cannot be the limiting
+              factor and <code>leftMax</code> alone determines the answer at <code>l</code>. State
+              that and the code is obvious; skip it and the code looks like magic.
+            </p>
+            <p>
+              <strong>Problem 4's two tricks:</strong> the sentinel zero at the end, which forces
+              the stack to drain without duplicating the resolution logic; and the width
+              calculation, where the left boundary is the element <em>after</em> the new stack top
+              because that top is the nearest shorter bar on the left. Getting the width right is
+              the entire difficulty. If you can only remember one thing: the popped bar's
+              rectangle spans from just past the new top to just before the current index.
+            </p>
+          </div>
+        </details>
+
+        <p class="qlabel">Cross-questions</p>
+        <div class="xq">
+          <div class="xq-item">
+            <p class="xq-q">Why is <code>dailyTemperatures</code> O(n) when it has a nested loop?</p>
+            <p class="xq-why">Testing: amortised analysis again &mdash; they will ask.</p>
+            <p class="ans good">"Because each index is pushed exactly once and popped at most once across the entire run. The inner <code>while</code> can be long on one iteration only if it was short on many others. Total work is bounded by 2n, so O(n). It is the same amortisation argument as the sliding window."</p>
+          </div>
+          <div class="xq-item">
+            <p class="xq-q">Increasing or decreasing stack &mdash; how do you decide?</p>
+            <p class="xq-why">Testing: whether you can derive it rather than memorise two variants.</p>
+            <p class="ans good">"Work it from what resolves an element. For 'next greater', an element is resolved by something bigger arriving, so I pop while the incoming value is greater &mdash; which leaves the stack in decreasing order. For 'next smaller' it is the mirror. I never memorise which direction; I ask 'what arrival answers the question for the thing on top' and the comparison follows."</p>
+          </div>
+          <div class="xq-item">
+            <p class="xq-q">Trapping rain water &mdash; which solution would you present?</p>
+            <p class="xq-why">Testing: communication judgement under time pressure.</p>
+            <p class="ans good">"I'd describe the prefix-maxima version first because it is the easiest to explain &mdash; two passes recording the tallest bar to the left and right of each position, then one pass summing. That is O(n) time and O(n) space and it is obviously correct. Then I'd say I can drop the space to O(1) with two pointers and explain why, and write that one. Leading with the clever version and getting tangled is a worse outcome than leading with the clear one."</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ================================================================= -->
+    <div class="session">
+      <span class="sn">Session 6</span>
+      <span class="st">Strings in JavaScript, and the mixed round</span>
+      <span class="sd">~75 min</span>
+    </div>
+
+    <h2>11 &middot; Strings, and what JavaScript does differently</h2>
+
+    <div class="qblock">
+      <div class="q-head">
+        <span class="q-n">Question 11</span>
+        <span class="q-t">Reverse a string. Now handle emoji.</span>
+        <span class="q-freq">The reversal is a warm-up; the emoji follow-up is a real differentiator</span>
+      </div>
+      <div class="q-body">
+
+        <div class="saythis">
+          <span class="st-lab">Say this</span>
+          <p>
+            JavaScript strings are <strong>immutable</strong> and are sequences of
+            <strong>UTF-16 code units</strong>, not characters. Indexing and
+            <code>length</code> operate on code units, so any character outside the Basic
+            Multilingual Plane &mdash; emoji, many CJK extensions, mathematical symbols &mdash; is
+            stored as a <strong>surrogate pair</strong> of two code units and is silently split by
+            index-based operations.
+          </p>
+          <p>
+            So <code>s.split("").reverse().join("")</code> corrupts emoji.
+            <code>[...s]</code> and <code>for…of</code> iterate by <strong>code point</strong>,
+            which fixes surrogate pairs &mdash; but still not <em>grapheme clusters</em> like a
+            flag, a skin-tone modifier or a combining accent, which are several code points that
+            render as one character. Fully correct segmentation needs
+            <code>Intl.Segmenter</code>.
+          </p>
+          <p>
+            Saying those three levels &mdash; code unit, code point, grapheme cluster &mdash; is
+            the complete answer, and almost nobody gives it.
+          </p>
+        </div>
+
+<pre><code>const s = "ab🙂cd";
+
+s.length;                              <span class="cmt">// 6 — the emoji counts as 2 code units</span>
+[...s].length;                         <span class="cmt">// 5 — code points</span>
+
+s.split("").reverse().join("");        <span class="cmt">// "dc\uDE42\uD83Dba" — BROKEN emoji</span>
+[...s].reverse().join("");             <span class="cmt">// "dc🙂ba" — correct</span>
+
+<span class="cmt">// still not enough for grapheme clusters:</span>
+[..."👨‍👩‍👧"].length;                   <span class="cmt">// 5 — three people plus two joiners</span>
+
+<span class="cmt">// fully correct segmentation</span>
+const seg = new Intl.Segmenter("en", { granularity: "grapheme" });
+[...seg.segment("👨‍👩‍👧")].length;      <span class="cmt">// 1</span></code></pre>
+
+        <div class="hing">
+          <span class="h-lab">Seedhi baat</span>
+          <p>
+            JavaScript mein string ke teen "length" hote hain, aur teeno alag hain.
+            <code>s.length</code> code units ginta hai, <code>[...s]</code> code points, aur
+            <code>Intl.Segmenter</code> wo cheez ginta hai jo user ko ek akshar dikhti hai.
+          </p>
+          <p>
+            Interview mein string reverse poochein to pehle simple answer do, phir khud bolo:
+            "<em>agar input mein emoji ho sakte hain to <code>split("")</code> tootega, spread
+            use karna padega</em>". Ye ek line bahut logon se aage nikaal deti hai &mdash; aur
+            aapke caption editor mein ye real problem hai, theoretical nahi.
+          </p>
+        </div>
+
+        <div class="drill">
+          <div class="d-head"><span>Problem set &mdash; strings</span><span>AI off &middot; autocomplete off</span><span class="clock">45 min for 5</span></div>
+          <div class="d-body">
+            <h4>Five problems</h4>
+            <ol>
+              <li>
+                <strong>Reverse words in a string</strong> &mdash;
+                <code>"  the sky   is blue "</code> &rarr; <code>"blue is sky the"</code>.
+                Collapse the extra whitespace.
+              </li>
+              <li>
+                <strong>String compression</strong> &mdash; <code>"aabcccccaaa"</code> &rarr;
+                <code>"a2b1c5a3"</code>, but return the original if the compressed form is not
+                shorter.
+              </li>
+              <li>
+                <strong>Longest common prefix</strong> across an array of strings.
+                <em>Vertical scanning is the clean answer; say why you would not sort.</em>
+              </li>
+              <li>
+                <strong>Roman to integer</strong> &mdash; <code>"MCMXCIV"</code> &rarr;
+                <code>1994</code>. <em>The rule: if a numeral is smaller than the one after it,
+                subtract instead of add.</em>
+              </li>
+              <li>
+                <strong>Longest palindromic substring</strong> &mdash; expand around every
+                centre. <em>There are 2n&minus;1 centres, not n &mdash; even-length palindromes
+                have their centre between two characters.</em>
+              </li>
+            </ol>
+          </div>
+        </div>
+
+        <details class="solution">
+          <summary>Solutions &mdash; open only after the timers</summary>
+          <div class="sol-in">
+<pre><code><span class="cmt">// 1 — reverse words</span>
+const reverseWords = (s) =&gt; s.trim().split(/\s+/).reverse().join(" ");
+
+<span class="cmt">// 2 — string compression</span>
+function compress(s) {
+  const out = [];                            <span class="cmt">// array + join, never += in a loop</span>
+  let i = 0;
+  while (i &lt; s.length) {
+    const c = s[i];
+    let run = 0;
+    while (i &lt; s.length &amp;&amp; s[i] === c) { run++; i++; }
+    out.push(c, run);
+  }
+  const compressed = out.join("");
+  return compressed.length &lt; s.length ? compressed : s;
+}
+
+<span class="cmt">// 3 — longest common prefix, vertical scan: O(n · m) worst, often much less</span>
+function longestCommonPrefix(strs) {
+  if (strs.length === 0) return "";
+  for (let i = 0; i &lt; strs[0].length; i++) {
+    const c = strs[0][i];
+    for (const s of strs) {
+      if (i === s.length || s[i] !== c) return strs[0].slice(0, i);
+    }
+  }
+  return strs[0];
+}
+
+<span class="cmt">// 4 — roman to integer</span>
+function romanToInt(s) {
+  const V = { I: 1, V: 5, X: 10, L: 50, C: 100, D: 500, M: 1000 };
+  let total = 0;
+  for (let i = 0; i &lt; s.length; i++) {
+    <span class="cmt">// a smaller numeral before a larger one means subtract</span>
+    if (V[s[i]] &lt; V[s[i + 1]]) total -= V[s[i]];
+    else total += V[s[i]];
+  }
+  return total;
+}
+
+<span class="cmt">// 5 — longest palindromic substring, expand around 2n-1 centres</span>
+function longestPalindrome(s) {
+  let bestStart = 0, bestLen = 0;
+
+  const expand = (l, r) =&gt; {
+    while (l &gt;= 0 &amp;&amp; r &lt; s.length &amp;&amp; s[l] === s[r]) { l--; r++; }
+    const len = r - l - 1;                   <span class="cmt">// the loop overshoots by one each side</span>
+    if (len &gt; bestLen) { bestLen = len; bestStart = l + 1; }
+  };
+
+  for (let i = 0; i &lt; s.length; i++) {
+    expand(i, i);                            <span class="cmt">// odd length, centred on a character</span>
+    expand(i, i + 1);                        <span class="cmt">// even length, centred between two</span>
+  }
+  return s.slice(bestStart, bestStart + bestLen);
+}
+<span class="cmt">// Time O(n²), Space O(1). Manacher's is O(n) — mention it, don't write it.</span></code></pre>
+            <p>
+              <strong>Problem 4's lookahead is safe</strong> because <code>s[i + 1]</code> is
+              <code>undefined</code> at the end and <code>V[undefined]</code> is
+              <code>undefined</code>, and any number compared with <code>undefined</code> is
+              <code>false</code> &mdash; so the last numeral always adds. That is one of the rare
+              cases where JavaScript's loose comparison behaviour works in your favour, and it is
+              worth noticing rather than adding a bounds check.
+            </p>
+            <p>
+              <strong>Problem 5's <code>r - l - 1</code></strong> is the only tricky line: the
+              <code>while</code> exits one step past the valid range on both sides, so the true
+              length is <code>(r - 1) - (l + 1) + 1</code>. Derive it on paper once and you will
+              not get it wrong again.
+            </p>
+            <p>
+              On problem 3, say why you would <em>not</em> sort: sorting the array and comparing
+              only the first and last strings is a clever O(n log n &middot; m) trick, but vertical
+              scanning is O(n &middot; m) and clearer. Reaching for the clever one when the simple
+              one is asymptotically better is a bad instinct to display.
+            </p>
+          </div>
+        </details>
+
+        <p class="qlabel">Cross-questions</p>
+        <div class="xq">
+          <div class="xq-item">
+            <p class="xq-q">Is string concatenation in a loop O(n&sup2;)?</p>
+            <p class="xq-why">Testing: theory versus engine reality. A nuanced answer wins here.</p>
+            <p class="ans good">"Textbook answer yes, because strings are immutable so each concatenation copies. In practice V8 and other engines use rope structures, so repeated <code>+=</code> is closer to amortised O(1) and is often as fast as an array join. I still write push-and-join, because it is predictable across engines and it is what a reviewer expects &mdash; but I would not claim the naive version is quadratic if someone pushed back, because on modern engines it usually is not."</p>
+          </div>
+          <div class="xq-item">
+            <p class="xq-q">Where does this actually bite you?</p>
+            <p class="xq-why">Testing: whether Unicode is real for you or a trivia answer.</p>
+            <p class="ans good">"The caption editor. Captions contain emoji constantly, and character limits, truncation and cursor movement all have to work on grapheme clusters, not code units &mdash; otherwise you can truncate mid-emoji and produce a replacement character, or the caret jumps by half a character. We handle it with spread for code points and <code>Intl.Segmenter</code> where segmentation actually matters. It is the most common real Unicode bug in any text UI."</p>
+          </div>
+          <div class="xq-item">
+            <p class="xq-q">How do you compare strings for sorting in a UI?</p>
+            <p class="xq-why">Testing: internationalisation awareness.</p>
+            <p class="ans good">"<code>localeCompare</code> or an <code>Intl.Collator</code>, not <code>&lt;</code> &mdash; raw comparison uses UTF-16 code unit order, which puts all uppercase before all lowercase and gets accented characters wrong for every locale. <code>Intl.Collator</code> is the right choice for a list because you create it once and reuse the comparator, which is much faster than calling <code>localeCompare</code> per comparison. It also supports numeric collation, so 'item2' sorts before 'item10'."</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <h2>12 &middot; The mixed round</h2>
+
+    <div class="qblock">
+      <div class="q-head">
+        <span class="q-n">Question 12</span>
+        <span class="q-t">Here's a problem you haven't seen. Pick your approach.</span>
+        <span class="q-freq">This is the actual round &mdash; problems arrive without a label</span>
+      </div>
+      <div class="q-body">
+
+        <div class="callout warn">
+          <span class="ct">Why practising by topic stops working</span>
+          <p>
+            Everything so far has been grouped by pattern, which makes recognition free &mdash;
+            you knew it was a window problem because it was in the window session. The real round
+            gives you an unlabelled problem. <strong>Pattern recognition is the skill that
+            actually transfers</strong>, and the only way to train it is a mixed set.
+          </p>
+        </div>
+
+        <div class="drill">
+          <div class="d-head"><span>The mixed round</span><span>AI off &middot; narrate out loud &middot; no notes</span><span class="clock">60 min for 5</span></div>
+          <div class="d-body">
+            <h4>Five unlabelled problems, 12 minutes each</h4>
+            <p>
+              Before writing any code, say out loud: <strong>which pattern, and why</strong>. Write
+              the pattern name down. Then solve. Getting the pattern right in under sixty seconds
+              is the thing being measured &mdash; more than finishing.
+            </p>
+            <ol>
+              <li>Given an array of stock prices, find the maximum profit from one buy and one later sell.</li>
+              <li>Given a string, find the first character that does not repeat, returning its index.</li>
+              <li>Given an array, return the length of the longest subarray containing at most two distinct numbers.</li>
+              <li>Given a list of intervals, merge all overlapping ones. <code>[[1,3],[2,6],[8,10]]</code> &rarr; <code>[[1,6],[8,10]]</code>.</li>
+              <li>Given an array, find the element appearing more than n/2 times, in O(1) space.</li>
+            </ol>
+          </div>
+        </div>
+
+        <details class="solution">
+          <summary>Patterns and solutions &mdash; open only after all five</summary>
+          <div class="sol-in">
+<pre><code><span class="cmt">// 1 — PATTERN: single pass with running state (a degenerate two-pointer).
+// Track the cheapest price seen so far; profit today is price - minSoFar.</span>
+function maxProfit(prices) {
+  let min = Infinity, best = 0;
+  for (const p of prices) {
+    min = Math.min(min, p);
+    best = Math.max(best, p - min);
+  }
+  return best;
+}
+
+<span class="cmt">// 2 — PATTERN: frequency hashmap, two passes.</span>
+function firstUniqChar(s) {
+  const count = new Map();
+  for (const c of s) count.set(c, (count.get(c) ?? 0) + 1);
+  for (let i = 0; i &lt; s.length; i++) if (count.get(s[i]) === 1) return i;
+  return -1;
+}
+
+<span class="cmt">// 3 — PATTERN: variable sliding window with a count map ("at most k distinct").</span>
+function longestTwoDistinct(nums) {
+  const count = new Map();
+  let start = 0, best = 0;
+  for (let end = 0; end &lt; nums.length; end++) {
+    count.set(nums[end], (count.get(nums[end]) ?? 0) + 1);
+    while (count.size &gt; 2) {
+      const c = nums[start];
+      count.set(c, count.get(c) - 1);
+      if (count.get(c) === 0) count.delete(c);
+      start++;
+    }
+    best = Math.max(best, end - start + 1);
+  }
+  return best;
+}
+
+<span class="cmt">// 4 — PATTERN: sort, then a single merge pass. Not a hashmap problem.</span>
+function mergeIntervals(intervals) {
+  if (intervals.length === 0) return [];
+  intervals.sort((a, b) =&gt; a[0] - b[0]);     <span class="cmt">// numeric comparator, always</span>
+
+  const out = [intervals[0].slice()];
+  for (let i = 1; i &lt; intervals.length; i++) {
+    const last = out.at(-1);
+    if (intervals[i][0] &lt;= last[1]) last[1] = Math.max(last[1], intervals[i][1]);
+    else out.push(intervals[i].slice());
+  }
+  return out;
+}
+
+<span class="cmt">// 5 — PATTERN: Boyer-Moore voting. Not a hashmap — the O(1) space
+// constraint rules that out and is the hint.</span>
+function majorityElement(nums) {
+  let candidate = null, count = 0;
+  for (const n of nums) {
+    if (count === 0) candidate = n;
+    count += (n === candidate) ? 1 : -1;
+  }
+  return candidate;   <span class="cmt">// valid only because a majority is guaranteed to exist</span>
+}</code></pre>
+            <p>
+              <strong>Problem 5 is the one that tests whether you read constraints.</strong> The
+              frequency-map solution is obvious and is O(n) space. The phrase "in O(1) space" is
+              the entire hint: it rules out the map and points at voting. Boyer-Moore works
+              because every non-majority element can cancel at most one majority element, and a
+              true majority has more than half the votes, so it survives. Without the majority
+              guarantee you need a second pass to verify the candidate &mdash; say that.
+            </p>
+            <p>
+              <strong>Problem 4 is the one people over-think.</strong> Intervals almost always
+              start with a sort by start time; after that it is one linear pass. If you found
+              yourself reaching for a stack or a map, that is worth noting in your log &mdash;
+              it means "overlapping ranges" is not yet wired to "sort first" in your head.
+            </p>
+            <p>
+              <strong>Score yourself on pattern identification, not completion.</strong> Five out
+              of five patterns named correctly within a minute is a pass, even if you only
+              finished three. Two out of five patterns means more mixed sets, not more solutions.
+            </p>
+          </div>
+        </details>
+
+        <p class="qlabel">Cross-questions</p>
+        <div class="xq">
+          <div class="xq-item">
+            <p class="xq-q">You are stuck and five minutes have gone. What do you do?</p>
+            <p class="xq-why">Testing: behaviour under pressure, which is genuinely part of the rubric.</p>
+            <p class="ans good">"Say so, and say what I have tried. 'I've been thinking about a window approach but the negatives break the shrink condition, so I think it needs prefix sums &mdash; can I talk that through?' Silence is the worst outcome: the interviewer cannot help someone who is quiet, and they cannot score reasoning they cannot hear. I would also write the brute force and get something working, because a working O(n&sup2;) with a clear path to O(n) beats a blank screen."</p>
+          </div>
+          <div class="xq-item">
+            <p class="xq-q">You finish in six minutes. What next?</p>
+            <p class="xq-why">Testing: whether you use the remaining time well.</p>
+            <p class="ans good">"Test it out loud on the examples including the edge cases, state the complexity, and then volunteer an extension: what changes if the input is streaming, if it does not fit in memory, if there are duplicates, if I need all answers rather than one. That turns spare time into extra signal rather than an awkward pause."</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="practice">
+      <span class="pt">Practice &mdash; Session 6</span>
+      <h4>Your spaced-repetition schedule</h4>
+      <p>
+        Thirty-three problems is enough. Repetition beats volume from here, and the schedule
+        matters more than the count:
+      </p>
+      <ol>
+        <li><strong>Day 3:</strong> re-attempt everything marked "not solved unaided". Solutions only after a genuine second attempt.</li>
+        <li><strong>Day 7:</strong> one mixed set of five, drawn at random across all five patterns, narrated aloud, timed.</li>
+        <li><strong>Day 14:</strong> the five canonical problems only &mdash; two sum sorted, longest substring without repeats, subarray sum equals k, valid parentheses, daily temperatures. If all five are fluent, this chapter is done.</li>
+        <li><strong>Every morning:</strong> read the trigger table once. Thirty seconds. It is the only thing you need to recall under pressure.</li>
+      </ol>
+    </div>
+
+    <h2>Rapid fire</h2>
+
+    <div class="rapid">
+      <div class="r-head"><span>Chapter 5 &mdash; arrays, strings, pointers, hashmaps, stacks</span><span class="rc">22 questions</span></div>
+
+      <details><summary>Sorted array, find a pair — which pattern?</summary><p class="ra">Two pointers from both ends. O(n) time, O(1) space.</p></details>
+      <details><summary>Unsorted array, find a pair — which pattern?</summary><p class="ra">Hashmap of seen values. O(n) time, O(n) space.</p></details>
+      <details><summary>"Contiguous subarray" or "substring" — which pattern?</summary><p class="ra">Sliding window. Fixed size if a length k is given, variable if it says longest or shortest.</p></details>
+      <details><summary>Subarray sum equals k with negatives — which pattern?</summary><p class="ra">Prefix sum plus hashmap. Negatives kill the sliding window.</p></details>
+      <details><summary>"Next greater element" — which pattern?</summary><p class="ra">Monotonic stack of indices.</p></details>
+      <details><summary>Why is a sliding window O(n) despite the nested loop?</summary><p class="ra"><code>start</code> only moves forward and never passes <code>end</code>, so total inner iterations are bounded by n. Amortised, not multiplicative.</p></details>
+      <details><summary>Max-window vs min-window: where does the recording line go?</summary><p class="ra">Maximum: shrink while invalid, record after. Minimum: shrink while still valid, record inside the shrink loop.</p></details>
+      <details><summary>Why seed the prefix-sum map with <code>0 → 1</code>?</summary><p class="ra">It represents the empty prefix, which is what lets subarrays starting at index 0 be counted.</p></details>
+      <details><summary>What is <code>-1 % 5</code> in JavaScript?</summary><p class="ra"><code>-1</code>. It is remainder, not modulo. Normalise with <code>((x % k) + k) % k</code>.</p></details>
+      <details><summary>Cost of <code>shift()</code>?</summary><p class="ra">O(n) — it re-indexes the array. Use a head index in a BFS queue instead.</p></details>
+      <details><summary>What is wrong with <code>{ ...acc }</code> inside a reduce?</summary><p class="ra">It copies the accumulator every step, making the reduce O(n²).</p></details>
+      <details><summary>Longest consecutive sequence in O(n) — the trick?</summary><p class="ra">Only start counting from a number with no predecessor in the set, so each run is walked once.</p></details>
+      <details><summary>Two maps for isomorphic strings — why?</summary><p class="ra">The mapping must be a bijection. One map allows two source characters to collide onto one target.</p></details>
+      <details><summary>Top k frequent in O(n) — how?</summary><p class="ra">Bucket sort by frequency: frequencies are bounded by n, so index an array by count instead of sorting.</p></details>
+      <details><summary>Why store indices in a monotonic stack, not values?</summary><p class="ra">You almost always need a distance or position, and the value is one lookup away.</p></details>
+      <details><summary>Increasing or decreasing monotonic stack — how do you decide?</summary><p class="ra">Ask what arrival answers the question for the top element, and pop on that condition. The order follows.</p></details>
+      <details><summary><code>Math.trunc</code> or <code>Math.floor</code> for integer division?</summary><p class="ra"><code>trunc</code> for truncation toward zero — they differ for negatives. RPN problems usually want <code>trunc</code>.</p></details>
+      <details><summary>Why does <code>"ab🙂".length</code> return 4?</summary><p class="ra">Strings are UTF-16 code units and the emoji is a surrogate pair. <code>[...s]</code> iterates code points instead.</p></details>
+      <details><summary>Three levels of string length?</summary><p class="ra">Code units (<code>.length</code>), code points (<code>[...s]</code>), grapheme clusters (<code>Intl.Segmenter</code>).</p></details>
+      <details><summary>How many centres does "expand around centre" need?</summary><p class="ra">2n−1 — every character, plus every gap between two characters for even-length palindromes.</p></details>
+      <details><summary>Sorting strings for a UI — what do you use?</summary><p class="ra"><code>Intl.Collator</code>, created once and reused. Raw <code>&lt;</code> uses code unit order and gets case and accents wrong.</p></details>
+      <details><summary>"Find the majority element in O(1) space" — what is the constraint telling you?</summary><p class="ra">No hashmap. It is Boyer-Moore voting.</p></details>
+    </div>
+
+    <div class="checkpoint">
+      <span class="pt">Before moving on &mdash; you should be able to</span>
+      <ul>
+        <li>Name the pattern for an unlabelled problem within sixty seconds, four times out of five.</li>
+        <li>Run the six-step narration script without thinking about it, including stating the brute force before the optimal.</li>
+        <li>State time and space complexity in the three-part form &mdash; bound, reason, what n refers to &mdash; without hedging.</li>
+        <li>Spot the five accidental quadratics on sight, especially spread-in-reduce and <code>indexOf</code> in a loop.</li>
+        <li>Write the two-pointer and variable-window skeletons from memory, and say where the recording line goes for a max versus a min.</li>
+        <li>Explain why sliding window and monotonic stack are O(n) despite their nested loops.</li>
+        <li>Derive the prefix-sum identity rather than recalling the code, and explain the <code>0 → 1</code> seed.</li>
+        <li>Solve valid parentheses, min stack and daily temperatures cold, in under ten minutes each.</li>
+        <li>Give the three levels of string length, and say where it bit you in the caption editor.</li>
+        <li>Say out loud, for any solution, one thing you would change if the input were streaming or did not fit in memory.</li>
+      </ul>
+    </div>
+
+    <h2>What's next</h2>
+
+    <p>
+      Chapter 6 completes the DSA gate: recursion and backtracking, trees and traversals, the
+      <strong>DOM-shaped tree problems</strong> that get asked far more often in frontend rounds
+      than binary search trees do, BFS and DFS on grids and graphs, sorting &mdash; including the
+      <code>Array.prototype.sort</code> default that has caught almost everyone at least once
+      &mdash; binary search and its three variants, and an honest, small amount of dynamic
+      programming.
+    </p>
+    <p>
+      Then Part II is finished and you move to Part III, which is where the money is.
+    </p>
 
     <div class="ch-nav" id="chnav"></div>
 
@@ -44,7 +2446,7 @@
 
 <footer class="site-foot">
   <div class="site-foot-in">
-    <span>Chapter 5 &middot; not written yet</span>
+    <span>Chapter 5 &middot; Arrays, Strings, Pointers, Hashmaps &amp; Stacks</span>
     <span class="sp"></span>
     <span>Use &larr; and &rarr; to move between chapters</span>
   </div>

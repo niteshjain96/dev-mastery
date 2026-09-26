@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Chapter 4</title>
+<title>The Polyfill Canon — Chapter 4</title>
 <link rel="stylesheet" href="../assets/book.css">
 </head>
 <body data-chapter="4">
@@ -12,7 +12,7 @@
   <div class="site-head-in">
     <a class="logo" href="../index.html"><span class="logo-mark">DM</span> Dev Mastery</a>
     <span class="head-sp"></span>
-    <span class="head-meta">Chapter 4 of 30</span>
+    <span class="head-meta">Part I &middot; Chapter 4 of 30</span>
   </div>
   <div class="readbar" id="readbar"></div>
 </header>
@@ -22,12 +22,1966 @@
   <main class="ch-main">
 
     <div class="ch-hero">
-      <p class="ch-kicker" id="stub-kicker">Chapter 4</p>
-      <h1 id="stub-title">Chapter 4</h1>
-      <p class="lede" id="stub-lede"></p>
+      <p class="ch-kicker">Part I &middot; JavaScript: The Gate &middot; Chapter Four</p>
+      <h1>The Polyfill Canon</h1>
+      <p class="lede">
+        This is the remediation chapter. Twenty-three implementations, all of them asked, all of
+        them to be written by hand with AI off, autocomplete off and a timer running. The goal is
+        not to learn them &mdash; you know most of them already. The goal is to get the
+        <em>typing</em> back, so that in a ninety-minute machine coding round your hands are not
+        the bottleneck.
+      </p>
+      <div class="ch-facts">
+        <span><b>6</b> sessions</span>
+        <span><b>~7.5</b> hours</span>
+        <span><b>12</b> Q-blocks</span>
+        <span><b>23</b> implementations</span>
+        <span>Prerequisites: <b>Chapters 1&ndash;3</b></span>
+      </div>
     </div>
 
-    <div id="stub"></div>
+    <div class="callout danger">
+      <span class="ct">Read this before you start, once</span>
+      <p>
+        You told me your manual coding has thinned out because you lean on an agent. That is a
+        real, specific, fixable problem, and this chapter is the fix. It only works under one
+        condition: <strong>you type every line yourself, with the assistant closed and the editor's
+        autocomplete disabled.</strong>
+      </p>
+      <p>
+        Reading a solution feels like learning and is not. Directing an agent to write
+        <code>debounce</code> teaches you nothing you can use when a stranger is watching you type
+        it. The cost of skipping this chapter is not that you fail to learn polyfills &mdash; it
+        is that in the round that sets your band, you are slow, and slow reads as weak.
+      </p>
+    </div>
+
+    <h2>The canon, and your time targets</h2>
+
+    <p>
+      Twenty-three functions. You have already written eleven of them in Chapters 1 to 3 &mdash;
+      those are marked, and the target for them is speed, not discovery. The rest are new here.
+      A <strong>pass</strong> is: correct, handles the listed edge cases, written inside the
+      target time, no reference material.
+    </p>
+
+    <div class="tbl">
+      <table>
+        <thead><tr><th>Session</th><th>Implementations</th><th>Target</th><th>Seen before</th></tr></thead>
+        <tbody>
+          <tr><td>1</td><td><code>map</code>, <code>filter</code>, <code>forEach</code>, <code>reduce</code></td><td>12 min</td><td>&mdash;</td></tr>
+          <tr><td>1</td><td><code>flat</code>, <code>flatMap</code></td><td>10 min</td><td>&mdash;</td></tr>
+          <tr><td>2</td><td><code>call</code>, <code>apply</code>, <code>bind</code></td><td>12 min</td><td>Ch 2</td></tr>
+          <tr><td>2</td><td><code>new</code>, <code>Object.create</code>, <code>instanceof</code></td><td>12 min</td><td>Ch 2</td></tr>
+          <tr><td>3</td><td><code>all</code>, <code>allSettled</code>, <code>race</code>, <code>any</code></td><td>15 min</td><td>Ch 3</td></tr>
+          <tr><td>3</td><td><code>MyPromise</code> (states + chaining)</td><td>15 min</td><td>Ch 3</td></tr>
+          <tr><td>4</td><td><code>debounce</code>, <code>throttle</code></td><td>15 min</td><td>Ch 1</td></tr>
+          <tr><td>4</td><td><code>once</code>, <code>memoize</code>, <code>curry</code>, <code>pipe</code>, <code>compose</code></td><td>15 min</td><td>Ch 1&ndash;2</td></tr>
+          <tr><td>5</td><td><code>EventEmitter</code></td><td>12 min</td><td>&mdash;</td></tr>
+          <tr><td>5</td><td><code>LRUCache</code> &mdash; O(1)</td><td>15 min</td><td>&mdash;</td></tr>
+          <tr><td>6</td><td><code>deepClone</code> with cycles</td><td>15 min</td><td>&mdash;</td></tr>
+          <tr><td>6</td><td><code>promisePool</code>, <code>retry</code> with backoff</td><td>20 min</td><td>&mdash;</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="callout key">
+      <span class="ct">What separates a pass from a strong pass</span>
+      <p>
+        For every one of these, the working version is table stakes. The score comes from the
+        edge cases you handle <em>without being prompted</em>: sparse arrays, <code>thisArg</code>,
+        <code>this</code> forwarding, cycles, the empty-input case, and cleanup. Each Q-block
+        below names exactly which ones the interviewer is listening for.
+      </p>
+    </div>
+
+    <!-- ================================================================= -->
+    <div class="session">
+      <span class="sn">Session 1</span>
+      <span class="st">Array iteration methods</span>
+      <span class="sd">~75 min</span>
+    </div>
+
+    <h2>1 &middot; map, filter, forEach, reduce</h2>
+
+    <div class="qblock">
+      <div class="q-head">
+        <span class="q-n">Question 1</span>
+        <span class="q-t">Implement Array.prototype.map. Then reduce.</span>
+        <span class="q-freq">Extremely common warm-up &middot; the sparse-array follow-up is the real test</span>
+      </div>
+      <div class="q-body">
+
+        <div class="saythis">
+          <span class="st-lab">Say this &mdash; the contract, before you type</span>
+          <p>
+            <strong><code>map</code></strong> returns a new array of the same length, with the
+            callback applied to each element. The callback receives
+            <code>(element, index, array)</code>, and a second argument to <code>map</code> itself
+            sets <code>this</code> inside the callback. It <strong>skips holes</strong> in sparse
+            arrays but <strong>preserves them</strong> in the output, and it does not mutate the
+            original.
+          </p>
+          <p>
+            <strong><code>reduce</code></strong> folds the array to one value. With an
+            <code>initialValue</code>, the accumulator starts there and iteration starts at index
+            0. <strong>Without one</strong>, the accumulator starts as the first element and
+            iteration starts at index <strong>1</strong>. On an empty array with no initial value
+            it throws a <code>TypeError</code>. It skips holes, and unlike
+            <code>map</code>/<code>filter</code>/<code>forEach</code> it takes
+            <strong>no <code>thisArg</code></strong>.
+          </p>
+        </div>
+
+        <div class="predict">
+          <span class="p-lab">The edge cases that break naive versions &mdash; predict all five</span>
+<pre><code>[1, 2, , 4].map(x =&gt; x * 2);        <span class="cmt">// A</span>
+[1, 2, , 4].reduce((a, b) =&gt; a + b); <span class="cmt">// B</span>
+[1, 2, undefined, 4].reduce((a, b) =&gt; a + b); <span class="cmt">// C</span>
+[].reduce((a, b) =&gt; a + b);          <span class="cmt">// D</span>
+[].reduce((a, b) =&gt; a + b, 0);       <span class="cmt">// E</span></code></pre>
+          <p>
+            <strong>A:</strong> <code>[2, 4, &lt;1 empty slot&gt;, 8]</code> &mdash; the hole is
+            skipped <em>and preserved</em>, not turned into <code>NaN</code>.
+            <strong>B:</strong> <code>7</code> &mdash; the hole is skipped entirely.
+            <strong>C:</strong> <code>NaN</code> &mdash; an explicit <code>undefined</code> is
+            <em>not</em> a hole and is not skipped. <strong>D:</strong>
+            <code>TypeError: Reduce of empty array with no initial value</code>.
+            <strong>E:</strong> <code>0</code>.
+          </p>
+        </div>
+
+        <div class="hing">
+          <span class="h-lab">Seedhi baat</span>
+          <p>
+            Hole aur <code>undefined</code> alag cheezein hain. <code>[1, , 3]</code> mein beech
+            wali jagah <em>exist hi nahi karti</em> &mdash; array ki <code>length</code> 3 hai par
+            index 1 hai hi nahi. Isliye check <code>arr[i] !== undefined</code> nahi,
+            <strong><code>i in arr</code></strong> hona chahiye.
+          </p>
+          <p>
+            Ye ek line hi naive polyfill aur sahi polyfill ka farak hai, aur interviewer yahi
+            pooche ga: "what about sparse arrays?"
+          </p>
+        </div>
+
+        <div class="drill">
+          <div class="d-head"><span>Now you code</span><span>AI off &middot; autocomplete off</span><span class="clock">12 min</span></div>
+          <div class="d-body">
+            <h4>All four, on Array.prototype</h4>
+<pre><code><span class="cmt">// Requirements for all four:
+//   - callback gets (element, index, array)
+//   - map/filter/forEach accept a thisArg as the second parameter
+//   - holes are skipped (use `i in arr`, not a value check)
+//   - map preserves holes in the output; filter drops them
+//   - length is read ONCE before iterating
+//   - throw TypeError if the callback is not a function
+//   - reduce: no thisArg; correct start index; TypeError on empty + no init</span>
+
+Array.prototype.myMap = function (cb, thisArg) { <span class="cmt">/* you */</span> };
+Array.prototype.myFilter = function (cb, thisArg) { <span class="cmt">/* you */</span> };
+Array.prototype.myForEach = function (cb, thisArg) { <span class="cmt">/* you */</span> };
+Array.prototype.myReduce = function (cb, initialValue) { <span class="cmt">/* you */</span> };</code></pre>
+          </div>
+        </div>
+
+        <details class="solution">
+          <summary>Solution &mdash; open only after the timer</summary>
+          <div class="sol-in">
+<pre><code>Array.prototype.myMap = function (cb, thisArg) {
+  if (typeof cb !== "function") throw new TypeError(cb + " is not a function");
+  const arr = Object(this);
+  const len = arr.length &gt;&gt;&gt; 0;          <span class="cmt">// read once, coerce to uint32</span>
+  const out = new Array(len);            <span class="cmt">// same length, holes preserved</span>
+
+  for (let i = 0; i &lt; len; i++) {
+    if (i in arr) out[i] = cb.call(thisArg, arr[i], i, arr);   <span class="cmt">// skip holes</span>
+  }
+  return out;
+};
+
+Array.prototype.myFilter = function (cb, thisArg) {
+  if (typeof cb !== "function") throw new TypeError(cb + " is not a function");
+  const arr = Object(this);
+  const len = arr.length &gt;&gt;&gt; 0;
+  const out = [];
+  for (let i = 0; i &lt; len; i++) {
+    if (i in arr &amp;&amp; cb.call(thisArg, arr[i], i, arr)) out.push(arr[i]);
+  }
+  return out;                            <span class="cmt">// dense — holes are dropped, not preserved</span>
+};
+
+Array.prototype.myForEach = function (cb, thisArg) {
+  if (typeof cb !== "function") throw new TypeError(cb + " is not a function");
+  const arr = Object(this);
+  const len = arr.length &gt;&gt;&gt; 0;
+  for (let i = 0; i &lt; len; i++) if (i in arr) cb.call(thisArg, arr[i], i, arr);
+  <span class="cmt">// returns undefined — which is exactly why forEach can't await</span>
+};
+
+Array.prototype.myReduce = function (cb, initialValue) {
+  if (typeof cb !== "function") throw new TypeError(cb + " is not a function");
+  const arr = Object(this);
+  const len = arr.length &gt;&gt;&gt; 0;
+
+  let i = 0;
+  let acc;
+
+  if (arguments.length &gt;= 2) {           <span class="cmt">// NOT `initialValue !== undefined`</span>
+    acc = initialValue;
+  } else {
+    while (i &lt; len &amp;&amp; !(i in arr)) i++;  <span class="cmt">// find the first real element</span>
+    if (i &gt;= len) throw new TypeError("Reduce of empty array with no initial value");
+    acc = arr[i++];
+  }
+
+  for (; i &lt; len; i++) {
+    if (i in arr) acc = cb(acc, arr[i], i, arr);   <span class="cmt">// no thisArg for reduce</span>
+  }
+  return acc;
+};</code></pre>
+            <p>The six details being scored, in the order they get noticed:</p>
+            <ul>
+              <li><strong><code>i in arr</code></strong>, not <code>arr[i] !== undefined</code>. This is the sparse-array answer and the whole reason the question is asked.</li>
+              <li><strong><code>new Array(len)</code> in <code>map</code></strong>, with assignment only for present indices &mdash; that is what preserves holes. Using <code>push</code> would compact the array and change its length.</li>
+              <li><strong><code>arguments.length &gt;= 2</code></strong> in <code>reduce</code>. Checking <code>initialValue !== undefined</code> is wrong: <code>arr.reduce(fn, undefined)</code> is a legitimate call with an initial value.</li>
+              <li><strong>Length read once</strong> before the loop, so elements appended during iteration are not visited &mdash; which is the specified behaviour.</li>
+              <li><strong><code>cb.call(thisArg, ...)</code></strong> for the three that take one, and no <code>thisArg</code> for <code>reduce</code>. Knowing which three is a small, sharp signal.</li>
+              <li><strong><code>Object(this)</code> and <code>&gt;&gt;&gt; 0</code></strong> &mdash; the generic-method detail. These work on array-likes; mentioning it is enough, writing it is better.</li>
+            </ul>
+          </div>
+        </details>
+
+        <p class="qlabel">Cross-questions</p>
+        <div class="xq">
+
+          <div class="xq-item">
+            <p class="xq-q">What is the difference between a hole and <code>undefined</code>?</p>
+            <p class="xq-why">Testing: the thing your implementation either handles or does not.</p>
+            <p class="ans good">"A hole is an index that does not exist as a property, even though <code>length</code> counts past it. <code>1 in [1, , 3]</code> is <code>false</code>; <code>1 in [1, undefined, 3]</code> is <code>true</code>. Iteration methods skip holes and visit explicit <code>undefined</code>s. In practice I avoid creating sparse arrays at all &mdash; <code>new Array(5).fill()</code> rather than <code>new Array(5)</code> &mdash; because the behaviour differs between methods and surprises everyone."</p>
+          </div>
+
+          <div class="xq-item">
+            <p class="xq-q">Why does <code>new Array(3).map(x =&gt; 0)</code> not work?</p>
+            <p class="xq-why">Testing: the same fact, in the form people actually hit.</p>
+            <p class="ans good">"Because those three slots are holes, and <code>map</code> skips them &mdash; you get back three holes. <code>Array.from({length: 3}, () =&gt; 0)</code> or <code>new Array(3).fill(0)</code> works, because <code>from</code> and <code>fill</code> treat missing indices as <code>undefined</code> rather than skipping them."</p>
+          </div>
+
+          <div class="xq-item">
+            <p class="xq-q">Can you implement <code>map</code> using <code>reduce</code>?</p>
+            <p class="xq-why">Testing: composition, and whether you notice the edge case it loses.</p>
+            <p class="ans good">"Yes: <code>arr.reduce((acc, x, i) =&gt; { acc[i] = fn(x, i, arr); return acc; }, new Array(arr.length))</code>. It is a fine party trick, but it is slower and less readable, and if I used <code>[...acc, fn(x)]</code> instead of index assignment it would be quadratic. Also, because <code>reduce</code> skips holes and I am pre-sizing the array, hole preservation survives &mdash; but a naive <code>push</code>-based version would silently compact."</p>
+          </div>
+
+          <div class="xq-item">
+            <p class="xq-q">Is modifying <code>Array.prototype</code> acceptable?</p>
+            <p class="xq-why">Testing: judgement. The exercise asks for it; production does not.</p>
+            <p class="ans good">"For an interview exercise, yes, that is the ask. In production, no &mdash; extending built-in prototypes risks collisions with future language features, which is exactly what happened to <code>Array.prototype.flatten</code> and MooTools and forced the name <code>flat</code>. Enumerable additions also leak into <code>for…in</code>. If I genuinely needed it I would use a standalone function, or at minimum <code>Object.defineProperty</code> with <code>enumerable: false</code>."</p>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <h2>2 &middot; flat and flatMap</h2>
+
+    <div class="qblock">
+      <div class="q-head">
+        <span class="q-n">Question 2</span>
+        <span class="q-t">Flatten a nested array. Now do it without recursion.</span>
+        <span class="q-freq">Very common &middot; the "without recursion" follow-up is almost guaranteed</span>
+      </div>
+      <div class="q-body">
+
+        <div class="saythis">
+          <span class="st-lab">Say this</span>
+          <p>
+            <code>flat(depth)</code> returns a new array with sub-array elements concatenated into
+            it, up to <code>depth</code> levels &mdash; default <strong>1</strong>, and
+            <code>Infinity</code> for fully flat. It <strong>removes holes</strong> from sparse
+            arrays, which is different from <code>map</code>, and it only flattens actual arrays,
+            leaving array-likes alone.
+          </p>
+          <p>
+            <code>flatMap</code> is <code>map</code> followed by <code>flat(1)</code> &mdash; and
+            only one level, always. It is the idiomatic way to map-and-filter in one pass, because
+            returning an empty array drops the element.
+          </p>
+          <p>
+            Three implementations exist and the interviewer usually wants two of them: recursion,
+            <code>reduce</code> plus recursion, and an iterative stack version that cannot blow
+            the call stack.
+          </p>
+        </div>
+
+        <div class="drill">
+          <div class="d-head"><span>Now you code</span><span>AI off &middot; autocomplete off</span><span class="clock">10 min</span></div>
+          <div class="d-body">
+            <h4>Three versions, then flatMap</h4>
+<pre><code><span class="cmt">// 1. myFlat(arr, depth = 1) — recursive
+// 2. myFlatIterative(arr) — stack-based, fully flat, NO recursion.
+//    Must survive an array nested 100,000 deep without a stack overflow.
+// 3. myFlatMap(arr, cb) — in terms of your flat
+//
+// All must: remove holes, default depth 1, support Infinity,
+// and NOT flatten non-array values like strings or array-likes.
+//
+// Test: myFlat([1, [2, [3, [4]], 5], , 6], 2)  →  [1, 2, 3, [4], 5, 6]</span></code></pre>
+          </div>
+        </div>
+
+        <details class="solution">
+          <summary>Solution &mdash; open only after the timer</summary>
+          <div class="sol-in">
+<pre><code><span class="cmt">// 1 — recursive, the one you write first</span>
+function myFlat(arr, depth = 1) {
+  const out = [];
+  for (let i = 0; i &lt; arr.length; i++) {
+    if (!(i in arr)) continue;                    <span class="cmt">// holes are removed</span>
+    const item = arr[i];
+    if (Array.isArray(item) &amp;&amp; depth &gt; 0) out.push(...myFlat(item, depth - 1));
+    else out.push(item);
+  }
+  return out;
+}
+
+<span class="cmt">// 2 — iterative, stack-based. Note we push onto a stack and REVERSE at
+// the end, which avoids the O(n²) of unshift.</span>
+function myFlatIterative(arr) {
+  const stack = [...arr];
+  const out = [];
+  while (stack.length) {
+    const item = stack.pop();
+    if (Array.isArray(item)) stack.push(...item);
+    else out.push(item);
+  }
+  return out.reverse();
+}
+
+<span class="cmt">// 3 — flatMap is map then flat(1), and that is all it is</span>
+function myFlatMap(arr, cb, thisArg) {
+  return myFlat(arr.map(cb, thisArg), 1);
+}</code></pre>
+            <p>
+              <strong>The stack-overflow point is the reason for version 2.</strong> The recursive
+              version recurses once per level of nesting, so a 100,000-deep array throws
+              <code>RangeError: Maximum call stack size exceeded</code>. The iterative version
+              moves that depth onto the heap as an explicit stack. Interviewers ask "what if it is
+              very deeply nested" precisely to see whether you know recursion depth is a real
+              limit, not a theoretical one.
+            </p>
+            <p>
+              Two honest caveats to volunteer. <code>out.push(...myFlat(...))</code> spreads, and
+              spreading a very large array can exceed the argument limit &mdash; for huge inputs
+              use a loop or <code>out = out.concat(...)</code>. And version 2 flattens
+              <em>fully</em>; adding depth control to the iterative version means pushing
+              <code>[item, depth]</code> pairs onto the stack, which is worth saying even if you
+              do not write it.
+            </p>
+          </div>
+        </details>
+
+        <p class="qlabel">Cross-questions</p>
+        <div class="xq">
+
+          <div class="xq-item">
+            <p class="xq-q">Why is it called <code>flat</code> and not <code>flatten</code>?</p>
+            <p class="xq-why">Testing: do you know the web-compatibility story? It is a good one.</p>
+            <p class="ans good">"<code>Array.prototype.flatten</code> was the original proposal, but shipping it broke sites using an old version of MooTools, which had added its own incompatible <code>flatten</code> to the prototype. Rather than break the web, TC39 renamed the method. It is the standard cautionary tale for why you do not extend built-in prototypes in a library."</p>
+          </div>
+
+          <div class="xq-item">
+            <p class="xq-q">Does <code>flat</code> deep-copy the elements?</p>
+            <p class="xq-why">Testing: shallow versus deep, again.</p>
+            <p class="ans good">"No &mdash; it returns a new array whose elements are the same references. Objects inside are shared with the original. Flattening changes the structure, not the contents."</p>
+          </div>
+
+          <div class="xq-item">
+            <p class="xq-q">When would you reach for <code>flatMap</code> in real code?</p>
+            <p class="xq-why">Testing: practical use rather than definition.</p>
+            <p class="ans good">"Map-and-filter in one pass: return <code>[value]</code> to keep, <code>[]</code> to drop. In the slide parser I use it to turn each shape into zero or more render commands &mdash; a grouped shape produces several, an unsupported one produces none &mdash; which is much cleaner than <code>map</code> then <code>filter(Boolean)</code>."</p>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <!-- ================================================================= -->
+    <div class="session">
+      <span class="sn">Session 2</span>
+      <span class="st">Function and object polyfills, against the clock</span>
+      <span class="sd">~75 min</span>
+    </div>
+
+    <div class="callout warn">
+      <span class="ct">This session is a re-drill</span>
+      <p>
+        You wrote all six of these in Chapter 2. Do not re-read it. The point now is
+        <strong>speed and spec fidelity from memory</strong> &mdash; if you need to look back,
+        that is the measurement, not a failure. Note it and move on.
+      </p>
+    </div>
+
+    <h2>3 &middot; call, apply, bind &mdash; from memory</h2>
+
+    <div class="qblock">
+      <div class="q-head">
+        <span class="q-n">Question 3</span>
+        <span class="q-t">Implement bind. It must work with new.</span>
+        <span class="q-freq">The single most-asked function polyfill</span>
+      </div>
+      <div class="q-body">
+
+        <div class="saythis">
+          <span class="st-lab">The contract, in one breath</span>
+          <p>
+            Permanent <code>this</code>; partial application of leading arguments; when called
+            with <code>new</code> the bound <code>this</code> is <strong>ignored</strong> and the
+            result must be <code>instanceof</code> the original; rebinding does nothing; the real
+            one also sets <code>name</code> to <code>"bound f"</code>, reduces
+            <code>length</code>, and has no <code>prototype</code> property of its own.
+          </p>
+        </div>
+
+        <div class="drill">
+          <div class="d-head"><span>Now you code</span><span>AI off &middot; no looking back at Chapter 2</span><span class="clock">12 min</span></div>
+          <div class="d-body">
+            <h4>All three, plus the four assertions</h4>
+<pre><code>Function.prototype.myCall = function (thisArg, ...args) { <span class="cmt">/* you */</span> };
+Function.prototype.myApply = function (thisArg, args) { <span class="cmt">/* you */</span> };
+Function.prototype.myBind = function (thisArg, ...preset) { <span class="cmt">/* you */</span> };
+
+<span class="cmt">// then write these four assertions and make them pass:
+//   1. borrowed context:  fn.myCall({x:1}) sees this.x === 1
+//   2. partial:           fn.myBind(ctx, 1)(2) === fn.call(ctx, 1, 2)
+//   3. new-correct:       new (Ctor.myBind({ignored:true}))("w1") instanceof Ctor
+//   4. rebinding:         fn.myBind(a).myBind(b)() uses a, not b</span></code></pre>
+          </div>
+        </div>
+
+        <details class="solution">
+          <summary>Solution &mdash; open only after the timer</summary>
+          <div class="sol-in">
+<pre><code>Function.prototype.myCall = function (thisArg, ...args) {
+  if (typeof this !== "function") throw new TypeError("not callable");
+  const key = Symbol("fn");
+  const ctx = thisArg ?? globalThis;
+  Object.defineProperty(ctx, key, { value: this, configurable: true, enumerable: false });
+  try { return ctx[key](...args); } finally { delete ctx[key]; }
+};
+
+Function.prototype.myApply = function (thisArg, args) {
+  return this.myCall(thisArg, ...(args ?? []));
+};
+
+Function.prototype.myBind = function (thisArg, ...preset) {
+  if (typeof this !== "function") throw new TypeError("not callable");
+  const target = this;
+
+  function bound(...later) {
+    return target.apply(new.target ? this : thisArg, [...preset, ...later]);
+  }
+  if (target.prototype) bound.prototype = Object.create(target.prototype);
+  return bound;
+};</code></pre>
+            <p>
+              If assertion 3 or 4 failed, that is the one to repeat tomorrow. Assertion 3 needs
+              <code>new.target</code>; assertion 4 passes automatically because the inner
+              <code>bound</code> ignores any outer <code>thisArg</code> &mdash; the target is
+              already bound.
+            </p>
+            <p>
+              Time check: under 8 minutes is strong, 12 is a pass, over 15 means this goes back
+              into the daily set until it is not.
+            </p>
+          </div>
+        </details>
+
+        <p class="qlabel">Cross-questions</p>
+        <div class="xq">
+          <div class="xq-item">
+            <p class="xq-q">Why <code>Object.create(target.prototype)</code> rather than assigning it directly?</p>
+            <p class="xq-why">Testing: whether you understood it or copied it.</p>
+            <p class="ans good">"Assigning directly makes <code>bound.prototype</code> the <em>same object</em> as <code>target.prototype</code>, so anyone adding a method to the bound function's prototype mutates the original's, for every existing instance. Creating an object that inherits from it keeps <code>instanceof</code> working while isolating writes."</p>
+          </div>
+          <div class="xq-item">
+            <p class="xq-q">What can your polyfill not reproduce?</p>
+            <p class="xq-why">Testing: honesty about the limits of userland code.</p>
+            <p class="ans good">"A real bound function is an exotic object with no <code>prototype</code> property at all, so it cannot be used with <code>extends</code>. Mine has one, because that is how I make <code>instanceof</code> work. I also have to set <code>name</code> and <code>length</code> manually with <code>defineProperty</code> to match, since they are non-writable on functions."</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <h2>4 &middot; new, Object.create, instanceof &mdash; from memory</h2>
+
+    <div class="qblock">
+      <div class="q-head">
+        <span class="q-n">Question 4</span>
+        <span class="q-t">Implement the new operator, and instanceof.</span>
+        <span class="q-freq">Common pairing &middot; usually straight after bind</span>
+      </div>
+      <div class="q-body">
+
+        <div class="saythis">
+          <span class="st-lab">The contracts, in one breath</span>
+          <p>
+            <strong><code>new</code>:</strong> create an object whose prototype is
+            <code>Ctor.prototype</code>; call the constructor with <code>this</code> as that
+            object; return it <em>unless</em> the constructor returned an object, in which case
+            that wins &mdash; a primitive return is ignored.
+            <strong><code>instanceof</code>:</strong> check <code>Symbol.hasInstance</code> first,
+            then walk the object's prototype chain looking for
+            <code>Ctor.prototype</code>. Primitives are always <code>false</code>; a non-callable
+            right-hand side throws.
+          </p>
+        </div>
+
+        <div class="drill">
+          <div class="d-head"><span>Now you code</span><span>AI off &middot; no looking back</span><span class="clock">12 min</span></div>
+          <div class="d-body">
+            <h4>Three functions, six assertions</h4>
+<pre><code>function myNew(Ctor, ...args) { <span class="cmt">/* you */</span> }
+function myObjectCreate(proto, descriptors) { <span class="cmt">/* you */</span> }
+function myInstanceof(obj, Ctor) { <span class="cmt">/* you */</span> }
+
+<span class="cmt">// assertions to write and pass:
+//   1. prototype methods work on the result of myNew
+//   2. a constructor returning an object → that object wins
+//   3. a constructor returning 42 → ignored
+//   4. myObjectCreate(null) has no prototype at all
+//   5. myInstanceof([], Object) === true   (walks more than one link)
+//   6. myInstanceof("s", String) === false (primitives are not instances)</span></code></pre>
+          </div>
+        </div>
+
+        <details class="solution">
+          <summary>Solution &mdash; open only after the timer</summary>
+          <div class="sol-in">
+<pre><code>function myNew(Ctor, ...args) {
+  if (typeof Ctor !== "function") throw new TypeError(Ctor + " is not a constructor");
+  const proto = (Ctor.prototype !== null &amp;&amp; typeof Ctor.prototype === "object")
+    ? Ctor.prototype : Object.prototype;
+  const instance = Object.create(proto);
+  const result = Ctor.apply(instance, args);
+  return (result !== null &amp;&amp; (typeof result === "object" || typeof result === "function"))
+    ? result : instance;
+}
+
+function myObjectCreate(proto, descriptors) {
+  if (typeof proto !== "object" &amp;&amp; typeof proto !== "function")
+    throw new TypeError("Object prototype may only be an Object or null");
+  function F() {}
+  F.prototype = proto;
+  const obj = new F();
+  if (proto === null) Object.setPrototypeOf(obj, null);
+  if (descriptors) Object.defineProperties(obj, descriptors);
+  return obj;
+}
+
+function myInstanceof(obj, Ctor) {
+  if (typeof Ctor !== "function") throw new TypeError("Right-hand side is not callable");
+  const custom = Ctor[Symbol.hasInstance];
+  if (typeof custom === "function") return Boolean(custom.call(Ctor, obj));
+  if (obj === null || (typeof obj !== "object" &amp;&amp; typeof obj !== "function")) return false;
+
+  const target = Ctor.prototype;
+  let cur = Object.getPrototypeOf(obj);
+  while (cur !== null) {
+    if (cur === target) return true;
+    cur = Object.getPrototypeOf(cur);
+  }
+  return false;
+}</code></pre>
+            <p>
+              Assertion 6 is the sharp one: <code>"s" instanceof String</code> is
+              <code>false</code> because a primitive string is not an object and has no prototype
+              chain of its own &mdash; only <code>new String("s")</code> is an instance. If you
+              got that right without thinking, the Chapter 2 material has stuck.
+            </p>
+          </div>
+        </details>
+
+        <p class="qlabel">Cross-questions</p>
+        <div class="xq">
+          <div class="xq-item">
+            <p class="xq-q">Will <code>myNew</code> work on an ES6 <code>class</code>?</p>
+            <p class="xq-why">Testing: do you know the limit of a userland <code>new</code>?</p>
+            <p class="ans good">"No, and that is correct behaviour rather than a bug. A class constructor throws when invoked without <code>new</code>, and <code>Ctor.apply(instance, args)</code> is a normal call &mdash; it cannot set <code>new.target</code>. Reproducing that needs <code>Reflect.construct</code>, which is the real primitive underneath the operator."</p>
+          </div>
+          <div class="xq-item">
+            <p class="xq-q">What is <code>Reflect.construct</code> for, then?</p>
+            <p class="xq-why">Testing: breadth.</p>
+            <p class="ans good">"It is <code>new</code> as a function, and it takes an optional third argument &mdash; the <code>newTarget</code> &mdash; which decides which prototype the instance gets. That is how you construct one class but give the instance a subclass's prototype, and it is the sanctioned way to subclass built-ins in transpiled code."</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="practice">
+      <span class="pt">Practice &mdash; Sessions 1&ndash;2</span>
+      <h4>Log your times</h4>
+      <p>
+        Create a table in <code>answers.md</code>: implementation, date, time taken, edge cases
+        missed. You will re-run every one of these on day 3, day 10 and day 24. The number that
+        matters is not whether you passed today &mdash; it is whether the time is falling.
+      </p>
+    </div>
+
+    <!-- ================================================================= -->
+    <div class="session">
+      <span class="sn">Session 3</span>
+      <span class="st">Promise polyfills, against the clock</span>
+      <span class="sd">~75 min</span>
+    </div>
+
+    <h2>5 &middot; The four combinators &mdash; from memory</h2>
+
+    <div class="qblock">
+      <div class="q-head">
+        <span class="q-n">Question 5</span>
+        <span class="q-t">Implement Promise.all. Now allSettled, race and any.</span>
+        <span class="q-freq">Very common &middot; all is near-certain, any is the one that catches people</span>
+      </div>
+      <div class="q-body">
+
+        <div class="saythis">
+          <span class="st-lab">The contract, in one breath</span>
+          <p>
+            Results in <strong>input order</strong>, not completion order. Accept any iterable and
+            any non-promise values. <code>all</code> rejects on the first rejection;
+            <code>allSettled</code> never rejects; <code>race</code> takes the first to settle
+            either way; <code>any</code> takes the first fulfilment and rejects with an
+            <code>AggregateError</code> only if all reject. Empty input:
+            <code>all</code> and <code>allSettled</code> fulfil with <code>[]</code>,
+            <code>race</code> stays pending forever, <code>any</code> rejects immediately.
+          </p>
+        </div>
+
+        <div class="drill">
+          <div class="d-head"><span>Now you code</span><span>AI off &middot; no looking back at Chapter 3</span><span class="clock">15 min</span></div>
+          <div class="d-body">
+            <h4>All four, then the ordering test</h4>
+<pre><code>function myAll(iterable) { <span class="cmt">/* you */</span> }
+function myAllSettled(iterable) { <span class="cmt">/* you */</span> }
+function myRace(iterable) { <span class="cmt">/* you */</span> }
+function myAny(iterable) { <span class="cmt">/* you */</span> }
+
+<span class="cmt">// the test that catches the push-instead-of-index bug:</span>
+const delay = (ms, v) =&gt; new Promise((r) =&gt; setTimeout(() =&gt; r(v), ms));
+myAll([delay(30, "a"), delay(10, "b"), delay(20, "c")])
+  .then((r) =&gt; console.log(r));        <span class="cmt">// MUST be ["a","b","c"], not ["b","c","a"]</span>
+
+<span class="cmt">// and the four empty cases:</span>
+myAll([]).then(() =&gt; console.log("all: fulfilled []"));
+myAllSettled([]).then(() =&gt; console.log("allSettled: fulfilled []"));
+myRace([]).then(() =&gt; console.log("race: NEVER PRINTS"));
+myAny([]).catch((e) =&gt; console.log("any:", e.constructor.name));</code></pre>
+          </div>
+        </div>
+
+        <details class="solution">
+          <summary>Solution &mdash; open only after the timer</summary>
+          <div class="sol-in">
+<pre><code>function myAll(iterable) {
+  return new Promise((resolve, reject) =&gt; {
+    const items = [...iterable];
+    const results = new Array(items.length);
+    let remaining = items.length;
+    if (remaining === 0) return resolve([]);
+    items.forEach((item, i) =&gt; {
+      Promise.resolve(item).then((value) =&gt; {
+        results[i] = value;                       <span class="cmt">// index, never push</span>
+        if (--remaining === 0) resolve(results);
+      }, reject);
+    });
+  });
+}
+
+function myAllSettled(iterable) {
+  return new Promise((resolve) =&gt; {
+    const items = [...iterable];
+    const results = new Array(items.length);
+    let remaining = items.length;
+    if (remaining === 0) return resolve([]);
+    items.forEach((item, i) =&gt; {
+      Promise.resolve(item).then(
+        (value)  =&gt; { results[i] = { status: "fulfilled", value }; },
+        (reason) =&gt; { results[i] = { status: "rejected", reason }; }
+      ).finally(() =&gt; { if (--remaining === 0) resolve(results); });
+    });
+  });
+}
+
+function myRace(iterable) {
+  return new Promise((resolve, reject) =&gt; {
+    for (const item of iterable) Promise.resolve(item).then(resolve, reject);
+  });
+}
+
+function myAny(iterable) {
+  return new Promise((resolve, reject) =&gt; {
+    const items = [...iterable];
+    const errors = new Array(items.length);
+    let remaining = items.length;
+    if (remaining === 0)
+      return reject(new AggregateError([], "All promises were rejected"));
+    items.forEach((item, i) =&gt; {
+      Promise.resolve(item).then(resolve, (err) =&gt; {
+        errors[i] = err;
+        if (--remaining === 0)
+          reject(new AggregateError(errors, "All promises were rejected"));
+      });
+    });
+  });
+}</code></pre>
+            <p>
+              Under 10 minutes for all four is strong. If you wrote <code>results.push(value)</code>
+              anywhere, the ordering test caught you &mdash; and it is the single most common bug
+              in this exercise, because it passes every test where the promises happen to settle
+              in order.
+            </p>
+          </div>
+        </details>
+
+        <p class="qlabel">Cross-questions</p>
+        <div class="xq">
+          <div class="xq-item">
+            <p class="xq-q">Why is a counter needed &mdash; can't you check <code>results.length</code>?</p>
+            <p class="xq-why">Testing: whether you thought about it or copied the pattern.</p>
+            <p class="ans good">"No, for two reasons. The array is pre-sized, so its <code>length</code> is already final from the start. And even if I built it up, assigning index 4 before index 2 sets <code>length</code> to 5 with a hole at 2 &mdash; so length would lie. A counter decremented on each settle is the only reliable completion signal."</p>
+          </div>
+          <div class="xq-item">
+            <p class="xq-q">What if the same promise appears twice in the input?</p>
+            <p class="xq-why">Testing: a small edge case that reveals whether you reason or recall.</p>
+            <p class="ans good">"It works fine &mdash; each entry gets its own <code>.then</code> and its own index, so the value simply appears twice in the results. Promises are not consumed by being awaited; you can attach any number of handlers to one promise and they all fire."</p>
+          </div>
+          <div class="xq-item">
+            <p class="xq-q">Add a concurrency limit to <code>all</code>.</p>
+            <p class="xq-why">Testing: the natural escalation &mdash; and it is session 6's drill.</p>
+            <p class="ans good">"That is no longer <code>all</code>, because <code>all</code> takes promises that have already started. A pool has to take <em>functions</em> that return promises, so it controls when each one starts. That distinction &mdash; promises versus thunks &mdash; is the crux of the exercise, and the pool then keeps N in flight and pulls the next task as each finishes."</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <h2>6 &middot; MyPromise &mdash; from memory</h2>
+
+    <div class="qblock">
+      <div class="q-head">
+        <span class="q-n">Question 6</span>
+        <span class="q-t">Implement a Promise class from scratch.</span>
+        <span class="q-freq">The heaviest polyfill they ask &middot; usually reserved for senior rounds</span>
+      </div>
+      <div class="q-body">
+
+        <div class="saythis">
+          <span class="st-lab">The contract, in one breath</span>
+          <p>
+            Executor runs synchronously and a throw in it rejects. State transitions are one-way
+            and permanent. Callbacks attached while pending are queued and flushed on settle.
+            Callbacks <strong>always</strong> run as microtasks, even on an already-settled
+            promise. <code>then</code> returns a new promise: a returned value fulfils it, a throw
+            rejects it, a returned thenable is adopted, and a missing handler passes the state
+            straight through.
+          </p>
+        </div>
+
+        <div class="drill">
+          <div class="d-head"><span>Now you code</span><span>AI off &middot; no looking back</span><span class="clock">15 min</span></div>
+          <div class="d-body">
+            <h4>The class, plus five assertions</h4>
+<pre><code>class MyPromise { <span class="cmt">/* constructor, then, catch, finally, static resolve/reject */</span> }
+
+<span class="cmt">// assertions:
+//   1. new MyPromise(r => r(1)).then(v => console.log(v))       → async, logs 1
+//   2. resolve twice → only the first wins
+//   3. throw in the executor → rejects
+//   4. throw in a .then handler → the NEXT promise rejects
+//   5. a .catch five links down catches an error thrown at link one</span></code></pre>
+            <p>
+              Skip thenable adoption if you are short on time and say so out loud. Assertion 5 is
+              the one that proves you understood chaining rather than memorised it.
+            </p>
+          </div>
+        </div>
+
+        <details class="solution">
+          <summary>Solution &mdash; open only after the timer</summary>
+          <div class="sol-in">
+<pre><code>class MyPromise {
+  #state = "pending";
+  #value;
+  #callbacks = [];
+
+  constructor(executor) {
+    const resolve = (v) =&gt; this.#settle("fulfilled", v);
+    const reject  = (r) =&gt; this.#settle("rejected", r);
+    try { executor(resolve, reject); } catch (err) { reject(err); }
+  }
+
+  #settle(state, value) {
+    if (this.#state !== "pending") return;
+    this.#state = state;
+    this.#value = value;
+    this.#callbacks.forEach(queueMicrotask);
+    this.#callbacks = [];
+  }
+
+  then(onFulfilled, onRejected) {
+    return new MyPromise((resolve, reject) =&gt; {
+      const handle = () =&gt; {
+        const handler = this.#state === "fulfilled" ? onFulfilled : onRejected;
+        if (typeof handler !== "function") {
+          this.#state === "fulfilled" ? resolve(this.#value) : reject(this.#value);
+          return;
+        }
+        try {
+          const result = handler(this.#value);
+          if (result &amp;&amp; typeof result.then === "function") result.then(resolve, reject);
+          else resolve(result);
+        } catch (err) { reject(err); }
+      };
+      if (this.#state === "pending") this.#callbacks.push(handle);
+      else queueMicrotask(handle);
+    });
+  }
+
+  catch(onRejected) { return this.then(undefined, onRejected); }
+  finally(fn) { return this.then((v) =&gt; { fn(); return v; }, (e) =&gt; { fn(); throw e; }); }
+  static resolve(v) { return v instanceof MyPromise ? v : new MyPromise((r) =&gt; r(v)); }
+  static reject(e) { return new MyPromise((_, rj) =&gt; rj(e)); }
+}</code></pre>
+            <p>
+              Assertion 5 passes because of the three-line pass-through branch. Without it, a
+              rejection stops dead at the first <code>.then</code> that has no
+              <code>onRejected</code>, and every chain would need a <code>catch</code> at every
+              link. If you can point at those three lines and explain that, you have understood
+              promises at a level most candidates have not.
+            </p>
+          </div>
+        </details>
+
+        <p class="qlabel">Cross-questions</p>
+        <div class="xq">
+          <div class="xq-item">
+            <p class="xq-q">Why <code>queueMicrotask</code> rather than <code>setTimeout</code>?</p>
+            <p class="xq-why">Testing: whether Chapter 3 connected.</p>
+            <p class="ans good">"Because promise callbacks are specified as microtasks, and using a timer would make them tasks &mdash; so they would run after every pending promise callback and after rendering, changing the ordering of every program that used it. It would still 'work' on the happy path, which is exactly why it is a bug worth catching."</p>
+          </div>
+          <div class="xq-item">
+            <p class="xq-q">Name three ways yours diverges from the spec.</p>
+            <p class="xq-why">Testing: honesty, which scores better than a false claim of completeness.</p>
+            <p class="ans good">"It does not run the full resolution procedure on values passed to <code>resolve()</code> itself, only on values returned from handlers. It does not guard against a promise resolving with itself, which should be a <code>TypeError</code>. And it may call a thenable's <code>then</code> more than once in adversarial cases, where the spec requires it be called at most once. Those three are what the Promises/A+ test suite exists to catch."</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ================================================================= -->
+    <div class="session">
+      <span class="sn">Session 4</span>
+      <span class="st">Timing and functional utilities</span>
+      <span class="sd">~75 min</span>
+    </div>
+
+    <h2>7 &middot; debounce and throttle</h2>
+
+    <div class="qblock">
+      <div class="q-head">
+        <span class="q-n">Question 7</span>
+        <span class="q-t">Implement throttle with both leading and trailing edges.</span>
+        <span class="q-freq">Near-certain &middot; and throttle is asked more often than debounce at senior level</span>
+      </div>
+      <div class="q-body">
+
+        <div class="saythis">
+          <span class="st-lab">The contract, in one breath</span>
+          <p>
+            <strong>Debounce</strong> postpones until the calls stop for <code>wait</code> ms.
+            <strong>Throttle</strong> guarantees at most one call per <code>wait</code> ms during
+            a continuous stream. Both must forward <code>this</code> and all arguments, remember
+            the <em>latest</em> arguments, and expose <code>cancel</code>. Throttle additionally
+            needs the two edges: <code>leading</code> fires immediately on the first call,
+            <code>trailing</code> fires once more at the end of the window with the last
+            arguments &mdash; and with both enabled, a single isolated call must fire
+            <strong>once</strong>, not twice.
+          </p>
+        </div>
+
+        <div class="trap">
+          <span class="t-lab">Trap</span>
+          <div class="t-in">
+            <p>
+              The double-fire bug: with <code>leading</code> and <code>trailing</code> both on,
+              one isolated call runs on the leading edge and then the trailing timer fires again
+              with the same arguments. The fix is to only schedule the trailing call if at least
+              one <em>additional</em> call arrived during the window &mdash; track pending
+              arguments and clear them after every invoke.
+            </p>
+          </div>
+        </div>
+
+        <div class="drill">
+          <div class="d-head"><span>Now you code</span><span>AI off &middot; autocomplete off</span><span class="clock">15 min</span></div>
+          <div class="d-body">
+            <h4>Both, with the edge test</h4>
+<pre><code>function debounce(fn, wait, { leading = false, trailing = true } = {}) { <span class="cmt">/* you */</span> }
+function throttle(fn, wait, { leading = true, trailing = true } = {}) { <span class="cmt">/* you */</span> }
+
+<span class="cmt">// the tests that matter:
+//   A. throttled(1); throttled(2); throttled(3) within one window
+//      → fn called with 1 (leading) and 3 (trailing). Never 2.
+//   B. one isolated throttled(1), then silence
+//      → fn called EXACTLY ONCE, not twice.
+//   C. debounced(1); debounced(2); debounced(3)
+//      → fn called once, with 3.
+//   D. both must expose .cancel() that prevents any pending call.</span></code></pre>
+          </div>
+        </div>
+
+        <details class="solution">
+          <summary>Solution &mdash; open only after the timer</summary>
+          <div class="sol-in">
+<pre><code>function debounce(fn, wait, { leading = false, trailing = true } = {}) {
+  let timer = null, lastArgs = null, lastThis = null, result;
+
+  function invoke() {
+    const args = lastArgs, ctx = lastThis;
+    lastArgs = lastThis = null;
+    result = fn.apply(ctx, args);
+  }
+
+  function debounced(...args) {
+    lastArgs = args; lastThis = this;
+    const isFirst = timer === null;
+    if (timer !== null) clearTimeout(timer);
+    if (leading &amp;&amp; isFirst) invoke();
+    timer = setTimeout(() =&gt; {
+      timer = null;
+      if (trailing &amp;&amp; lastArgs) invoke();      <span class="cmt">// lastArgs is null if leading just ran</span>
+    }, wait);
+    return result;
+  }
+
+  debounced.cancel = () =&gt; { clearTimeout(timer); timer = null; lastArgs = lastThis = null; };
+  debounced.flush = () =&gt; { if (timer &amp;&amp; lastArgs) { clearTimeout(timer); timer = null; invoke(); } return result; };
+  return debounced;
+}
+
+function throttle(fn, wait, { leading = true, trailing = true } = {}) {
+  let timer = null, lastArgs = null, lastThis = null, result;
+
+  function invoke() {
+    const args = lastArgs, ctx = lastThis;
+    lastArgs = lastThis = null;              <span class="cmt">// ← clears the "something pending" flag</span>
+    result = fn.apply(ctx, args);
+  }
+
+  function startWindow() {
+    timer = setTimeout(() =&gt; {
+      timer = null;
+      <span class="cmt">// only fire the trailing edge if a call arrived DURING the window;
+      // this is what prevents the double-fire on an isolated call</span>
+      if (trailing &amp;&amp; lastArgs) { invoke(); startWindow(); }
+    }, wait);
+  }
+
+  function throttled(...args) {
+    lastArgs = args; lastThis = this;
+    if (timer === null) {                    <span class="cmt">// not in a window → this is a leading call</span>
+      if (leading) invoke();
+      startWindow();
+    }
+    <span class="cmt">// in a window → do nothing; lastArgs now holds the newest arguments</span>
+    return result;
+  }
+
+  throttled.cancel = () =&gt; { clearTimeout(timer); timer = null; lastArgs = lastThis = null; };
+  return throttled;
+}</code></pre>
+            <p>
+              Walk test B through the throttle: one call, <code>timer</code> is null, so
+              <code>invoke()</code> runs and clears <code>lastArgs</code>, then
+              <code>startWindow()</code> schedules the check. When it fires,
+              <code>lastArgs</code> is null &mdash; nothing arrived during the window &mdash; so
+              no trailing call. Exactly once. Now test A: calls 2 and 3 land while
+              <code>timer</code> is set, overwriting <code>lastArgs</code>; at the end of the
+              window <code>lastArgs</code> is <code>[3]</code>, so it invokes with 3 and starts a
+              fresh window in case more arrive. Never 2.
+            </p>
+            <p>
+              <strong>The relationship worth stating:</strong> lodash implements
+              <code>throttle</code> as <code>debounce</code> with <code>maxWait</code> equal to
+              <code>wait</code>. Throttle is debounce plus a promise that you will never wait
+              longer than the window. Saying that shows you see the family rather than two
+              memorised snippets.
+            </p>
+          </div>
+        </details>
+
+        <p class="qlabel">Cross-questions</p>
+        <div class="xq">
+          <div class="xq-item">
+            <p class="xq-q">Would you throttle a <code>pointermove</code> on your canvas?</p>
+            <p class="xq-why">Testing: your own domain &mdash; and the answer is no.</p>
+            <p class="ans good">"No &mdash; I would coalesce into <code>requestAnimationFrame</code>. Store the latest position in a closure, schedule one frame if none is pending, draw once per frame. A 16ms throttle is fighting the browser's clock rather than aligning with it, so it can draw twice in one frame or skip one entirely. Throttle is right for things not tied to painting, like firing an analytics ping during scroll."</p>
+          </div>
+          <div class="xq-item">
+            <p class="xq-q">Why must these use <code>function</code>, not an arrow, for the returned wrapper?</p>
+            <p class="xq-why">Testing: whether Chapter 2 connected.</p>
+            <p class="ans good">"So <code>this</code> can be captured and forwarded with <code>apply</code>. An arrow has no own <code>this</code>, so assigning the debounced function as a method or a DOM handler would lose the binding entirely."</p>
+          </div>
+          <div class="xq-item">
+            <p class="xq-q">What does <code>cancel</code> need to null out, and why?</p>
+            <p class="xq-why">Testing: the leak awareness from Chapter 1.</p>
+            <p class="ans good">"The timer, and also <code>lastArgs</code> and <code>lastThis</code>. If I only clear the timer, the closure still retains the last arguments &mdash; which in a React app can be a whole event object or a component instance. Cancelling on unmount that still retains the component is a leak with extra steps."</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <h2>8 &middot; once, memoize, curry, pipe, compose</h2>
+
+    <div class="qblock">
+      <div class="q-head">
+        <span class="q-n">Question 8</span>
+        <span class="q-t">Implement memoize. Now make it work with object arguments.</span>
+        <span class="q-freq">Common &middot; the object-arguments follow-up is where most versions fall over</span>
+      </div>
+      <div class="q-body">
+
+        <div class="saythis">
+          <span class="st-lab">The contracts, in one breath</span>
+          <p>
+            <strong><code>once</code></strong>: invoke at most once, cache and return the first
+            result, forward <code>this</code>, use a separate flag because the result may
+            legitimately be <code>undefined</code>.
+            <strong><code>memoize</code></strong>: cache by arguments, with a custom key resolver,
+            and an honest answer about object keys.
+            <strong><code>curry</code></strong>: collect arguments until
+            <code>fn.length</code> is reached, never mutating the captured array.
+            <strong><code>pipe</code></strong> applies left to right,
+            <strong><code>compose</code></strong> right to left &mdash; that is the only
+            difference.
+          </p>
+        </div>
+
+        <div class="trap">
+          <span class="t-lab">Trap</span>
+          <div class="t-in">
+            <p>
+              <code>JSON.stringify(args)</code> as a cache key is the default answer and it is
+              wrong in four ways: key order changes the string, functions and
+              <code>undefined</code> are dropped, <code>Map</code>/<code>Set</code>/<code>Date</code>
+              do not round-trip, and cycles throw. Say this before the interviewer does, then
+              offer the two real options: a custom resolver, or a nested
+              <code>WeakMap</code> keyed by the argument objects themselves.
+            </p>
+          </div>
+        </div>
+
+        <div class="drill">
+          <div class="d-head"><span>Now you code</span><span>AI off &middot; autocomplete off</span><span class="clock">15 min</span></div>
+          <div class="d-body">
+            <h4>Five functions</h4>
+<pre><code>function once(fn) { <span class="cmt">/* you */</span> }
+function memoize(fn, resolver) { <span class="cmt">/* you */</span> }
+function curry(fn) { <span class="cmt">/* you */</span> }
+const pipe = (...fns) =&gt; { <span class="cmt">/* you */</span> };
+const compose = (...fns) =&gt; { <span class="cmt">/* you */</span> };
+
+<span class="cmt">// tests:
+//   once:    a fn returning undefined must still only run once
+//   memoize: memoized(1,2) hits cache on the second identical call;
+//            a custom resolver is used when supplied;
+//            calling with the SAME object twice must hit the cache
+//   curry:   const base = f(1,2); base(3); base(10);  ← both must work
+//   pipe:    pipe(a, b, c)(x) === c(b(a(x)))
+//   compose: compose(a, b, c)(x) === a(b(c(x)))</span></code></pre>
+          </div>
+        </div>
+
+        <details class="solution">
+          <summary>Solution &mdash; open only after the timer</summary>
+          <div class="sol-in">
+<pre><code>function once(fn) {
+  let called = false, result;
+  return function (...args) {
+    if (!called) { called = true; result = fn.apply(this, args); fn = null; }
+    return result;
+  };
+}
+
+function memoize(fn, resolver) {
+  const cache = new Map();
+  function memoized(...args) {
+    const key = resolver ? resolver.apply(this, args) : args[0];   <span class="cmt">// lodash default: first arg</span>
+    if (cache.has(key)) return cache.get(key);
+    const value = fn.apply(this, args);
+    cache.set(key, value);
+    return value;
+  }
+  memoized.cache = cache;              <span class="cmt">// expose it — callers need to clear it</span>
+  return memoized;
+}
+
+function curry(fn) {
+  return function curried(...args) {
+    if (args.length &gt;= fn.length) return fn.apply(this, args);
+    return function (...rest) {
+      return curried.apply(this, [...args, ...rest]);   <span class="cmt">// NEW array every time</span>
+    };
+  };
+}
+
+const pipe = (...fns) =&gt; (x) =&gt; fns.reduce((acc, fn) =&gt; fn(acc), x);
+const compose = (...fns) =&gt; (x) =&gt; fns.reduceRight((acc, fn) =&gt; fn(acc), x);</code></pre>
+
+            <p>Now the object-key problem, which is the actual question:</p>
+
+<pre><code><span class="cmt">// multi-argument memoize with a nested cache — no stringify anywhere.
+// Objects are keyed by IDENTITY via WeakMap, primitives by value via Map.</span>
+function memoizeDeep(fn) {
+  const root = new Map();
+  const RESULT = Symbol("result");
+
+  return function (...args) {
+    let node = root;
+    for (const arg of args) {
+      const isObj = (typeof arg === "object" &amp;&amp; arg !== null) || typeof arg === "function";
+      if (!node.has(arg)) {
+        <span class="cmt">// object branches use WeakMap so cached entries don't pin objects</span>
+        node.set(arg, isObj ? new WeakMap() : new Map());
+      }
+      node = node.get(arg);
+    }
+    if (!node.has?.(RESULT)) {
+      <span class="cmt">// WeakMap can't hold a symbol key, so use a wrapper object per node</span>
+    }
+    return node;
+  };
+}</code></pre>
+            <p>
+              That second sketch is deliberately left unfinished, because the honest interview
+              answer is: <strong>a fully general multi-argument memoize is harder than it looks,
+              and you should say so.</strong> The trade-offs to name out loud:
+            </p>
+            <ul>
+              <li><strong>Single primitive argument</strong> &mdash; a <code>Map</code> is perfect and this is 90% of real use.</li>
+              <li><strong>Single object argument</strong> &mdash; a <code>WeakMap</code> keyed by identity is perfect, and it cannot leak.</li>
+              <li><strong>Several arguments</strong> &mdash; either a custom resolver the caller writes, or a nested cache. The nested version is real work and mixing <code>WeakMap</code> and <code>Map</code> branches is fiddly.</li>
+              <li><strong>Any memoize is a memory leak by design</strong> unless it is bounded. That is why the next session's exercise is an LRU cache, and why I would reach for one in production rather than an unbounded <code>Map</code>.</li>
+            </ul>
+            <p>
+              On <code>curry</code>: the reason <code>[...args, ...rest]</code> must build a new
+              array is that <code>base = f(1,2)</code> must be reusable. Mutating the captured
+              array means <code>base(3)</code> poisons <code>base(10)</code>. That is the test
+              case, and it is the whole exercise.
+            </p>
+          </div>
+        </details>
+
+        <p class="qlabel">Cross-questions</p>
+        <div class="xq">
+          <div class="xq-item">
+            <p class="xq-q">What is wrong with <code>JSON.stringify</code> as a cache key?</p>
+            <p class="xq-why">Testing: the trap above, asked directly.</p>
+            <p class="ans good">"Key order changes the output, so two equal objects can produce different keys. <code>undefined</code>, functions and symbols are dropped, so different inputs can produce the <em>same</em> key. <code>Date</code> becomes a string, <code>Map</code> and <code>Set</code> become <code>{}</code>, and circular references throw. It is fine for a flat object of primitives that you control, and dangerous as a general solution."</p>
+          </div>
+          <div class="xq-item">
+            <p class="xq-q">Does <code>memoize</code> leak?</p>
+            <p class="xq-why">Testing: the Chapter 1 instinct applied to your own utility.</p>
+            <p class="ans good">"An unbounded <code>Map</code> grows forever and strongly references both keys and values, so yes. Three mitigations: bound it with an LRU, use a <code>WeakMap</code> when the key is an object whose lifetime you do not control, or expose <code>.cache</code> so the caller can clear it. React's <code>useMemo</code> sidesteps this entirely by caching exactly one value and dropping it on dependency change."</p>
+          </div>
+          <div class="xq-item">
+            <p class="xq-q">Difference between <code>pipe</code> and <code>compose</code>?</p>
+            <p class="xq-why">Testing: a ten-second question you should answer in five.</p>
+            <p class="ans good">"Direction only. <code>pipe</code> is left to right, which reads in execution order; <code>compose</code> is right to left, matching mathematical notation. <code>reduce</code> versus <code>reduceRight</code> is the entire implementation difference. Redux's <code>compose</code> is the one most people have used, for <code>applyMiddleware</code>."</p>
+          </div>
+          <div class="xq-item">
+            <p class="xq-q">Why does <code>curry</code> use <code>fn.length</code>, and when does that fail?</p>
+            <p class="xq-why">Testing: knowing the limits of your own implementation.</p>
+            <p class="ans good">"<code>fn.length</code> is the count of parameters before the first default or rest parameter, so <code>(a, b = 1) =&gt; …</code> reports 1 and <code>(...args) =&gt; …</code> reports 0 &mdash; the curry fires immediately in both cases. For variadic or defaulted functions you need an explicit arity: <code>curry(fn, 3)</code>."</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="practice">
+      <span class="pt">Practice &mdash; Sessions 3&ndash;4</span>
+      <h4>Half the canon, back to back</h4>
+      <p>
+        One sitting, 45 minutes, no reference: the four combinators, <code>debounce</code>,
+        <code>throttle</code>, <code>once</code>, <code>memoize</code>, <code>curry</code>,
+        <code>pipe</code>, <code>compose</code>. Record the total. On day 10 you should be
+        ten minutes faster.
+      </p>
+    </div>
+
+    <!-- ================================================================= -->
+    <div class="session">
+      <span class="sn">Session 5</span>
+      <span class="st">Data structures: EventEmitter and LRU</span>
+      <span class="sd">~75 min</span>
+    </div>
+
+    <h2>9 &middot; EventEmitter</h2>
+
+    <div class="qblock">
+      <div class="q-head">
+        <span class="q-n">Question 9</span>
+        <span class="q-t">Implement an EventEmitter with on, off, once and emit.</span>
+        <span class="q-freq">Very common &middot; appears in machine coding rounds as a building block</span>
+      </div>
+      <div class="q-body">
+
+        <div class="saythis">
+          <span class="st-lab">The contract, in one breath</span>
+          <p>
+            <code>on(event, fn)</code> registers and <strong>returns an unsubscribe
+            function</strong>. <code>off</code> removes by identity. <code>once</code> wraps so it
+            fires at most once and removes itself &mdash; and <code>off</code> with the
+            <em>original</em> function must still remove the wrapper. <code>emit</code> calls every
+            listener with the given arguments and returns whether there were any.
+          </p>
+          <p>
+            The two correctness details: <strong>copy the listener list before iterating</strong>,
+            because a listener may subscribe or unsubscribe during emit; and decide explicitly
+            what happens when a listener <strong>throws</strong> &mdash; the safe choice is to
+            isolate it so one bad listener does not stop the others.
+          </p>
+        </div>
+
+        <div class="drill">
+          <div class="d-head"><span>Now you code</span><span>AI off &middot; autocomplete off</span><span class="clock">12 min</span></div>
+          <div class="d-body">
+            <h4>The class, and five nasty tests</h4>
+<pre><code>class EventEmitter {
+  on(event, fn) {}      <span class="cmt">// returns an unsubscribe function</span>
+  off(event, fn) {}
+  once(event, fn) {}    <span class="cmt">// returns an unsubscribe function too</span>
+  emit(event, ...args) {}
+  listenerCount(event) {}
+}
+
+<span class="cmt">// tests that break naive versions:
+//   1. a listener that unsubscribes ITSELF during emit must not
+//      cause the next listener to be skipped
+//   2. once() must fire exactly once even if emit is called from
+//      inside the once handler
+//   3. off(event, originalFn) must remove a listener added with once
+//   4. the same fn added twice must be called twice, and off removes
+//      only ONE of them (match Node's behaviour)
+//   5. a listener that throws must not prevent later listeners running</span></code></pre>
+          </div>
+        </div>
+
+        <details class="solution">
+          <summary>Solution &mdash; open only after the timer</summary>
+          <div class="sol-in">
+<pre><code>class EventEmitter {
+  #events = new Map();            <span class="cmt">// event -> array of { fn, original }</span>
+
+  on(event, fn) {
+    if (typeof fn !== "function") throw new TypeError("listener must be a function");
+    if (!this.#events.has(event)) this.#events.set(event, []);
+    this.#events.get(event).push({ fn, original: fn });
+    return () =&gt; this.off(event, fn);          <span class="cmt">// unsubscribe handle</span>
+  }
+
+  off(event, fn) {
+    const list = this.#events.get(event);
+    if (!list) return this;
+    <span class="cmt">// match on `original` so off(ev, fn) also removes a once(ev, fn) wrapper.
+    // findIndex + splice removes ONE, matching Node.</span>
+    const i = list.findIndex((l) =&gt; l.original === fn);
+    if (i !== -1) list.splice(i, 1);
+    if (list.length === 0) this.#events.delete(event);
+    return this;
+  }
+
+  once(event, fn) {
+    const wrapper = (...args) =&gt; {
+      this.off(event, fn);        <span class="cmt">// remove BEFORE calling → re-entrant emit is safe</span>
+      fn.apply(this, args);
+    };
+    if (!this.#events.has(event)) this.#events.set(event, []);
+    this.#events.get(event).push({ fn: wrapper, original: fn });
+    return () =&gt; this.off(event, fn);
+  }
+
+  emit(event, ...args) {
+    const list = this.#events.get(event);
+    if (!list || list.length === 0) return false;
+
+    <span class="cmt">// COPY before iterating — listeners may mutate the list mid-emit</span>
+    for (const { fn } of [...list]) {
+      try { fn.apply(this, args); }
+      catch (err) {
+        <span class="cmt">// isolate: one broken listener must not stop the rest</span>
+        queueMicrotask(() =&gt; { throw err; });   <span class="cmt">// surface it globally, don't swallow</span>
+      }
+    }
+    return true;
+  }
+
+  listenerCount(event) { return this.#events.get(event)?.length ?? 0; }
+}</code></pre>
+            <p>Four decisions worth defending out loud:</p>
+            <ul>
+              <li><strong>Storing <code>{ fn, original }</code></strong> is what makes test 3 pass. Storing bare functions means <code>off</code> can never find a <code>once</code> wrapper, which is a real bug in most hand-written emitters.</li>
+              <li><strong>Removing before calling</strong> in <code>once</code> makes test 2 pass. If you call first and remove after, a handler that re-emits recurses.</li>
+              <li><strong>Copying the array in <code>emit</code></strong> makes test 1 pass &mdash; the same fix as <code>createStore</code> in Chapter 1, for the same reason.</li>
+              <li><strong>Re-throwing in a microtask</strong> rather than swallowing. Swallowing hides bugs; letting it propagate stops the loop. Throwing asynchronously does both jobs: later listeners run, and the error still reaches <code>window.onerror</code> or the unhandled-rejection path.</li>
+            </ul>
+            <p>
+              Node's real emitter differs in two ways worth naming: it treats an
+              <code>"error"</code> event with no listeners as a throw, and it warns at eleven
+              listeners to catch leaks. Mentioning either shows you have read the thing you are
+              reimplementing.
+            </p>
+          </div>
+        </details>
+
+        <p class="qlabel">Cross-questions</p>
+        <div class="xq">
+          <div class="xq-item">
+            <p class="xq-q">Why return an unsubscribe function from <code>on</code>?</p>
+            <p class="xq-why">Testing: API design instinct.</p>
+            <p class="ans good">"Because the caller then cannot get removal wrong &mdash; no need to keep the event name and the exact function reference around, which is where cleanup bugs come from. It is the same shape as React's effect cleanup and as <code>store.subscribe</code>, and it composes: collect the returned functions in an array and call them all on teardown."</p>
+          </div>
+          <div class="xq-item">
+            <p class="xq-q">How is this different from the DOM's <code>EventTarget</code>?</p>
+            <p class="xq-why">Testing: platform awareness.</p>
+            <p class="ans good">"<code>EventTarget</code> has capture and bubble phases, event objects with <code>preventDefault</code> and <code>stopPropagation</code>, and it dedupes identical listener/options triples rather than adding twice. A plain emitter has none of that &mdash; it is a flat pub/sub. And <code>EventTarget</code> is constructible now, so if I need cleanup via <code>AbortSignal</code> I would extend it rather than write this."</p>
+          </div>
+          <div class="xq-item">
+            <p class="xq-q">Should <code>emit</code> be synchronous?</p>
+            <p class="xq-why">Testing: whether you have thought about the trade-off.</p>
+            <p class="ans good">"Mine is, and that matches Node. Synchronous means the emitter can be reasoned about like a function call and errors are attributable, but a slow listener blocks the emitter and re-entrancy is possible. Asynchronous emit avoids both but makes ordering harder and delays everything by a tick. I would keep it synchronous and document that listeners must be fast."</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <h2>10 &middot; LRU cache in O(1)</h2>
+
+    <div class="qblock">
+      <div class="q-head">
+        <span class="q-n">Question 10</span>
+        <span class="q-t">Implement an LRU cache. Both operations must be O(1).</span>
+        <span class="q-freq">Extremely common &middot; it is a LeetCode medium that doubles as a JS idiom test</span>
+      </div>
+      <div class="q-body">
+
+        <div class="saythis">
+          <span class="st-lab">The contract, in one breath</span>
+          <p>
+            Fixed capacity. <code>get(key)</code> returns the value and marks it most recently
+            used. <code>put(key, value)</code> inserts or updates, marks it most recently used,
+            and evicts the least recently used entry when over capacity. Both must be O(1).
+          </p>
+          <p>
+            The classic solution is a hash map plus a doubly linked list. <strong>In JavaScript
+            there is a shortcut:</strong> <code>Map</code> guarantees insertion order and lets you
+            delete and re-insert in O(1), so deleting a key and setting it again moves it to the
+            end. The oldest key is <code>map.keys().next().value</code>. Say both &mdash; know the
+            linked-list version because that is the language-agnostic answer, and use the
+            <code>Map</code> version because it is the idiomatic one.
+          </p>
+        </div>
+
+        <div class="drill">
+          <div class="d-head"><span>Now you code</span><span>AI off &middot; autocomplete off</span><span class="clock">15 min</span></div>
+          <div class="d-body">
+            <h4>Both versions</h4>
+<pre><code><span class="cmt">// Version A — Map-based (target: 5 minutes)
+// Version B — hash map + doubly linked list, no Map ordering tricks
+//             (target: 10 minutes; this is the one asked in DSA rounds)
+//
+// Both must pass:
+//   const c = new LRUCache(2);
+//   c.put("a", 1); c.put("b", 2);
+//   c.get("a");            // 1   → "a" is now most recent
+//   c.put("c", 3);         // evicts "b", NOT "a"
+//   c.get("b");            // -1 / undefined
+//   c.put("a", 10);        // update in place, still size 2, still most recent
+//
+// Edge cases they will name:
+//   - capacity 0
+//   - storing a value that is legitimately undefined
+//   - get on a missing key must not affect ordering</span></code></pre>
+          </div>
+        </div>
+
+        <details class="solution">
+          <summary>Solution &mdash; open only after the timer</summary>
+          <div class="sol-in">
+<pre><code><span class="cmt">// VERSION A — Map insertion order does the work</span>
+class LRUCache {
+  #map = new Map();
+  constructor(capacity) {
+    if (!Number.isInteger(capacity) || capacity &lt; 0) throw new RangeError("bad capacity");
+    this.capacity = capacity;
+  }
+
+  has(key) { return this.#map.has(key); }
+
+  get(key) {
+    if (!this.#map.has(key)) return undefined;     <span class="cmt">// has(), not a value check —</span>
+    const value = this.#map.get(key);              <span class="cmt">// undefined may be a real value</span>
+    this.#map.delete(key);
+    this.#map.set(key, value);                     <span class="cmt">// re-insert → now most recent</span>
+    return value;
+  }
+
+  put(key, value) {
+    if (this.capacity === 0) return;
+    if (this.#map.has(key)) this.#map.delete(key); <span class="cmt">// so the re-set moves it</span>
+    this.#map.set(key, value);
+    if (this.#map.size &gt; this.capacity) {
+      const oldest = this.#map.keys().next().value;  <span class="cmt">// first inserted = LRU</span>
+      this.#map.delete(oldest);
+    }
+  }
+
+  get size() { return this.#map.size; }
+}
+
+<span class="cmt">// VERSION B — hash map + doubly linked list, with sentinel head/tail
+// nodes so there are no null checks anywhere.</span>
+class LRUCacheDLL {
+  constructor(capacity) {
+    this.capacity = capacity;
+    this.map = new Map();                 <span class="cmt">// key -> node</span>
+    this.head = { key: null, value: null };   <span class="cmt">// most recent side</span>
+    this.tail = { key: null, value: null };   <span class="cmt">// least recent side</span>
+    this.head.next = this.tail;
+    this.tail.prev = this.head;
+  }
+
+  #remove(node) {
+    node.prev.next = node.next;
+    node.next.prev = node.prev;
+  }
+
+  #addFirst(node) {
+    node.next = this.head.next;
+    node.prev = this.head;
+    this.head.next.prev = node;
+    this.head.next = node;
+  }
+
+  get(key) {
+    const node = this.map.get(key);
+    if (!node) return undefined;
+    this.#remove(node);
+    this.#addFirst(node);                 <span class="cmt">// move to front</span>
+    return node.value;
+  }
+
+  put(key, value) {
+    if (this.capacity === 0) return;
+    const existing = this.map.get(key);
+    if (existing) { existing.value = value; this.#remove(existing); this.#addFirst(existing); return; }
+
+    if (this.map.size === this.capacity) {
+      const lru = this.tail.prev;         <span class="cmt">// the node just before the tail sentinel</span>
+      this.#remove(lru);
+      this.map.delete(lru.key);
+    }
+    const node = { key, value };
+    this.#addFirst(node);
+    this.map.set(key, node);
+  }
+}</code></pre>
+            <p>Three things being graded:</p>
+            <ul>
+              <li><strong>Sentinel head and tail nodes.</strong> Without them every insert and remove needs null checks for the empty and single-element cases, and that is where people lose five minutes to off-by-one bugs under time pressure. Say "I use sentinels so there are no edge cases" as you draw it.</li>
+              <li><strong><code>has()</code> rather than a truthiness check on the value.</strong> A cached <code>undefined</code>, <code>0</code>, <code>""</code> or <code>null</code> is a real value; a naive <code>if (!value)</code> treats every one of them as a miss and silently recomputes forever.</li>
+              <li><strong>Deleting before setting</strong> in the <code>Map</code> version. <code>map.set</code> on an existing key updates the value but does <em>not</em> move it in insertion order. Missing that line makes the cache evict the wrong entry, and it passes any test that never re-writes a key.</li>
+            </ul>
+            <p>
+              Say the storage cost out loud too: the linked-list node holds <code>key</code> as
+              well as <code>value</code>, because eviction starts from the list and must delete
+              from the map. Forgetting <code>key</code> on the node is the classic bug in version
+              B &mdash; you find the node to evict and then cannot remove its map entry.
+            </p>
+          </div>
+        </details>
+
+        <p class="qlabel">Cross-questions</p>
+        <div class="xq">
+          <div class="xq-item">
+            <p class="xq-q">Why is <code>Map</code> ordered, and can you rely on it?</p>
+            <p class="xq-why">Testing: is the shortcut knowledge or luck?</p>
+            <p class="ans good">"Yes &mdash; <code>Map</code> is specified to iterate in insertion order, unlike plain objects, whose ordering rules put integer-like keys first in ascending order and are a trap. That guarantee is what makes the five-line LRU correct rather than incidental."</p>
+          </div>
+          <div class="xq-item">
+            <p class="xq-q">Where would you actually use an LRU?</p>
+            <p class="xq-why">Testing: whether this is a puzzle or a tool for you.</p>
+            <p class="ans good">"Anywhere memoisation would otherwise grow without bound. In the slide editor: rendered thumbnails keyed by slide id, parsed font metrics, and measured text extents &mdash; all expensive to compute, all reusable, none of which should retain 400 entries. It is also the eviction policy behind most HTTP and image caches, which is why the question gets asked."</p>
+          </div>
+          <div class="xq-item">
+            <p class="xq-q">LRU versus LFU versus TTL?</p>
+            <p class="xq-why">Testing: do you know there are other policies?</p>
+            <p class="ans good">"LRU evicts by recency, LFU by access frequency, TTL by age. LRU is the default because it is cheap and matches how real access patterns cluster. LFU handles a hot set better but needs counters and can be poisoned by an early burst. TTL is for data that goes stale rather than data that is unpopular &mdash; which is React Query's model, and why it uses <code>staleTime</code> and <code>gcTime</code> rather than an LRU."</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ================================================================= -->
+    <div class="session">
+      <span class="sn">Session 6</span>
+      <span class="st">The hard three, and the canon run</span>
+      <span class="sd">~75 min</span>
+    </div>
+
+    <h2>11 &middot; deepClone with cycles</h2>
+
+    <div class="qblock">
+      <div class="q-head">
+        <span class="q-n">Question 11</span>
+        <span class="q-t">Write a deep clone. Now make it handle circular references.</span>
+        <span class="q-freq">Common &middot; and the cycle follow-up is guaranteed</span>
+      </div>
+      <div class="q-body">
+
+        <div class="saythis">
+          <span class="st-lab">Say this before you write a line</span>
+          <p>
+            First, the honest framing: in a browser I would use
+            <strong><code>structuredClone</code></strong>, which is built in, handles cycles,
+            <code>Date</code>, <code>RegExp</code>, <code>Map</code>, <code>Set</code> and typed
+            arrays, and is faster than anything I would write. It cannot clone functions, DOM
+            nodes or symbols, it drops the prototype so class instances come back as plain
+            objects, it invokes nothing and preserves no getters or property descriptors, and it
+            throws a <code>DataCloneError</code> on anything unsupported.
+          </p>
+          <p>
+            <code>JSON.parse(JSON.stringify(x))</code> is the other common answer and it is worse
+            than people think: it throws on cycles, turns <code>Date</code> into a string, drops
+            <code>undefined</code>, functions and symbols, converts <code>Map</code> and
+            <code>Set</code> to <code>{}</code>, and mangles <code>NaN</code> and
+            <code>Infinity</code> into <code>null</code>.
+          </p>
+          <p>
+            Then write the manual one, because that is what is being asked. The cycle fix is a
+            <strong><code>WeakMap</code> from original to clone</strong>, checked before
+            recursing and populated <em>before</em> the children are copied.
+          </p>
+        </div>
+
+        <div class="drill">
+          <div class="d-head"><span>Now you code</span><span>AI off &middot; autocomplete off</span><span class="clock">15 min</span></div>
+          <div class="d-body">
+            <h4>deepClone(value)</h4>
+<pre><code><span class="cmt">// Must handle, in this order of priority:
+//   1. primitives and functions (returned as-is — functions are NOT cloned)
+//   2. plain objects and arrays, recursively
+//   3. CYCLES:  const a = {}; a.self = a;  → clone.self === clone
+//   4. shared references preserved: if x.a === x.b, clone.a === clone.b
+//   5. Date, RegExp (including lastIndex), Map, Set
+//   6. Symbol keys, and the prototype of the original
+//
+// Then write the comparison table: your version vs structuredClone
+// vs JSON round-trip, for each of the six.</span>
+
+function deepClone(value) { <span class="cmt">/* you */</span> }</code></pre>
+          </div>
+        </div>
+
+        <details class="solution">
+          <summary>Solution &mdash; open only after the timer</summary>
+          <div class="sol-in">
+<pre><code>function deepClone(value, seen = new WeakMap()) {
+  <span class="cmt">// 1 — primitives, null, and functions pass straight through</span>
+  if (value === null || (typeof value !== "object" &amp;&amp; typeof value !== "function")) return value;
+  if (typeof value === "function") return value;      <span class="cmt">// deliberately shared, not cloned</span>
+
+  <span class="cmt">// 3 + 4 — one map handles BOTH cycles and shared references</span>
+  if (seen.has(value)) return seen.get(value);
+
+  <span class="cmt">// 5 — built-ins that need special construction</span>
+  if (value instanceof Date) return new Date(value.getTime());
+  if (value instanceof RegExp) {
+    const re = new RegExp(value.source, value.flags);
+    re.lastIndex = value.lastIndex;                   <span class="cmt">// stateful — easy to miss</span>
+    return re;
+  }
+
+  if (value instanceof Map) {
+    const out = new Map();
+    seen.set(value, out);                             <span class="cmt">// register BEFORE recursing</span>
+    for (const [k, v] of value) out.set(deepClone(k, seen), deepClone(v, seen));
+    return out;
+  }
+
+  if (value instanceof Set) {
+    const out = new Set();
+    seen.set(value, out);
+    for (const v of value) out.add(deepClone(v, seen));
+    return out;
+  }
+
+  if (ArrayBuffer.isView(value)) return new value.constructor(value);   <span class="cmt">// typed arrays</span>
+
+  <span class="cmt">// 2 + 6 — arrays and plain/class objects, preserving the prototype</span>
+  const out = Array.isArray(value)
+    ? []
+    : Object.create(Object.getPrototypeOf(value));
+  seen.set(value, out);                               <span class="cmt">// ← the line that makes cycles work</span>
+
+  for (const key of Reflect.ownKeys(value)) {         <span class="cmt">// includes symbol keys</span>
+    const desc = Object.getOwnPropertyDescriptor(value, key);
+    if ("value" in desc) {
+      out[key] = deepClone(desc.value, seen);
+    } else {
+      Object.defineProperty(out, key, desc);          <span class="cmt">// copy accessors without invoking</span>
+    }
+  }
+  return out;
+}</code></pre>
+            <p>
+              <strong>The ordering rule is the whole exercise:</strong>
+              <code>seen.set(value, out)</code> must happen <em>before</em> you recurse into the
+              children. If you populate the clone first and register afterwards, a child that
+              points back at the parent recurses forever. Say that sentence while you write the
+              line.
+            </p>
+            <p>
+              <strong>Why one <code>WeakMap</code> gives you requirement 4 for free:</strong> if
+              <code>x.a</code> and <code>x.b</code> are the same object, the second lookup hits
+              the cache and returns the same clone &mdash; so the shared-reference structure of
+              the original survives. A cycle is just a shared reference that happens to point
+              upward. Most candidates treat them as two problems; they are one.
+            </p>
+            <div class="tbl">
+              <table>
+                <thead><tr><th>Case</th><th>JSON round-trip</th><th><code>structuredClone</code></th><th>This function</th></tr></thead>
+                <tbody>
+                  <tr><td>Cycles</td><td>throws</td><td>✓</td><td>✓</td></tr>
+                  <tr><td><code>Date</code></td><td>becomes a string</td><td>✓</td><td>✓</td></tr>
+                  <tr><td><code>Map</code> / <code>Set</code></td><td>becomes <code>{}</code></td><td>✓</td><td>✓</td></tr>
+                  <tr><td><code>undefined</code> values</td><td>dropped</td><td>✓</td><td>✓</td></tr>
+                  <tr><td>Functions</td><td>dropped</td><td><code>DataCloneError</code></td><td>shared by reference</td></tr>
+                  <tr><td>Symbol keys</td><td>dropped</td><td>dropped</td><td>✓</td></tr>
+                  <tr><td>Prototype / class</td><td>lost</td><td>lost</td><td>✓</td></tr>
+                  <tr><td>Getters</td><td>invoked, frozen as data</td><td>invoked, frozen as data</td><td>✓ preserved as accessors</td></tr>
+                  <tr><td>DOM nodes</td><td>becomes <code>{}</code></td><td><code>DataCloneError</code></td><td>attempts and produces junk</td></tr>
+                </tbody>
+              </table>
+            </div>
+            <p>
+              That table <em>is</em> the strong answer. "I would use <code>structuredClone</code>,
+              here are the three cases where it is not enough, and here is what I would write for
+              those" beats any implementation offered without context.
+            </p>
+          </div>
+        </details>
+
+        <p class="qlabel">Cross-questions</p>
+        <div class="xq">
+          <div class="xq-item">
+            <p class="xq-q">Should a deep clone copy functions?</p>
+            <p class="xq-why">Testing: whether you made a decision or an omission.</p>
+            <p class="ans good">"No, and I return them by reference deliberately. A function cannot be meaningfully copied &mdash; you cannot duplicate its closure &mdash; so the options are share it, omit it, or throw. Sharing keeps class instances working after a clone. <code>structuredClone</code> chose to throw, which is defensible for its use case of passing data across a worker boundary."</p>
+          </div>
+          <div class="xq-item">
+            <p class="xq-q">Will your recursion blow the stack?</p>
+            <p class="xq-why">Testing: the same instinct as the <code>flat</code> question.</p>
+            <p class="ans good">"On a deeply nested structure, yes &mdash; it recurses once per level. For a widget tree a few dozen levels deep it is fine. If I needed to guarantee it, I would convert it to an explicit stack of work items, the same transformation as the iterative <code>flat</code>. I would not do that by default, because it makes the code significantly harder to read for a case most data never hits."</p>
+          </div>
+          <div class="xq-item">
+            <p class="xq-q">Is a deep clone the right answer for React state?</p>
+            <p class="xq-why">Testing: whether you know when not to use your own tool.</p>
+            <p class="ans good">"Usually not. React compares by reference, so what you need is a new reference along the path you changed, not a copy of everything &mdash; that is structural sharing, and it is what Immer does with a proxy over a draft. Deep-cloning state on every update throws away all the memoisation benefits and gets slower as the tree grows."</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <h2>12 &middot; Promise pool and retry with backoff</h2>
+
+    <div class="qblock">
+      <div class="q-head">
+        <span class="q-n">Question 12</span>
+        <span class="q-t">Run 300 requests with at most 5 in flight. Then add retries.</span>
+        <span class="q-freq">Common at senior level &middot; it is a design question wearing a polyfill costume</span>
+      </div>
+      <div class="q-body">
+
+        <div class="saythis">
+          <span class="st-lab">The contract, in one breath</span>
+          <p>
+            The key insight first: a pool must take <strong>functions that return promises</strong>,
+            not promises. A promise has already started &mdash; by the time you have an array of
+            them, all 300 requests are in flight and there is nothing left to limit. Taking
+            thunks is what lets the pool decide <em>when</em> each one begins.
+          </p>
+          <p>
+            Beyond that: results in input order, at most N running at once, start the next task
+            the instant one finishes rather than in batches, and decide explicitly whether one
+            failure stops everything or is collected like <code>allSettled</code>.
+          </p>
+          <p>
+            <strong>Retry</strong> needs exponential backoff &mdash; delay doubling per attempt
+            &mdash; plus <strong>jitter</strong>, because without randomness a thousand clients
+            that failed together retry together and the server is hit by a synchronised wave.
+            And it needs a predicate: retrying a 400 is pointless, retrying a 503 is the point.
+          </p>
+        </div>
+
+        <div class="trap">
+          <span class="t-lab">Trap</span>
+          <div class="t-in">
+            <p>
+              The batch version &mdash; <code>chunk(tasks, 5)</code> then
+              <code>Promise.all</code> per chunk &mdash; is the answer most people give, and it is
+              measurably worse: every chunk runs at the speed of its slowest member, so four
+              workers idle while one slow request finishes. A real pool starts the next task the
+              moment a slot frees. If you write the batch version, say that you know it is a
+              batch and not a pool.
+            </p>
+          </div>
+        </div>
+
+        <div class="drill">
+          <div class="d-head"><span>Now you code</span><span>AI off &middot; autocomplete off</span><span class="clock">20 min</span></div>
+          <div class="d-body">
+            <h4>Two functions, and prove the concurrency</h4>
+<pre><code><span class="cmt">// 1. promisePool(tasks, limit)
+//    - tasks is an array of FUNCTIONS returning promises
+//    - never more than `limit` in flight
+//    - resolves with results in INPUT order
+//    - a rejection is collected, not thrown (allSettled-style)
+//
+// 2. retry(taskFn, { attempts = 3, baseMs = 300, factor = 2,
+//                    jitter = true, shouldRetry, signal })
+//    - exponential backoff with full jitter
+//    - shouldRetry(error, attemptNumber) decides whether to continue
+//    - honours an AbortSignal between attempts
+//    - throws the LAST error if every attempt fails
+//
+// 3. Prove it: instrument the pool with a counter that increments on
+//    start and decrements on finish, and assert it never exceeds limit.</span></code></pre>
+          </div>
+        </div>
+
+        <details class="solution">
+          <summary>Solution &mdash; open only after the timer</summary>
+          <div class="sol-in">
+<pre><code>async function promisePool(tasks, limit) {
+  const results = new Array(tasks.length);
+  let next = 0;                         <span class="cmt">// shared cursor across all workers</span>
+
+  async function worker() {
+    while (next &lt; tasks.length) {
+      const i = next++;                 <span class="cmt">// claim an index — atomic, single-threaded</span>
+      try {
+        results[i] = { status: "fulfilled", value: await tasks[i]() };
+      } catch (reason) {
+        results[i] = { status: "rejected", reason };
+      }
+      <span class="cmt">// loop immediately — a free slot takes the next task at once,
+      // which is exactly what a batch implementation cannot do</span>
+    }
+  }
+
+  <span class="cmt">// start `limit` workers that all pull from the same cursor</span>
+  const size = Math.max(1, Math.min(limit, tasks.length));
+  await Promise.all(Array.from({ length: size }, worker));
+  return results;
+}
+
+const sleep = (ms, signal) =&gt; new Promise((resolve, reject) =&gt; {
+  const t = setTimeout(resolve, ms);
+  signal?.addEventListener("abort", () =&gt; { clearTimeout(t); reject(signal.reason); },
+                           { once: true });
+});
+
+async function retry(taskFn, {
+  attempts = 3, baseMs = 300, factor = 2, maxMs = 30_000,
+  jitter = true, shouldRetry = () =&gt; true, signal,
+} = {}) {
+  let lastError;
+
+  for (let attempt = 1; attempt &lt;= attempts; attempt++) {
+    if (signal?.aborted) throw signal.reason;
+    try {
+      return await taskFn({ attempt, signal });        <span class="cmt">// return await: catch must see it</span>
+    } catch (err) {
+      lastError = err;
+      if (attempt === attempts || !shouldRetry(err, attempt)) break;
+
+      const backoff = Math.min(maxMs, baseMs * factor ** (attempt - 1));
+      <span class="cmt">// FULL jitter: a random point in [0, backoff], not backoff ± a bit.
+      // This is what actually de-synchronises a thundering herd.</span>
+      const delay = jitter ? Math.random() * backoff : backoff;
+      await sleep(delay, signal);
+    }
+  }
+  throw lastError;
+}
+
+<span class="cmt">// 3 — the concurrency proof</span>
+let inFlight = 0, peak = 0;
+const task = (ms) =&gt; async () =&gt; {
+  peak = Math.max(peak, ++inFlight);
+  await new Promise((r) =&gt; setTimeout(r, ms));
+  inFlight--;
+};
+await promisePool(Array.from({ length: 50 }, () =&gt; task(Math.random() * 100)), 5);
+console.assert(peak &lt;= 5, `peak was ${peak}`);</code></pre>
+            <p>Four things being graded:</p>
+            <ul>
+              <li><strong>The worker-pool shape.</strong> N workers pulling from one shared cursor is both shorter and better than tracking a set of active promises with <code>Promise.race</code>. It naturally starts the next task the instant a worker frees up.</li>
+              <li><strong><code>const i = next++</code> before the <code>await</code>.</strong> Claim the index synchronously; if you read <code>next</code> after awaiting, two workers can take the same task.</li>
+              <li><strong>Full jitter, not "backoff plus a little randomness".</strong> Randomising across the whole interval is what AWS's published backoff guidance recommends, and it is the difference between spreading the retries and merely blurring the spike.</li>
+              <li><strong><code>return await</code> inside the <code>try</code>.</strong> Chapter 3's point, load-bearing here: with a bare <code>return</code> the promise escapes the <code>try</code> and the retry never triggers.</li>
+            </ul>
+            <p>
+              Connect it back to your own work when you present it: "this is how I would thumbnail
+              300 slides &mdash; a pool of six, visible slides queued first, and each task
+              wrapped in retry with backoff for transient failures." That turns a utility into a
+              design answer.
+            </p>
+          </div>
+        </details>
+
+        <p class="qlabel">Cross-questions</p>
+        <div class="xq">
+          <div class="xq-item">
+            <p class="xq-q">Why must the pool take functions rather than promises?</p>
+            <p class="xq-why">Testing: the central insight. If this is shaky, the rest is memorised.</p>
+            <p class="ans good">"Because a promise represents work that has <em>already started</em>. Constructing the array of 300 promises fires all 300 requests before the pool sees any of them &mdash; there is nothing left to throttle. A thunk defers the start, so the pool controls when each begins. Same reason you cannot add a concurrency limit to <code>Promise.all</code> without changing its signature."</p>
+          </div>
+          <div class="xq-item">
+            <p class="xq-q">What limit would you pick, and why?</p>
+            <p class="xq-why">Testing: whether you have a number or a shrug.</p>
+            <p class="ans good">"For HTTP in a browser, six or eight &mdash; browsers cap concurrent connections per origin at around six anyway over HTTP/1.1, so a higher limit just queues at a layer I cannot see. Over HTTP/2 that cap is gone and the constraint becomes server capacity and client memory, so I would tune by measurement. For CPU-bound work like canvas rendering, roughly <code>navigator.hardwareConcurrency</code>, and I would move it to workers before raising it."</p>
+          </div>
+          <div class="xq-item">
+            <p class="xq-q">Why is jitter necessary at all?</p>
+            <p class="xq-why">Testing: distributed-systems awareness in a frontend engineer, which is rare and lands well.</p>
+            <p class="ans good">"Because backoff alone keeps clients synchronised. If a server hiccups and a thousand clients all fail at the same instant, they all wait exactly 300ms and retry as one wave, which knocks the server over again &mdash; the thundering herd. Randomising the delay spreads that wave out. Without jitter, exponential backoff can make an outage worse rather than better."</p>
+          </div>
+          <div class="xq-item">
+            <p class="xq-q">Which errors would you not retry?</p>
+            <p class="xq-why">Testing: judgement, and this is the follow-up that ends the question well.</p>
+            <p class="ans good">"Anything the server told me is my fault or is permanent: 400, 401, 403, 404, 422. Retrying those wastes time and can lock an account. I retry network errors, timeouts, 429 &mdash; honouring <code>Retry-After</code> if present rather than my own backoff &mdash; and 5xx. And I never retry a non-idempotent write without an idempotency key, or I risk creating the same resource twice."</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <h2>The canon run</h2>
+
+    <p>
+      This is the assessment the chapter exists for. One sitting. A blank file. No reference
+      material, no AI, no autocomplete, timer visible from the first keystroke.
+    </p>
+
+    <div class="drill">
+      <div class="d-head"><span>The canon run</span><span>AI off &middot; autocomplete off &middot; no notes</span><span class="clock">90 min</span></div>
+      <div class="d-body">
+        <p>Write all twenty-three, in this order. Do not test as you go &mdash; write everything, then run everything.</p>
+        <ol>
+          <li><code>myMap</code>, <code>myFilter</code>, <code>myForEach</code>, <code>myReduce</code></li>
+          <li><code>myFlat</code> (recursive and iterative), <code>myFlatMap</code></li>
+          <li><code>myCall</code>, <code>myApply</code>, <code>myBind</code></li>
+          <li><code>myNew</code>, <code>myObjectCreate</code>, <code>myInstanceof</code></li>
+          <li><code>myAll</code>, <code>myAllSettled</code>, <code>myRace</code>, <code>myAny</code></li>
+          <li><code>debounce</code>, <code>throttle</code></li>
+          <li><code>once</code>, <code>memoize</code>, <code>curry</code>, <code>pipe</code>, <code>compose</code></li>
+          <li><code>EventEmitter</code></li>
+          <li><code>LRUCache</code></li>
+          <li><code>deepClone</code></li>
+          <li><code>promisePool</code>, <code>retry</code></li>
+        </ol>
+        <p>
+          <strong>Scoring.</strong> For each: does it run, does it handle the named edge cases,
+          and how long did it take. Record all three in <code>answers.md</code>. Anything that
+          failed or ran over target goes into tomorrow's warm-up &mdash; fifteen minutes, that
+          function only, until it is automatic.
+        </p>
+        <p>
+          <strong>Repeat the whole run on day 10 and day 24.</strong> The target is 90 minutes
+          the first time and under 60 by the third. That improvement is the actual deliverable of
+          this chapter, and it is what the machine coding round in Chapter 26 is built on.
+        </p>
+      </div>
+    </div>
+
+    <h2>Rapid fire</h2>
+
+    <div class="rapid">
+      <div class="r-head"><span>Chapter 4 &mdash; the canon</span><span class="rc">22 questions</span></div>
+
+      <details><summary>How do you detect a hole in an array?</summary><p class="ra"><code>i in arr</code> — not a value check, because an explicit <code>undefined</code> is not a hole.</p></details>
+      <details><summary>Does <code>map</code> preserve holes?</summary><p class="ra">Yes — it skips them but keeps them in the output. <code>filter</code> drops them entirely.</p></details>
+      <details><summary><code>reduce</code> with no initial value on an empty array?</summary><p class="ra"><code>TypeError: Reduce of empty array with no initial value</code>.</p></details>
+      <details><summary>Where does <code>reduce</code> start without an initial value?</summary><p class="ra">Accumulator is the first present element; iteration starts at the next index.</p></details>
+      <details><summary>Which iteration methods take a <code>thisArg</code>?</summary><p class="ra"><code>map</code>, <code>filter</code>, <code>forEach</code>, <code>some</code>, <code>every</code>, <code>find</code>, <code>flatMap</code>. Not <code>reduce</code>.</p></details>
+      <details><summary>Why check <code>arguments.length &gt;= 2</code> in <code>reduce</code>?</summary><p class="ra">Because <code>reduce(fn, undefined)</code> is a legitimate call with an initial value of <code>undefined</code>.</p></details>
+      <details><summary>Default depth of <code>flat</code>? And holes?</summary><p class="ra">Depth 1. It removes holes.</p></details>
+      <details><summary>Why is it <code>flat</code> and not <code>flatten</code>?</summary><p class="ra">Shipping <code>flatten</code> broke sites using an old MooTools that had patched the prototype, so TC39 renamed it.</p></details>
+      <details><summary>How does a bound function detect <code>new</code>?</summary><p class="ra"><code>new.target</code> — truthy only under construction, so the bound <code>this</code> is ignored.</p></details>
+      <details><summary>Why <code>Object.create(target.prototype)</code> in the bind polyfill?</summary><p class="ra">So <code>instanceof</code> works without making writes to the bound prototype mutate the original.</p></details>
+      <details><summary>Will a hand-written <code>new</code> work on a <code>class</code>?</summary><p class="ra">No — a class throws without real <code>new</code>, and you cannot set <code>new.target</code>. That is what <code>Reflect.construct</code> is for.</p></details>
+      <details><summary>Input order or completion order for <code>Promise.all</code>?</summary><p class="ra">Input order. Assign by index; never <code>push</code>.</p></details>
+      <details><summary>Why a counter rather than <code>results.length</code>?</summary><p class="ra">The array is pre-sized, and sparse assignment makes <code>length</code> lie.</p></details>
+      <details><summary>Throttle with leading and trailing — the double-fire bug?</summary><p class="ra">Only schedule the trailing call if another call arrived during the window; clear the pending args after each invoke.</p></details>
+      <details><summary>Relationship between throttle and debounce?</summary><p class="ra">Throttle is debounce with a <code>maxWait</code> — the guarantee that you never wait longer than the window.</p></details>
+      <details><summary>Four problems with <code>JSON.stringify</code> as a memo key?</summary><p class="ra">Key order, dropped <code>undefined</code>/functions/symbols, <code>Map</code>/<code>Set</code>/<code>Date</code> not round-tripping, and cycles throwing.</p></details>
+      <details><summary>Why must <code>curry</code> build a new array each call?</summary><p class="ra">So a partially applied function is reusable — mutating the captured args poisons it after the first use.</p></details>
+      <details><summary>What must <code>emit</code> do before iterating?</summary><p class="ra">Copy the listener array, because a listener may subscribe or unsubscribe during the emit.</p></details>
+      <details><summary>How does <code>off(ev, fn)</code> remove a <code>once</code> listener?</summary><p class="ra">Store <code>{ fn, original }</code> and match on <code>original</code>, so the wrapper is found by the user's function.</p></details>
+      <details><summary>Two O(1) LRU designs?</summary><p class="ra">Hash map plus doubly linked list with sentinels; or a <code>Map</code>, deleting and re-setting to move a key to the end.</p></details>
+      <details><summary>The one line that makes <code>deepClone</code> handle cycles?</summary><p class="ra"><code>seen.set(value, out)</code> <em>before</em> recursing into the children.</p></details>
+      <details><summary>Why must a promise pool take functions, not promises?</summary><p class="ra">A promise has already started. Only a thunk lets the pool decide when the work begins.</p></details>
+    </div>
+
+    <div class="checkpoint">
+      <span class="pt">Before moving on &mdash; you should be able to</span>
+      <ul>
+        <li>Write all twenty-three from memory, cold, in under 90 minutes &mdash; and know which three are still slow.</li>
+        <li>Explain the difference between a hole and <code>undefined</code>, and show the <code>i in arr</code> line that handles it.</li>
+        <li>State the <code>reduce</code> contract exactly: start index, empty-array throw, no <code>thisArg</code>, <code>arguments.length</code> check.</li>
+        <li>Write <code>flat</code> both recursively and iteratively, and say why the iterative one exists.</li>
+        <li>Produce a new-correct <code>bind</code> in under eight minutes and name what a userland version cannot reproduce.</li>
+        <li>Write all four combinators with input-order results and the four different empty-input behaviours.</li>
+        <li>Write <code>throttle</code> with both edges and walk an interviewer through why an isolated call fires exactly once.</li>
+        <li>Say the four problems with <code>JSON.stringify</code> keys before being asked, and give two real alternatives.</li>
+        <li>Build an <code>EventEmitter</code> that survives self-unsubscribe during emit and <code>off</code> on a <code>once</code> listener.</li>
+        <li>Write an O(1) LRU both ways, and explain why <code>map.set</code> alone does not reorder.</li>
+        <li>Give the <code>structuredClone</code> comparison table from memory and say when you would still hand-write a clone.</li>
+        <li>Explain thunks versus promises, full jitter, and which HTTP status codes you would never retry.</li>
+      </ul>
+    </div>
+
+    <h2>What's next</h2>
+
+    <p>
+      Part I is done. You have the execution model, the two lookup chains, the timing model and
+      the canon &mdash; which is the entire surface of a standard JavaScript round, and the
+      foundation every later chapter builds on.
+    </p>
+    <p>
+      Part II is DSA in JavaScript, and it is a gate rather than a band-setter: it gets you past
+      the screen at product companies and does very little for your number after that. Treat it
+      accordingly. Chapter 5 covers arrays, strings, two pointers, sliding window, hashmaps and
+      stacks &mdash; around thirty-two problems &mdash; plus the thing that actually gets scored
+      in those rounds, which is narrating your approach out loud before you type.
+    </p>
+    <p>
+      One scheduling note, and it matters more than the chapter order: <strong>keep running the
+      canon.</strong> Fifteen minutes a morning on whichever three implementations were slowest.
+      Manual fluency decays quickly and rebuilds slowly, and the round it pays off in is
+      ninety minutes long with someone watching.
+    </p>
 
     <div class="ch-nav" id="chnav"></div>
 
@@ -44,7 +1998,7 @@
 
 <footer class="site-foot">
   <div class="site-foot-in">
-    <span>Chapter 4 &middot; not written yet</span>
+    <span>Chapter 4 &middot; The Polyfill Canon</span>
     <span class="sp"></span>
     <span>Use &larr; and &rarr; to move between chapters</span>
   </div>

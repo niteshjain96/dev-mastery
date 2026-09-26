@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Chapter 6</title>
+<title>Recursion, Trees, Graphs, Sorting &amp; a Little DP — Chapter 6</title>
 <link rel="stylesheet" href="../assets/book.css">
 </head>
 <body data-chapter="6">
@@ -12,7 +12,7 @@
   <div class="site-head-in">
     <a class="logo" href="../index.html"><span class="logo-mark">DM</span> Dev Mastery</a>
     <span class="head-sp"></span>
-    <span class="head-meta">Chapter 6 of 30</span>
+    <span class="head-meta">Part II &middot; Chapter 6 of 30</span>
   </div>
   <div class="readbar" id="readbar"></div>
 </header>
@@ -22,12 +22,2529 @@
   <main class="ch-main">
 
     <div class="ch-hero">
-      <p class="ch-kicker" id="stub-kicker">Chapter 6</p>
-      <h1 id="stub-title">Chapter 6</h1>
-      <p class="lede" id="stub-lede"></p>
+      <p class="ch-kicker">Part II &middot; DSA in JavaScript: The Screen &middot; Chapter Six</p>
+      <h1>Recursion, Trees, Graphs, Sorting &amp; a Little DP</h1>
+      <p class="lede">
+        The second half of the gate. One session in this chapter &mdash;
+        <strong>DOM-shaped tree problems</strong> &mdash; is worth more to you than everything
+        else here combined, because those get asked in frontend rounds far more often than
+        binary search trees and almost nobody prepares for them.
+      </p>
+      <div class="ch-facts">
+        <span><b>6</b> sessions</span>
+        <span><b>~7.5</b> hours</span>
+        <span><b>12</b> Q-blocks</span>
+        <span><b>32</b> problems</span>
+        <span>Prerequisites: <b>Chapter 5</b></span>
+      </div>
     </div>
 
-    <div id="stub"></div>
+    <div class="callout key">
+      <span class="ct">What to prioritise if you are short of time</span>
+      <p>
+        Sessions 3 (DOM trees) and 5 (sorting and binary search) are the highest-yield in this
+        chapter for a frontend role &mdash; do those first if you only have a week. Session 2
+        (binary trees) is standard screening material and worth the time. Session 6 (DP) is the
+        lowest yield of anything in Part II; do the four patterns and stop.
+      </p>
+      <p>
+        I will say it plainly rather than pad: <strong>hard DP, advanced graphs, segment trees,
+        tries and union-find are not worth your thirty days.</strong> They are asked at companies
+        that run algorithm-heavy loops, and those are not where a 7-year frontend engineer wins
+        an offer. Your leverage is the machine coding round and the canvas system design.
+      </p>
+    </div>
+
+    <!-- ================================================================= -->
+    <div class="session">
+      <span class="sn">Session 1</span>
+      <span class="st">Recursion and backtracking</span>
+      <span class="sd">~75 min</span>
+    </div>
+
+    <h2>1 &middot; Thinking recursively</h2>
+
+    <div class="qblock">
+      <div class="q-head">
+        <span class="q-n">Question 1</span>
+        <span class="q-t">How do you approach a recursive problem?</span>
+        <span class="q-freq">Asked directly, and implicitly in every tree problem</span>
+      </div>
+      <div class="q-body">
+
+        <div class="saythis">
+          <span class="st-lab">Say this &mdash; three questions, always in this order</span>
+          <p>
+            <strong>One: what is the base case?</strong> The smallest input where the answer is
+            obvious and no recursion is needed. Write it first &mdash; it is the thing that makes
+            the function terminate.
+          </p>
+          <p>
+            <strong>Two: what is the recursive relationship?</strong> Assume the function already
+            works for smaller inputs. How do I build this answer from those? This is the leap
+            people resist: you do not trace the whole call tree in your head, you
+            <em>trust the recursion</em> for the subproblem and only solve one level.
+          </p>
+          <p>
+            <strong>Three: does the state go down or come back up?</strong> Some problems pass
+            accumulated state downward as parameters; others combine returned values on the way
+            back up. Mixing the two carelessly is where recursive code gets confusing.
+          </p>
+          <p>
+            And always state the space: recursion costs <strong>O(depth)</strong> stack, even
+            when it allocates nothing.
+          </p>
+        </div>
+
+        <div class="hing">
+          <span class="h-lab">Seedhi baat</span>
+          <p>
+            Recursion mein sabse badi galti ye hai ki log poora call tree dimaag mein chalane ki
+            koshish karte hain. Mat karo. <strong>Maan lo ki function chhote input pe already sahi
+            kaam karta hai</strong> &mdash; ab sirf ek level ka kaam socho: "iske bachchon ka
+            answer mil gaya, main usse apna answer kaise banau?"
+          </p>
+          <p>
+            Base case pehle likho, phir ek level ka logic. Bas. Jab tak ye do sahi hain, poora
+            tree apne aap sahi chalega.
+          </p>
+        </div>
+
+        <p class="qlabel">Example &mdash; the same problem, both directions</p>
+
+<pre><code><span class="cmt">// state comes UP: each call returns its own answer, parent combines</span>
+function countNodes(node) {
+  if (!node) return 0;                             <span class="cmt">// base case</span>
+  return 1 + node.children.reduce((sum, c) =&gt; sum + countNodes(c), 0);
+}
+
+<span class="cmt">// state goes DOWN: the answer accumulates in a parameter</span>
+function collectPaths(node, prefix = "", out = []) {
+  const path = prefix + "/" + node.name;
+  if (node.children.length === 0) { out.push(path); return out; }   <span class="cmt">// base case</span>
+  for (const c of node.children) collectPaths(c, path, out);
+  return out;
+}</code></pre>
+
+        <div class="drill">
+          <div class="d-head"><span>Problem set &mdash; recursion</span><span>AI off &middot; autocomplete off</span><span class="clock">40 min for 5</span></div>
+          <div class="d-body">
+            <h4>Five problems, 8 minutes each</h4>
+            <ol>
+              <li><strong>Power</strong> &mdash; <code>pow(x, n)</code> for integer n, including negatives, in O(log n). <em>Halve the exponent, do not loop n times.</em></li>
+              <li><strong>Fibonacci</strong> &mdash; naive, then memoised, then iterative. <em>State the complexity of all three: O(2&#8319;), O(n), O(n) time with O(1) space.</em></li>
+              <li><strong>Reverse a linked list</strong> recursively, then iteratively. <em>The iterative version is three pointers and is asked more often.</em></li>
+              <li><strong>Flatten a nested array</strong> to any depth &mdash; you wrote this in Chapter 4; write it again without looking, and then the depth-limited version.</li>
+              <li><strong>Sum a nested object's numeric values</strong> at any depth, skipping non-numbers. <em>This is the shape of real config-walking code.</em></li>
+            </ol>
+          </div>
+        </div>
+
+        <details class="solution">
+          <summary>Solutions &mdash; open only after the timers</summary>
+          <div class="sol-in">
+<pre><code><span class="cmt">// 1 — fast power, O(log n)</span>
+function pow(x, n) {
+  if (n &lt; 0) return 1 / pow(x, -n);
+  if (n === 0) return 1;                       <span class="cmt">// base case</span>
+  const half = pow(x, Math.floor(n / 2));      <span class="cmt">// compute ONCE, not twice</span>
+  return n % 2 === 0 ? half * half : half * half * x;
+}
+
+<span class="cmt">// 2 — fibonacci, three ways</span>
+const fibNaive = (n) =&gt; (n &lt;= 1 ? n : fibNaive(n - 1) + fibNaive(n - 2));   <span class="cmt">// O(2ⁿ)</span>
+
+function fibMemo(n, memo = new Map()) {                                     <span class="cmt">// O(n)</span>
+  if (n &lt;= 1) return n;
+  if (memo.has(n)) return memo.get(n);
+  const value = fibMemo(n - 1, memo) + fibMemo(n - 2, memo);
+  memo.set(n, value);
+  return value;
+}
+
+function fibIter(n) {                                <span class="cmt">// O(n) time, O(1) space</span>
+  let a = 0, b = 1;
+  for (let i = 0; i &lt; n; i++) [a, b] = [b, a + b];
+  return a;
+}
+
+<span class="cmt">// 3 — reverse a linked list</span>
+function reverseIterative(head) {
+  let prev = null, curr = head;
+  while (curr) {
+    const next = curr.next;      <span class="cmt">// save before overwriting</span>
+    curr.next = prev;            <span class="cmt">// flip</span>
+    prev = curr;                 <span class="cmt">// advance both</span>
+    curr = next;
+  }
+  return prev;                   <span class="cmt">// prev is the new head</span>
+}
+
+function reverseRecursive(head) {
+  if (!head || !head.next) return head;          <span class="cmt">// base: empty or last node</span>
+  const newHead = reverseRecursive(head.next);   <span class="cmt">// trust it for the rest</span>
+  head.next.next = head;                         <span class="cmt">// the node after me points back</span>
+  head.next = null;                              <span class="cmt">// and I point at nothing</span>
+  return newHead;
+}
+
+<span class="cmt">// 4 — flatten with depth</span>
+function flatten(arr, depth = Infinity) {
+  const out = [];
+  for (const item of arr) {
+    if (Array.isArray(item) &amp;&amp; depth &gt; 0) out.push(...flatten(item, depth - 1));
+    else out.push(item);
+  }
+  return out;
+}
+
+<span class="cmt">// 5 — sum nested numeric values</span>
+function deepSum(value) {
+  if (typeof value === "number") return Number.isFinite(value) ? value : 0;
+  if (value === null || typeof value !== "object") return 0;
+  <span class="cmt">// arrays and objects both work — Object.values covers both</span>
+  return Object.values(value).reduce((sum, v) =&gt; sum + deepSum(v), 0);
+}</code></pre>
+            <p>
+              <strong>Problem 1's single recursive call is the point.</strong> Writing
+              <code>pow(x, n/2) * pow(x, n/2)</code> recurses twice and is O(n), not O(log n)
+              &mdash; the same mistake that makes naive Fibonacci exponential. Compute once,
+              store in a local, use twice.
+            </p>
+            <p>
+              <strong>Problem 3's recursive version is worth tracing on paper once.</strong>
+              <code>head.next.next = head</code> is doing the reversal one link at a time on the
+              way back up: after the recursive call returns, everything after <code>head</code> is
+              already reversed, and <code>head.next</code> is now the <em>tail</em> of that
+              reversed portion. So pointing it back at <code>head</code> appends <code>head</code>
+              to the end. Say that sentence out loud and the line stops being magic.
+            </p>
+          </div>
+        </details>
+
+        <p class="qlabel">Cross-questions</p>
+        <div class="xq">
+          <div class="xq-item">
+            <p class="xq-q">What is the space complexity of your recursive solution?</p>
+            <p class="xq-why">Testing: the answer people get wrong most often.</p>
+            <p class="ans bad">"O(1), it doesn't allocate anything."</p>
+            <p class="ans good">"O(depth), because each pending call keeps a frame on the stack. For balanced recursion that is O(log n); for a linked list or a degenerate tree it is O(n). The iterative version of reverse-a-list is genuinely O(1) space, and that difference is usually the reason to prefer it."</p>
+          </div>
+          <div class="xq-item">
+            <p class="xq-q">Does JavaScript have tail call optimisation?</p>
+            <p class="xq-why">Testing: a specific, checkable fact people often get wrong.</p>
+            <p class="ans good">"It is in the ES2015 spec but effectively unimplemented &mdash; Safari and JavaScriptCore shipped it, V8 and SpiderMonkey did not and have no plans to. So in practice I assume no TCO: a deep recursion will throw <code>RangeError: Maximum call stack size exceeded</code> somewhere around ten thousand frames, depending on the engine and frame size. If depth could be large, I convert to an explicit stack."</p>
+          </div>
+          <div class="xq-item">
+            <p class="xq-q">When would you choose iteration over recursion?</p>
+            <p class="xq-why">Testing: judgement rather than preference.</p>
+            <p class="ans good">"When depth could be unbounded &mdash; a linked list, a deeply nested JSON payload, a file tree from user input. Also in hot paths, since call overhead is real. I choose recursion when the structure is genuinely recursive and shallow, like a DOM subtree or a small widget tree, because the code is dramatically clearer. Clarity is the default; an explicit stack is the exception I can justify."</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <h2>2 &middot; Backtracking</h2>
+
+    <div class="qblock">
+      <div class="q-head">
+        <span class="q-n">Question 2</span>
+        <span class="q-t">Generate all subsets of an array. Then all permutations.</span>
+        <span class="q-freq">Common medium &middot; and one template covers the whole family</span>
+      </div>
+      <div class="q-body">
+
+        <div class="saythis">
+          <span class="st-lab">Say this &mdash; the trigger and the template</span>
+          <p>
+            <strong>Trigger:</strong> "all combinations", "all permutations", "all subsets",
+            "all valid ways", "generate every…". Any problem asking for
+            <em>every</em> solution rather than a count or the best one.
+          </p>
+          <p>
+            <strong>The template is always the same three lines:</strong> choose, explore,
+            un-choose. Add a candidate to the current path, recurse, then remove it so the next
+            branch starts clean. The un-choose step is what makes it backtracking rather than
+            plain recursion.
+          </p>
+          <p>
+            Complexity is inherently exponential &mdash; there are 2&#8319; subsets and n!
+            permutations, so producing them cannot be cheaper than that. Say the output size out
+            loud so the interviewer knows you are not confusing an exponential
+            <em>output</em> with an inefficient algorithm.
+          </p>
+        </div>
+
+<pre><code><span class="cmt">// the template — memorise this shape, not the individual problems</span>
+function backtrack(path, choices, results) {
+  if (<span class="cmt">/* path is a complete solution */</span>) {
+    results.push([...path]);                 <span class="cmt">// COPY — path keeps mutating</span>
+    return;
+  }
+  for (const choice of choices) {
+    if (<span class="cmt">/* choice is invalid here */</span>) continue;
+    path.push(choice);                       <span class="cmt">// choose</span>
+    backtrack(path, <span class="cmt">/* narrowed */</span> choices, results);   <span class="cmt">// explore</span>
+    path.pop();                              <span class="cmt">// un-choose</span>
+  }
+}</code></pre>
+
+        <div class="trap">
+          <span class="t-lab">Trap</span>
+          <div class="t-in">
+            <p>
+              <code>results.push(path)</code> without the spread pushes a <em>reference</em> to
+              the array you are still mutating &mdash; so every entry in the results ends up
+              pointing at the same, eventually-empty array. The bug is invisible until you log
+              the output. Always <code>[...path]</code>.
+            </p>
+          </div>
+        </div>
+
+        <div class="drill">
+          <div class="d-head"><span>Problem set &mdash; backtracking</span><span>AI off &middot; autocomplete off</span><span class="clock">50 min for 5</span></div>
+          <div class="d-body">
+            <h4>Five problems</h4>
+            <ol>
+              <li><strong>Subsets</strong> &mdash; all 2&#8319; subsets of a distinct-element array.</li>
+              <li><strong>Permutations</strong> &mdash; all n! orderings.</li>
+              <li><strong>Combination sum</strong> &mdash; all combinations of candidates summing to a target; each candidate may be reused. <em>Recurse with the same index to allow reuse.</em></li>
+              <li><strong>Generate parentheses</strong> &mdash; all valid strings with n pairs. <em>Two counters and two rules; no validity check needed at the end.</em></li>
+              <li><strong>Subsets with duplicates</strong> &mdash; the input may contain repeats and the output must not. <em>Sort first, then skip a candidate equal to its predecessor at the same depth.</em></li>
+            </ol>
+          </div>
+        </div>
+
+        <details class="solution">
+          <summary>Solutions &mdash; open only after the timers</summary>
+          <div class="sol-in">
+<pre><code><span class="cmt">// 1 — subsets: at each index, either take it or don't</span>
+function subsets(nums) {
+  const out = [];
+  const path = [];
+  const go = (start) =&gt; {
+    out.push([...path]);                     <span class="cmt">// EVERY node is a valid subset</span>
+    for (let i = start; i &lt; nums.length; i++) {
+      path.push(nums[i]);
+      go(i + 1);                             <span class="cmt">// i + 1: never reuse an element</span>
+      path.pop();
+    }
+  };
+  go(0);
+  return out;
+}
+
+<span class="cmt">// 2 — permutations: order matters, so every unused element is a choice</span>
+function permute(nums) {
+  const out = [];
+  const path = [];
+  const used = new Array(nums.length).fill(false);
+
+  const go = () =&gt; {
+    if (path.length === nums.length) { out.push([...path]); return; }
+    for (let i = 0; i &lt; nums.length; i++) {
+      if (used[i]) continue;
+      used[i] = true;  path.push(nums[i]);
+      go();
+      path.pop();      used[i] = false;      <span class="cmt">// un-choose BOTH</span>
+    }
+  };
+  go();
+  return out;
+}
+
+<span class="cmt">// 3 — combination sum, reuse allowed</span>
+function combinationSum(candidates, target) {
+  const out = [];
+  const path = [];
+  const go = (start, remaining) =&gt; {
+    if (remaining === 0) { out.push([...path]); return; }
+    if (remaining &lt; 0) return;               <span class="cmt">// prune</span>
+    for (let i = start; i &lt; candidates.length; i++) {
+      path.push(candidates[i]);
+      go(i, remaining - candidates[i]);      <span class="cmt">// i, not i+1 → reuse allowed</span>
+      path.pop();
+    }
+  };
+  go(0, target);
+  return out;
+}
+
+<span class="cmt">// 4 — generate parentheses: build only valid strings</span>
+function generateParenthesis(n) {
+  const out = [];
+  const go = (current, open, close) =&gt; {
+    if (current.length === 2 * n) { out.push(current); return; }
+    if (open &lt; n) go(current + "(", open + 1, close);          <span class="cmt">// can always open</span>
+    if (close &lt; open) go(current + ")", open, close + 1);      <span class="cmt">// close only if unmatched</span>
+  };
+  go("", 0, 0);
+  return out;
+}
+
+<span class="cmt">// 5 — subsets with duplicates</span>
+function subsetsWithDup(nums) {
+  nums.sort((a, b) =&gt; a - b);                <span class="cmt">// duplicates must be adjacent</span>
+  const out = [];
+  const path = [];
+  const go = (start) =&gt; {
+    out.push([...path]);
+    for (let i = start; i &lt; nums.length; i++) {
+      <span class="cmt">// skip a repeat only at the SAME depth (i > start), never the first one</span>
+      if (i &gt; start &amp;&amp; nums[i] === nums[i - 1]) continue;
+      path.push(nums[i]);
+      go(i + 1);
+      path.pop();
+    }
+  };
+  go(0);
+  return out;
+}</code></pre>
+            <p>
+              <strong>Problem 5's <code>i &gt; start</code> is the entire difficulty.</strong>
+              Skipping every duplicate would also drop legitimate subsets like
+              <code>[2, 2]</code>. The condition says: at this level of the tree, having already
+              tried this value as a choice, do not try it again &mdash; but the
+              <em>first</em> occurrence at each level is always allowed, which is what lets
+              duplicates appear within a single subset. Draw the tree for
+              <code>[1, 2, 2]</code> once and it becomes obvious.
+            </p>
+            <p>
+              <strong>Problem 4 is worth noticing as a design idea:</strong> rather than
+              generating all 2<sup>2n</sup> strings and filtering the valid ones, the two
+              conditions make it impossible to build an invalid string at all. Pruning at
+              construction beats filtering afterwards, and that generalises to every
+              backtracking problem &mdash; the pruning conditions <em>are</em> the optimisation.
+            </p>
+          </div>
+        </details>
+
+        <p class="qlabel">Cross-questions</p>
+        <div class="xq">
+          <div class="xq-item">
+            <p class="xq-q">What is the complexity of subsets?</p>
+            <p class="xq-why">Testing: whether you account for the copy.</p>
+            <p class="ans good">"O(n · 2&#8319;) time — there are 2&#8319; subsets and copying each into the output costs up to O(n). Space is O(n · 2&#8319;) for the output plus O(n) for the recursion stack and path. It is worth separating output size from working space, because the output is irreducible: you cannot list 2&#8319; things in less than 2&#8319; time."</p>
+          </div>
+          <div class="xq-item">
+            <p class="xq-q">Could you generate subsets without recursion?</p>
+            <p class="xq-why">Testing: breadth, and a genuinely neat alternative.</p>
+            <p class="ans good">"Yes — bitmasking. For i from 0 to 2&#8319;−1, treat the bits of i as which elements to include. It is iterative, has no stack depth, and is often faster. It caps out at 32 or so elements before the numbers get awkward, but that is far beyond any input where 2&#8319; is tractable anyway. There is also an iterative build where each new element doubles the existing result set."</p>
+          </div>
+          <div class="xq-item">
+            <p class="xq-q">Where does backtracking appear in real frontend work?</p>
+            <p class="xq-why">Testing: whether this is only interview material for you.</p>
+            <p class="ans good">"Rarely in its pure form, but the shape appears in constraint solving — auto-layout that tries placements and undoes them when they collide, form-builder validation exploring valid field combinations, or routing that tries candidate matches and backs out. In the slide editor, snap-and-align logic tries a placement, checks constraints, and reverts. That is choose-explore-un-choose with different vocabulary."</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ================================================================= -->
+    <div class="session">
+      <span class="sn">Session 2</span>
+      <span class="st">Binary trees</span>
+      <span class="sd">~75 min</span>
+    </div>
+
+    <h2>3 &middot; Traversals</h2>
+
+    <div class="qblock">
+      <div class="q-head">
+        <span class="q-n">Question 3</span>
+        <span class="q-t">Traverse a binary tree in order. Now do it without recursion.</span>
+        <span class="q-freq">Standard screening material &middot; the iterative version is the real question</span>
+      </div>
+      <div class="q-body">
+
+        <div class="saythis">
+          <span class="st-lab">Say this</span>
+          <p>
+            There are four traversals and each is useful for something different.
+            <strong>Pre-order</strong> (node, left, right) visits a parent before its children
+            &mdash; use it for copying a tree or serialising it.
+            <strong>In-order</strong> (left, node, right) visits a binary search tree in sorted
+            order, which is its defining property.
+            <strong>Post-order</strong> (left, right, node) visits children before the parent
+            &mdash; use it when the parent's result depends on its children, which is most tree
+            computations, and for safe deletion.
+            <strong>Level-order</strong> is BFS with a queue, not recursion.
+          </p>
+          <p>
+            The recursive versions are three lines each; the difference between them is only
+            <em>where</em> you place the visit relative to the two recursive calls. The iterative
+            versions use an explicit stack, and the in-order one is the one worth practising
+            because it is the least obvious.
+          </p>
+        </div>
+
+<pre><code><span class="cmt">// recursive — the only difference is the position of the visit line</span>
+const preorder  = (n, out = []) =&gt; { if (n) { out.push(n.val); preorder(n.left, out); preorder(n.right, out); } return out; };
+const inorder   = (n, out = []) =&gt; { if (n) { inorder(n.left, out); out.push(n.val); inorder(n.right, out); } return out; };
+const postorder = (n, out = []) =&gt; { if (n) { postorder(n.left, out); postorder(n.right, out); out.push(n.val); } return out; };
+
+<span class="cmt">// iterative in-order: go left as far as possible, visit, then go right once</span>
+function inorderIterative(root) {
+  const out = [], stack = [];
+  let curr = root;
+  while (curr || stack.length) {
+    while (curr) { stack.push(curr); curr = curr.left; }   <span class="cmt">// dive left</span>
+    curr = stack.pop();
+    out.push(curr.val);                                    <span class="cmt">// visit</span>
+    curr = curr.right;                                     <span class="cmt">// then one step right</span>
+  }
+  return out;
+}
+
+<span class="cmt">// level order (BFS) — a queue, and an index pointer instead of shift()</span>
+function levelOrder(root) {
+  if (!root) return [];
+  const out = [], queue = [root];
+  let head = 0;                              <span class="cmt">// shift() would make this O(n²)</span>
+
+  while (head &lt; queue.length) {
+    const levelSize = queue.length - head;   <span class="cmt">// snapshot this level's width</span>
+    const level = [];
+    for (let i = 0; i &lt; levelSize; i++) {
+      const node = queue[head++];
+      level.push(node.val);
+      if (node.left) queue.push(node.left);
+      if (node.right) queue.push(node.right);
+    }
+    out.push(level);
+  }
+  return out;
+}</code></pre>
+
+        <div class="drill">
+          <div class="d-head"><span>Problem set &mdash; traversals</span><span>AI off &middot; autocomplete off</span><span class="clock">35 min for 4</span></div>
+          <div class="d-body">
+            <h4>Four problems</h4>
+            <ol>
+              <li><strong>All four traversals recursively</strong>, from memory, in under five minutes total.</li>
+              <li><strong>Iterative pre-order</strong> &mdash; easier than in-order. <em>Push right before left. Why?</em></li>
+              <li><strong>Right side view</strong> &mdash; the values visible from the right of the tree. <em>Level order, take the last of each level.</em></li>
+              <li><strong>Zigzag level order</strong> &mdash; alternate left-to-right and right-to-left per level.</li>
+            </ol>
+          </div>
+        </div>
+
+        <details class="solution">
+          <summary>Solutions &mdash; open only after the timers</summary>
+          <div class="sol-in">
+<pre><code><span class="cmt">// 2 — iterative pre-order: push RIGHT first so LEFT pops first (LIFO)</span>
+function preorderIterative(root) {
+  if (!root) return [];
+  const out = [], stack = [root];
+  while (stack.length) {
+    const node = stack.pop();
+    out.push(node.val);
+    if (node.right) stack.push(node.right);   <span class="cmt">// right goes in first…</span>
+    if (node.left) stack.push(node.left);     <span class="cmt">// …so left comes out first</span>
+  }
+  return out;
+}
+
+<span class="cmt">// 3 — right side view</span>
+function rightSideView(root) {
+  if (!root) return [];
+  const out = [], queue = [root];
+  let head = 0;
+  while (head &lt; queue.length) {
+    const size = queue.length - head;
+    for (let i = 0; i &lt; size; i++) {
+      const node = queue[head++];
+      if (i === size - 1) out.push(node.val);   <span class="cmt">// last node of the level</span>
+      if (node.left) queue.push(node.left);
+      if (node.right) queue.push(node.right);
+    }
+  }
+  return out;
+}
+
+<span class="cmt">// 4 — zigzag: build the level normally, reverse alternate ones</span>
+function zigzagLevelOrder(root) {
+  if (!root) return [];
+  const out = [], queue = [root];
+  let head = 0, leftToRight = true;
+  while (head &lt; queue.length) {
+    const size = queue.length - head;
+    const level = [];
+    for (let i = 0; i &lt; size; i++) {
+      const node = queue[head++];
+      level.push(node.val);
+      if (node.left) queue.push(node.left);
+      if (node.right) queue.push(node.right);
+    }
+    out.push(leftToRight ? level : level.reverse());
+    leftToRight = !leftToRight;
+  }
+  return out;
+}</code></pre>
+            <p>
+              <strong>The "push right first" answer</strong> is simply LIFO: a stack returns the
+              most recently pushed item, so to visit left first you must push it last. Interviewers
+              ask why, and "because the stack reverses the order" is the whole answer.
+            </p>
+            <p>
+              <strong>Note the level-width snapshot</strong> in the BFS versions:
+              <code>queue.length - head</code> is captured <em>before</em> the inner loop, because
+              the loop pushes onto the same queue. Reading <code>queue.length</code> inside the
+              loop merges every level into one. That off-by-a-level bug is extremely common.
+            </p>
+          </div>
+        </details>
+
+        <p class="qlabel">Cross-questions</p>
+        <div class="xq">
+          <div class="xq-item">
+            <p class="xq-q">Which traversal gives sorted order from a BST, and why?</p>
+            <p class="xq-why">Testing: whether you know the defining property or just the word.</p>
+            <p class="ans good">"In-order. The BST invariant is that everything in the left subtree is smaller and everything in the right is larger, so visiting left, then the node, then right emits values in ascending order by construction. That is also the cheapest way to validate a BST — do an in-order walk and check the sequence is strictly increasing."</p>
+          </div>
+          <div class="xq-item">
+            <p class="xq-q">Why use an index pointer instead of <code>queue.shift()</code> in BFS?</p>
+            <p class="xq-why">Testing: the Chapter 5 complexity table, applied.</p>
+            <p class="ans good">"<code>shift()</code> is O(n) because it re-indexes the whole array, so using it in a BFS loop makes the traversal O(n²). A head index gives O(1) dequeue at the cost of not reclaiming the front of the array, which is irrelevant for a single traversal. For a long-lived queue I would use a ring buffer or a linked list."</p>
+          </div>
+          <div class="xq-item">
+            <p class="xq-q">BFS or DFS &mdash; how do you choose?</p>
+            <p class="xq-why">Testing: a genuine decision rule rather than a preference.</p>
+            <p class="ans good">"BFS when the answer depends on distance from the root — shortest path in an unweighted graph, level-by-level output, nearest match. DFS when I need to explore full paths or compute something bottom-up, and it is cheaper in memory on a wide tree because it holds O(depth) rather than O(width). On a very deep tree that flips, and DFS risks a stack overflow."</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <h2>4 &middot; Tree problems</h2>
+
+    <div class="qblock">
+      <div class="q-head">
+        <span class="q-n">Question 4</span>
+        <span class="q-t">Find the maximum depth of a binary tree. Now the diameter.</span>
+        <span class="q-freq">Very common pair &middot; the diameter is where the technique shows</span>
+      </div>
+      <div class="q-body">
+
+        <div class="saythis">
+          <span class="st-lab">Say this &mdash; the pattern behind most tree problems</span>
+          <p>
+            Almost every tree computation is the same shape: <strong>recurse to both children,
+            then combine their results</strong>. The interesting problems are the ones where what
+            you <em>return</em> to the parent is different from what you <em>record</em> as the
+            answer.
+          </p>
+          <p>
+            Diameter is the archetype. Each call returns the <em>height</em> of its subtree,
+            because that is what the parent needs. But the answer &mdash; the longest path through
+            any node &mdash; is recorded in an outer variable as
+            <code>leftHeight + rightHeight</code> at each node. One traversal, two different
+            quantities. Recognising that split is what makes hard tree problems easy.
+          </p>
+        </div>
+
+<pre><code>function maxDepth(root) {
+  if (!root) return 0;
+  return 1 + Math.max(maxDepth(root.left), maxDepth(root.right));
+}
+
+function diameterOfBinaryTree(root) {
+  let best = 0;
+
+  <span class="cmt">// returns HEIGHT to the parent; records DIAMETER on the side</span>
+  const height = (node) =&gt; {
+    if (!node) return 0;
+    const l = height(node.left);
+    const r = height(node.right);
+    best = Math.max(best, l + r);            <span class="cmt">// path through this node, in edges</span>
+    return 1 + Math.max(l, r);               <span class="cmt">// what the parent actually needs</span>
+  };
+
+  height(root);
+  return best;
+}
+<span class="cmt">// Time O(n), Space O(h)</span></code></pre>
+
+        <div class="drill">
+          <div class="d-head"><span>Problem set &mdash; trees</span><span>AI off &middot; autocomplete off</span><span class="clock">50 min for 6</span></div>
+          <div class="d-body">
+            <h4>Six problems, 8 minutes each</h4>
+            <ol>
+              <li><strong>Invert a binary tree</strong> &mdash; four lines, and famously the question that got Max Howell rejected by Google.</li>
+              <li><strong>Same tree</strong> and <strong>symmetric tree</strong> &mdash; write both; the second is the first with the arguments crossed.</li>
+              <li><strong>Path sum</strong> &mdash; is there a root-to-leaf path summing to a target? <em>The base case is a <b>leaf</b>, not null &mdash; think about why.</em></li>
+              <li><strong>Validate BST</strong> &mdash; <em>comparing each node only to its immediate children is wrong. Pass down a min/max range.</em></li>
+              <li><strong>Lowest common ancestor</strong> in a binary tree (not a BST). <em>Four lines, and the reasoning is elegant.</em></li>
+              <li><strong>Balanced binary tree</strong> &mdash; is every subtree's left/right height difference at most one? <em>The naive version is O(n²); return a sentinel to make it O(n).</em></li>
+            </ol>
+          </div>
+        </div>
+
+        <details class="solution">
+          <summary>Solutions &mdash; open only after the timers</summary>
+          <div class="sol-in">
+<pre><code><span class="cmt">// 1 — invert</span>
+function invertTree(root) {
+  if (!root) return null;
+  [root.left, root.right] = [invertTree(root.right), invertTree(root.left)];
+  return root;
+}
+
+<span class="cmt">// 2 — same tree, then symmetric as a special case</span>
+function isSameTree(p, q) {
+  if (!p &amp;&amp; !q) return true;
+  if (!p || !q || p.val !== q.val) return false;
+  return isSameTree(p.left, q.left) &amp;&amp; isSameTree(p.right, q.right);
+}
+
+function isSymmetric(root) {
+  const mirror = (a, b) =&gt; {
+    if (!a &amp;&amp; !b) return true;
+    if (!a || !b || a.val !== b.val) return false;
+    return mirror(a.left, b.right) &amp;&amp; mirror(a.right, b.left);   <span class="cmt">// crossed</span>
+  };
+  return !root || mirror(root.left, root.right);
+}
+
+<span class="cmt">// 3 — path sum: base case is a LEAF</span>
+function hasPathSum(root, target) {
+  if (!root) return false;
+  <span class="cmt">// a null child is not a path end — otherwise a single-child node
+  // would be treated as a leaf and report a false positive</span>
+  if (!root.left &amp;&amp; !root.right) return root.val === target;
+  const rest = target - root.val;
+  return hasPathSum(root.left, rest) || hasPathSum(root.right, rest);
+}
+
+<span class="cmt">// 4 — validate BST with a range, not a local comparison</span>
+function isValidBST(root, min = -Infinity, max = Infinity) {
+  if (!root) return true;
+  if (root.val &lt;= min || root.val &gt;= max) return false;
+  return isValidBST(root.left, min, root.val)      <span class="cmt">// tighten the max going left</span>
+      &amp;&amp; isValidBST(root.right, root.val, max);    <span class="cmt">// tighten the min going right</span>
+}
+
+<span class="cmt">// 5 — lowest common ancestor</span>
+function lowestCommonAncestor(root, p, q) {
+  if (!root || root === p || root === q) return root;
+  const left = lowestCommonAncestor(root.left, p, q);
+  const right = lowestCommonAncestor(root.right, p, q);
+  <span class="cmt">// found one in each subtree → THIS node is the split point</span>
+  if (left &amp;&amp; right) return root;
+  return left ?? right;                     <span class="cmt">// otherwise pass up whichever was found</span>
+}
+
+<span class="cmt">// 6 — balanced, in one pass using -1 as "already unbalanced"</span>
+function isBalanced(root) {
+  const height = (node) =&gt; {
+    if (!node) return 0;
+    const l = height(node.left);
+    if (l === -1) return -1;                <span class="cmt">// short-circuit upward</span>
+    const r = height(node.right);
+    if (r === -1) return -1;
+    if (Math.abs(l - r) &gt; 1) return -1;
+    return 1 + Math.max(l, r);
+  };
+  return height(root) !== -1;
+}</code></pre>
+            <p>
+              <strong>Problem 4 is the classic wrong answer.</strong> Checking only
+              <code>node.left.val &lt; node.val &lt; node.right.val</code> passes a tree where a
+              node deep in the left subtree is larger than the root &mdash; the local check is
+              satisfied but the global invariant is broken. The range must be threaded down: going
+              left tightens the upper bound to the current value, going right tightens the lower
+              bound. Interviewers use a tree specifically designed to break the local version.
+            </p>
+            <p>
+              <strong>Problem 5's elegance is worth articulating.</strong> Each call answers "did
+              I find p or q at or below me?" If both children report a find, this node is where
+              the two paths diverge, so it is the ancestor. If only one does, pass that answer
+              upward unchanged. The base case returning the node itself handles the case where one
+              target is an ancestor of the other. Four lines, and the explanation is what earns
+              the marks.
+            </p>
+            <p>
+              <strong>Problem 6's sentinel</strong> is the O(n) trick: the naive version calls a
+              separate <code>height()</code> at every node, recomputing the same subtrees
+              repeatedly for O(n&nbsp;log&nbsp;n) or O(n²). Returning <code>-1</code> to mean
+              "already unbalanced" fuses the check into a single post-order pass.
+            </p>
+          </div>
+        </details>
+
+        <p class="qlabel">Cross-questions</p>
+        <div class="xq">
+          <div class="xq-item">
+            <p class="xq-q">Why is the base case for path sum a leaf rather than null?</p>
+            <p class="xq-why">Testing: whether you thought about it or copied it.</p>
+            <p class="ans good">"Because a root-to-leaf path must end at a node with no children. If null were the base case and returned <code>target === 0</code>, then a node with only a left child would also check its null right child and could report success on a path that does not end at a leaf. The leaf check is the difference between a correct answer and one that passes most tests."</p>
+          </div>
+          <div class="xq-item">
+            <p class="xq-q">Diameter in edges or in nodes?</p>
+            <p class="xq-why">Testing: attention to the definition — an easy off-by-one.</p>
+            <p class="ans good">"My version counts edges, which is what the standard problem asks for: <code>l + r</code> where each is a height in edges. If it wanted nodes it would be <code>l + r + 1</code>. I would clarify that before coding, because it is a one-character difference and a silent wrong answer."</p>
+          </div>
+          <div class="xq-item">
+            <p class="xq-q">Your tree recursion is O(h) space. When is that a problem?</p>
+            <p class="xq-why">Testing: connecting complexity to failure.</p>
+            <p class="ans good">"When the tree is degenerate — a linked list in disguise — h becomes n, and for a large tree that is a stack overflow rather than slowness. Balanced trees are O(log n) and fine. If the tree came from untrusted input, for example deeply nested JSON or a DOM built by a user, I would use an explicit stack."</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ================================================================= -->
+    <div class="session">
+      <span class="sn">Session 3</span>
+      <span class="st">DOM-shaped trees &mdash; the frontend differentiator</span>
+      <span class="sd">~75 min</span>
+    </div>
+
+    <div class="callout key">
+      <span class="ct">This is the highest-value session in the chapter</span>
+      <p>
+        Frontend interviewers ask tree problems, but they usually ask them about
+        <strong>the DOM or a nested object</strong>, not about a binary tree of integers. These
+        problems are less practised, they look like real work, and they let you talk about
+        something you have actually built. Candidates who grind LeetCode trees and have never
+        written <code>getElementsByClassName</code> by hand get caught here.
+      </p>
+      <p>
+        Everything in this session is an n-ary tree: any number of children, no ordering
+        guarantee, and often a parent pointer available.
+      </p>
+    </div>
+
+    <h2>5 &middot; DOM tree problems</h2>
+
+    <div class="qblock">
+      <div class="q-head">
+        <span class="q-n">Question 5</span>
+        <span class="q-t">Implement document.getElementsByClassName without using the built-in.</span>
+        <span class="q-freq">A genuine frontend favourite &middot; and it opens into five follow-ups</span>
+      </div>
+      <div class="q-body">
+
+        <div class="saythis">
+          <span class="st-lab">Say this</span>
+          <p>
+            The DOM is an n-ary tree, so this is a traversal with a predicate. I walk from the
+            root, test each element, collect matches, and recurse into children. Two details
+            matter: I traverse <code>children</code> rather than <code>childNodes</code> because
+            the latter includes text and comment nodes, and I match against
+            <code>classList</code> rather than string-searching <code>className</code>, because
+            <code>"btn-primary"</code> contains <code>"btn"</code> as a substring and would
+            produce a false positive.
+          </p>
+          <p>
+            The real version returns a <em>live</em> <code>HTMLCollection</code> that updates as
+            the DOM changes, which is a genuinely different contract from the static array I am
+            returning &mdash; and it is why <code>querySelectorAll</code>, which returns a static
+            <code>NodeList</code>, behaves differently in a loop that mutates the DOM.
+          </p>
+        </div>
+
+<pre><code>function getElementsByClassName(root, className) {
+  const out = [];
+
+  const walk = (node) =&gt; {
+    <span class="cmt">// classList is a DOMTokenList — exact token match, no substring bug</span>
+    if (node.classList?.contains(className)) out.push(node);
+    for (const child of node.children) walk(child);   <span class="cmt">// elements only</span>
+  };
+
+  walk(root);
+  return out;
+}
+
+<span class="cmt">// iterative version — no stack-depth limit on a deeply nested document</span>
+function getElementsByClassNameIterative(root, className) {
+  const out = [], stack = [root];
+  while (stack.length) {
+    const node = stack.pop();
+    if (node.classList?.contains(className)) out.push(node);
+    <span class="cmt">// push in reverse so children are visited left to right</span>
+    for (let i = node.children.length - 1; i &gt;= 0; i--) stack.push(node.children[i]);
+  }
+  return out;
+}</code></pre>
+
+        <div class="hing">
+          <span class="h-lab">Seedhi baat</span>
+          <p>
+            Yahan do chhoti galtiyan sabse zyada hoti hain. Pehli:
+            <code>childNodes</code> use kar lena &mdash; usme text nodes aur comments bhi aate
+            hain, jinke paas <code>classList</code> hota hi nahi. Doosri:
+            <code>className.includes("btn")</code> likhna &mdash; ye
+            <code>"btn-primary"</code> ko bhi match kar dega.
+          </p>
+          <p>
+            <code>children</code> aur <code>classList.contains</code> &mdash; bas ye do cheezein
+            sahi kar do, baaki traversal simple hai.
+          </p>
+        </div>
+
+        <div class="drill">
+          <div class="d-head"><span>Problem set &mdash; DOM trees</span><span>AI off &middot; autocomplete off</span><span class="clock">55 min for 6</span></div>
+          <div class="d-body">
+            <h4>Six problems &mdash; build these against a real page, not a mock</h4>
+            <ol>
+              <li>
+                <strong>Find the path to a node</strong> &mdash; given a root and a target
+                element, return the array of indices to reach it, e.g.
+                <code>[0, 2, 1]</code> meaning first child &rarr; third child &rarr; second
+                child. <em>Then write the inverse: given the path, return the node.</em>
+              </li>
+              <li>
+                <strong>Find the corresponding node in two identical trees</strong> &mdash;
+                given <code>rootA</code>, <code>rootB</code> (a clone) and a node inside A,
+                return the matching node in B. <em>The path solution above, applied. This is a
+                real Google frontend question.</em>
+              </li>
+              <li>
+                <strong>Deepest node</strong> &mdash; return the most deeply nested element and
+                its depth.
+              </li>
+              <li>
+                <strong>Implement <code>closest(selector)</code></strong> &mdash; walk up via
+                <code>parentElement</code> until an element matches. <em>You may use
+                <code>matches()</code>.</em>
+              </li>
+              <li>
+                <strong>Serialise the DOM</strong> to a plain JSON structure of
+                <code>{ tag, attrs, children, text }</code>, then write the deserialiser that
+                rebuilds real elements from it. <em>This is your <code>.pptx</code> pipeline in
+                miniature.</em>
+              </li>
+              <li>
+                <strong>Count visible text</strong> &mdash; total length of all text content,
+                skipping <code>&lt;script&gt;</code>, <code>&lt;style&gt;</code> and anything with
+                <code>display: none</code>.
+              </li>
+            </ol>
+          </div>
+        </div>
+
+        <details class="solution">
+          <summary>Solutions &mdash; open only after the timers</summary>
+          <div class="sol-in">
+<pre><code><span class="cmt">// 1 — path to a node, and back again</span>
+function getPath(root, target) {
+  const path = [];
+  let node = target;
+  while (node &amp;&amp; node !== root) {
+    const parent = node.parentElement;
+    if (!parent) return null;                       <span class="cmt">// target is not under root</span>
+    path.unshift([...parent.children].indexOf(node));
+    node = parent;
+  }
+  return node === root ? path : null;
+}
+
+const getNodeByPath = (root, path) =&gt;
+  path.reduce((node, index) =&gt; node?.children[index], root);
+
+<span class="cmt">// 2 — corresponding node in a cloned tree: path out of A, path into B</span>
+function findCorresponding(rootA, rootB, nodeA) {
+  const path = getPath(rootA, nodeA);
+  return path === null ? null : getNodeByPath(rootB, path);
+}
+<span class="cmt">// O(d) where d is depth, using parent pointers — much better than the
+// O(n) "walk both trees in lockstep" solution people give first.</span>
+
+<span class="cmt">// 3 — deepest node</span>
+function deepestNode(root) {
+  let best = root, bestDepth = 0;
+  const walk = (node, depth) =&gt; {
+    if (depth &gt; bestDepth) { best = node; bestDepth = depth; }
+    for (const child of node.children) walk(child, depth + 1);
+  };
+  walk(root, 0);
+  return { node: best, depth: bestDepth };
+}
+
+<span class="cmt">// 4 — closest()</span>
+function closest(element, selector) {
+  let node = element;
+  while (node) {
+    if (node.matches?.(selector)) return node;
+    node = node.parentElement;
+  }
+  return null;
+}
+
+<span class="cmt">// 5 — serialise and deserialise</span>
+function serialize(node) {
+  if (node.nodeType === Node.TEXT_NODE) {
+    const text = node.textContent.trim();
+    return text ? { text } : null;                  <span class="cmt">// drop whitespace-only nodes</span>
+  }
+  if (node.nodeType !== Node.ELEMENT_NODE) return null;   <span class="cmt">// comments etc.</span>
+
+  return {
+    tag: node.tagName.toLowerCase(),
+    attrs: Object.fromEntries([...node.attributes].map((a) =&gt; [a.name, a.value])),
+    children: [...node.childNodes].map(serialize).filter(Boolean),
+  };
+}
+
+function deserialize(json) {
+  if (json.text !== undefined) return document.createTextNode(json.text);
+  const el = document.createElement(json.tag);
+  for (const [k, v] of Object.entries(json.attrs ?? {})) el.setAttribute(k, v);
+  for (const child of json.children ?? []) el.appendChild(deserialize(child));
+  return el;
+}
+
+<span class="cmt">// 6 — visible text length</span>
+function visibleTextLength(root) {
+  const SKIP = new Set(["SCRIPT", "STYLE", "NOSCRIPT", "TEMPLATE"]);
+  let total = 0;
+
+  const walk = (node) =&gt; {
+    if (node.nodeType === Node.TEXT_NODE) { total += node.textContent.trim().length; return; }
+    if (node.nodeType !== Node.ELEMENT_NODE) return;
+    if (SKIP.has(node.tagName)) return;
+    <span class="cmt">// getComputedStyle is expensive — called once per element, and only
+    // for elements we have not already skipped by tag</span>
+    if (getComputedStyle(node).display === "none") return;
+    for (const child of node.childNodes) walk(child);
+  };
+
+  walk(root);
+  return total;
+}</code></pre>
+            <p>
+              <strong>Problem 2 is the one to have ready.</strong> Most candidates walk both trees
+              simultaneously in a synchronised DFS, which is O(n). Using
+              <code>parentElement</code> to build the path upward and then replaying it downward
+              is O(depth) &mdash; typically twenty steps instead of thousands. Say both, then
+              pick the second and explain why. That comparison is the entire signal.
+            </p>
+            <p>
+              <strong>Problem 5 connects directly to your own work.</strong> Say so: "this is what
+              the <code>.pptx</code> importer does &mdash; walk an XML tree, map each element to a
+              normalised JSON node, and then rebuild a render tree from that." An interviewer who
+              hears that stops treating the question as a puzzle.
+            </p>
+            <p>
+              <strong>Problem 6's performance note is worth volunteering:</strong>
+              <code>getComputedStyle</code> forces a style recalculation and is slow, so calling
+              it on every node of a large document is genuinely expensive. Checking the tag
+              blocklist first avoids most calls. Knowing that reads as someone who has profiled a
+              real page.
+            </p>
+          </div>
+        </details>
+
+        <p class="qlabel">Cross-questions</p>
+        <div class="xq">
+          <div class="xq-item">
+            <p class="xq-q">Difference between <code>children</code> and <code>childNodes</code>?</p>
+            <p class="xq-why">Testing: DOM fundamentals, and this is where the bug lives.</p>
+            <p class="ans good">"<code>childNodes</code> is every node type — elements, text nodes, comments — as a live <code>NodeList</code>. <code>children</code> is elements only, as a live <code>HTMLCollection</code>. For traversal I use <code>children</code> unless I specifically need text, because text nodes have no <code>classList</code>, no <code>tagName</code> and no <code>children</code>, so they break naive walkers. Whitespace between tags creates text nodes, which is why <code>childNodes.length</code> surprises people."</p>
+          </div>
+          <div class="xq-item">
+            <p class="xq-q">Live versus static collections &mdash; why does it matter?</p>
+            <p class="xq-why">Testing: a subtle DOM fact with a real bug attached.</p>
+            <p class="ans good">"<code>getElementsByClassName</code> and <code>getElementsByTagName</code> return live collections that reflect DOM changes immediately; <code>querySelectorAll</code> returns a static <code>NodeList</code>. The classic bug is looping over a live collection while removing elements from it — the collection shrinks under you and you skip half the items. With a static list or a spread copy, it behaves as you expect."</p>
+          </div>
+          <div class="xq-item">
+            <p class="xq-q">How would you handle a DOM tree too deep for recursion?</p>
+            <p class="xq-why">Testing: whether the Chapter 4 instinct transfers.</p>
+            <p class="ans good">"Switch to an explicit stack, as in my iterative version. In practice browsers cap nesting depth themselves — the HTML parser has a limit — so a real document will not overflow. It matters more for arbitrary nested JSON from an API, where the depth is not bounded by anything. There is also <code>TreeWalker</code>, which is the platform's own iterator for exactly this and is worth mentioning."</p>
+          </div>
+          <div class="xq-item">
+            <p class="xq-q">Where does this appear in your actual work?</p>
+            <p class="xq-why">Testing: the thing this whole session exists to set up.</p>
+            <p class="ans good">"Constantly. The <code>.pptx</code> importer walks an OOXML tree and maps shapes, groups and placeholders into a normalised slide model — same traversal with a different predicate. Hit testing on the canvas walks the widget tree to find the topmost element at a point, which is the reverse: depth-first, last match wins. And the caption editor walks the DOM to compute visible text offsets, which is problem 6 almost exactly."</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <h2>6 &middot; Nested objects and trees of data</h2>
+
+    <div class="qblock">
+      <div class="q-head">
+        <span class="q-n">Question 6</span>
+        <span class="q-t">Flatten a deeply nested object into dot-notation keys. Then reverse it.</span>
+        <span class="q-freq">Very common in frontend rounds &mdash; it looks like config code because it is</span>
+      </div>
+      <div class="q-body">
+
+        <div class="saythis">
+          <span class="st-lab">Say this</span>
+          <p>
+            Same n-ary traversal, different node type. The only real decisions are what counts as
+            a leaf and what the key separator is. I treat primitives, <code>null</code> and
+            arrays as leaves by default &mdash; arrays are ambiguous and I would ask &mdash; and I
+            build the key by joining the path with dots.
+          </p>
+          <p>
+            The questions worth asking before writing a line: are arrays flattened with numeric
+            indices or kept whole? What about an empty object &mdash; does it disappear or become
+            a key with an empty value? What if a key already contains a dot? Those three
+            questions are most of the score.
+          </p>
+        </div>
+
+<pre><code>function flattenObject(obj, prefix = "", out = {}) {
+  for (const [key, value] of Object.entries(obj)) {
+    const path = prefix ? `${prefix}.${key}` : key;
+
+    const isPlainObject = value !== null
+      &amp;&amp; typeof value === "object"
+      &amp;&amp; !Array.isArray(value);
+
+    if (isPlainObject &amp;&amp; Object.keys(value).length &gt; 0) {
+      flattenObject(value, path, out);       <span class="cmt">// recurse</span>
+    } else {
+      out[path] = value;                     <span class="cmt">// leaf — including empty objects</span>
+    }
+  }
+  return out;
+}
+
+<span class="cmt">// { a: { b: { c: 1 } }, d: [1,2] }  →  { "a.b.c": 1, "d": [1,2] }</span>
+
+function unflattenObject(flat) {
+  const out = {};
+  for (const [path, value] of Object.entries(flat)) {
+    const keys = path.split(".");
+    let node = out;
+    for (let i = 0; i &lt; keys.length - 1; i++) {
+      node[keys[i]] ??= {};                  <span class="cmt">// create missing levels</span>
+      node = node[keys[i]];
+    }
+    node[keys.at(-1)] = value;
+  }
+  return out;
+}</code></pre>
+
+        <div class="drill">
+          <div class="d-head"><span>Problem set &mdash; data trees</span><span>AI off &middot; autocomplete off</span><span class="clock">55 min for 6</span></div>
+          <div class="d-body">
+            <h4>Six problems &mdash; all of these appear in real codebases</h4>
+            <ol>
+              <li>
+                <strong><code>get(obj, path, fallback)</code></strong> &mdash; lodash's
+                <code>get</code>. Must support <code>"a.b[0].c"</code> and return the fallback
+                for any missing link. <em>Then <code>set</code>, which must create missing
+                levels and choose array versus object correctly.</em>
+              </li>
+              <li>
+                <strong>Deep equal</strong> &mdash; compare two values structurally. Handle
+                nested objects, arrays, <code>NaN</code>, <code>Date</code>, and cycles.
+              </li>
+              <li>
+                <strong>List to tree</strong> &mdash; given
+                <code>[{id, parentId, name}]</code>, build the nested tree. <em>One pass with a
+                map, not nested loops. This is the nested-comments data structure.</em>
+              </li>
+              <li>
+                <strong>Tree to list</strong> &mdash; the inverse, producing a flat array with a
+                <code>depth</code> field. <em>This is how you virtualise a tree view.</em>
+              </li>
+              <li>
+                <strong>Count nested comments</strong> &mdash; total count and maximum reply
+                depth in one traversal.
+              </li>
+              <li>
+                <strong>Filter a tree</strong> &mdash; keep only nodes matching a predicate
+                <em>and</em> their ancestors, so the surviving structure is still connected.
+                <em>Harder than it looks; the answer is post-order.</em>
+              </li>
+            </ol>
+          </div>
+        </div>
+
+        <details class="solution">
+          <summary>Solutions &mdash; open only after the timers</summary>
+          <div class="sol-in">
+<pre><code><span class="cmt">// 1 — get and set by path</span>
+const toKeys = (path) =&gt;
+  Array.isArray(path) ? path : path.replace(/\[(\w+)\]/g, ".$1").split(".").filter(Boolean);
+
+function get(obj, path, fallback) {
+  let node = obj;
+  for (const key of toKeys(path)) {
+    if (node == null) return fallback;       <span class="cmt">// == catches null AND undefined</span>
+    node = node[key];
+  }
+  return node === undefined ? fallback : node;
+}
+
+function set(obj, path, value) {
+  const keys = toKeys(path);
+  let node = obj;
+  for (let i = 0; i &lt; keys.length - 1; i++) {
+    if (node[keys[i]] == null) {
+      <span class="cmt">// look ahead: a numeric next key means this level should be an array</span>
+      node[keys[i]] = /^\d+$/.test(keys[i + 1]) ? [] : {};
+    }
+    node = node[keys[i]];
+  }
+  node[keys.at(-1)] = value;
+  return obj;
+}
+
+<span class="cmt">// 2 — deep equal with cycle handling</span>
+function deepEqual(a, b, seen = new WeakMap()) {
+  if (Object.is(a, b)) return true;          <span class="cmt">// handles NaN === NaN, and +0/-0</span>
+  if (typeof a !== "object" || typeof b !== "object" || a === null || b === null) return false;
+
+  if (a instanceof Date &amp;&amp; b instanceof Date) return a.getTime() === b.getTime();
+  if (Array.isArray(a) !== Array.isArray(b)) return false;
+
+  if (seen.get(a) === b) return true;        <span class="cmt">// already comparing this pair — assume equal</span>
+  seen.set(a, b);
+
+  const ka = Reflect.ownKeys(a), kb = Reflect.ownKeys(b);
+  if (ka.length !== kb.length) return false;
+  return ka.every((k) =&gt; Object.hasOwn(b, k) &amp;&amp; deepEqual(a[k], b[k], seen));
+}
+
+<span class="cmt">// 3 — list to tree, one pass with a lookup map: O(n)</span>
+function listToTree(items) {
+  const byId = new Map();
+  for (const item of items) byId.set(item.id, { ...item, children: [] });
+
+  const roots = [];
+  for (const item of items) {
+    const node = byId.get(item.id);
+    const parent = item.parentId != null ? byId.get(item.parentId) : null;
+    if (parent) parent.children.push(node);
+    else roots.push(node);                   <span class="cmt">// no parent, or parent missing</span>
+  }
+  return roots;
+}
+
+<span class="cmt">// 4 — tree to flat list with depth (the virtualised tree-view shape)</span>
+function treeToList(roots) {
+  const out = [];
+  const walk = (nodes, depth) =&gt; {
+    for (const node of nodes) {
+      const { children, ...rest } = node;
+      out.push({ ...rest, depth });
+      if (children?.length) walk(children, depth + 1);
+    }
+  };
+  walk(roots, 0);
+  return out;
+}
+
+<span class="cmt">// 5 — count and max depth in one traversal</span>
+function commentStats(comments) {
+  let count = 0, maxDepth = 0;
+  const walk = (nodes, depth) =&gt; {
+    for (const node of nodes) {
+      count++;
+      maxDepth = Math.max(maxDepth, depth);
+      walk(node.replies ?? [], depth + 1);
+    }
+  };
+  walk(comments, 1);
+  return { count, maxDepth };
+}
+
+<span class="cmt">// 6 — filter a tree, keeping ancestors of matches. POST-order: a node
+// survives if it matches OR any descendant survived.</span>
+function filterTree(nodes, predicate) {
+  const out = [];
+  for (const node of nodes) {
+    const children = filterTree(node.children ?? [], predicate);   <span class="cmt">// recurse FIRST</span>
+    if (predicate(node) || children.length &gt; 0) {
+      out.push({ ...node, children });
+    }
+  }
+  return out;
+}</code></pre>
+            <p>
+              <strong>Problem 3 is the one you will use in real work.</strong> The naive solution
+              is a nested loop searching for each node's parent, which is O(n&sup2;). Building an
+              id-to-node map first makes it two linear passes. It also handles children appearing
+              before their parents in the input, which a single-pass version does not &mdash; and
+              which real API responses absolutely do. This is exactly the nested-comments build
+              from Chapter 26's machine coding round.
+            </p>
+            <p>
+              <strong>Problem 6's post-order requirement</strong> is the insight: you cannot
+              decide whether to keep a node until you know whether any descendant matched, so the
+              children must be processed first. Doing it pre-order and trying to prune afterwards
+              is far messier. This is the search-filter behaviour of every file-tree and
+              settings-tree UI you have used.
+            </p>
+            <p>
+              <strong>Problem 2's <code>Object.is</code></strong> handles <code>NaN</code>
+              correctly, which <code>===</code> does not &mdash; and interviewers do test
+              <code>deepEqual(NaN, NaN)</code>. The <code>WeakMap</code> pair-tracking for cycles
+              is the same technique as <code>deepClone</code> in Chapter 4.
+            </p>
+          </div>
+        </details>
+
+        <p class="qlabel">Cross-questions</p>
+        <div class="xq">
+          <div class="xq-item">
+            <p class="xq-q">Your flatten drops empty objects. Is that right?</p>
+            <p class="xq-why">Testing: whether you made a decision or an accident.</p>
+            <p class="ans good">"It is a decision and I would confirm it. My version keeps them as leaves, so <code>{a: {}}</code> becomes <code>{'a': {}}</code> — that round-trips correctly through unflatten. If empty objects were dropped entirely, flatten followed by unflatten would lose structure. Whenever a transform has an inverse, 'does it round-trip' is the question that settles these edge cases."</p>
+          </div>
+          <div class="xq-item">
+            <p class="xq-q">What if a key contains a dot?</p>
+            <p class="xq-why">Testing: the ambiguity they will raise if you do not.</p>
+            <p class="ans good">"Then dot notation is lossy and unflatten will produce the wrong shape — <code>{'a.b': 1}</code> is indistinguishable from <code>{a: {b: 1}}</code>. Options: escape dots in keys, use an array path instead of a string, or pick a separator that cannot appear. Lodash's <code>get</code> accepts an array path for exactly this reason, which is why my <code>toKeys</code> passes arrays straight through."</p>
+          </div>
+          <div class="xq-item">
+            <p class="xq-q">List-to-tree with a missing parent id &mdash; what happens?</p>
+            <p class="xq-why">Testing: whether you thought about malformed data.</p>
+            <p class="ans good">"In my version the node is treated as a root, because <code>byId.get(parentId)</code> returns undefined. That is usually right for a partially loaded thread — an orphaned reply is better shown at the top level than silently dropped. But it should be a deliberate choice: the alternatives are to discard orphans or to collect them separately and report. I would ask, and I would not let the data quietly disappear."</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ================================================================= -->
+    <div class="session">
+      <span class="sn">Session 4</span>
+      <span class="st">Grids and graphs</span>
+      <span class="sd">~75 min</span>
+    </div>
+
+    <h2>7 &middot; Grid traversal</h2>
+
+    <div class="qblock">
+      <div class="q-head">
+        <span class="q-n">Question 7</span>
+        <span class="q-t">Count the number of islands in a grid of land and water.</span>
+        <span class="q-freq">The canonical grid problem &middot; every grid question is a variation of it</span>
+      </div>
+      <div class="q-body">
+
+        <div class="saythis">
+          <span class="st-lab">Say this &mdash; the trigger and the template</span>
+          <p>
+            <strong>Trigger:</strong> a 2D grid, and words like <em>connected</em>,
+            <em>region</em>, <em>flood</em>, <em>reachable</em>, <em>shortest path</em>.
+          </p>
+          <p>
+            <strong>The template:</strong> a grid is a graph where each cell is a node connected
+            to its four neighbours. Scan every cell; when I find an unvisited cell that belongs to
+            a region, start a flood fill from it and mark everything it reaches as visited. The
+            number of times I <em>start</em> a fill is the number of regions.
+          </p>
+          <p>
+            Use DFS when you just need to mark the region. Use BFS when you need
+            <strong>distance or time</strong> &mdash; shortest path, or "how many minutes until
+            everything is reached" &mdash; because BFS explores in order of distance and DFS does
+            not. That choice is the main thing being tested.
+          </p>
+        </div>
+
+<pre><code>function numIslands(grid) {
+  if (!grid.length) return 0;
+  const rows = grid.length, cols = grid[0].length;
+  let count = 0;
+
+  const fill = (r, c) =&gt; {
+    <span class="cmt">// one bounds-and-validity check at the top beats four at each call site</span>
+    if (r &lt; 0 || r &gt;= rows || c &lt; 0 || c &gt;= cols || grid[r][c] !== "1") return;
+    grid[r][c] = "0";                        <span class="cmt">// mark visited IN PLACE</span>
+    fill(r + 1, c); fill(r - 1, c); fill(r, c + 1); fill(r, c - 1);
+  };
+
+  for (let r = 0; r &lt; rows; r++) {
+    for (let c = 0; c &lt; cols; c++) {
+      if (grid[r][c] === "1") { count++; fill(r, c); }
+    }
+  }
+  return count;
+}
+<span class="cmt">// Time O(rows · cols) — every cell visited a constant number of times.
+// Space O(rows · cols) worst case for the recursion stack (a snake-shaped island).</span></code></pre>
+
+        <div class="trap">
+          <span class="t-lab">Trap</span>
+          <div class="t-in">
+            <p>
+              Mutating the input grid is the cheapest way to track visited cells, and it is what
+              most solutions do &mdash; but <strong>say it out loud</strong>: "I'm marking visited
+              by mutating the grid; if the caller needs it intact I'd use a separate visited set
+              at O(rows&nbsp;&middot;&nbsp;cols) extra space." Silently destroying the input is a
+              real complaint an interviewer will raise.
+            </p>
+          </div>
+        </div>
+
+        <div class="drill">
+          <div class="d-head"><span>Problem set &mdash; grids</span><span>AI off &middot; autocomplete off</span><span class="clock">45 min for 4</span></div>
+          <div class="d-body">
+            <h4>Four problems</h4>
+            <ol>
+              <li><strong>Flood fill</strong> &mdash; the paint-bucket tool. Change a starting pixel's colour and every connected pixel of the same colour. <em>You have shipped a version of this in the canvas editor.</em></li>
+              <li><strong>Max area of island</strong> &mdash; the same fill, returning a size instead of marking. <em>What does the recursive call return now?</em></li>
+              <li><strong>Rotting oranges</strong> &mdash; each minute, rotten oranges rot their fresh neighbours; return the minutes until none are fresh, or &minus;1. <em>Multi-source BFS: seed the queue with <b>every</b> rotten orange before starting.</em></li>
+              <li><strong>Shortest path in a binary matrix</strong> &mdash; from top-left to bottom-right through open cells, eight-directional. <em>BFS, and the first time you reach the target is the answer.</em></li>
+            </ol>
+          </div>
+        </div>
+
+        <details class="solution">
+          <summary>Solutions &mdash; open only after the timers</summary>
+          <div class="sol-in">
+<pre><code><span class="cmt">// 1 — flood fill</span>
+function floodFill(image, sr, sc, newColor) {
+  const target = image[sr][sc];
+  if (target === newColor) return image;     <span class="cmt">// guard against infinite recursion</span>
+
+  const rows = image.length, cols = image[0].length;
+  const fill = (r, c) =&gt; {
+    if (r &lt; 0 || r &gt;= rows || c &lt; 0 || c &gt;= cols || image[r][c] !== target) return;
+    image[r][c] = newColor;
+    fill(r + 1, c); fill(r - 1, c); fill(r, c + 1); fill(r, c - 1);
+  };
+  fill(sr, sc);
+  return image;
+}
+
+<span class="cmt">// 2 — max area: the fill RETURNS a count and sums its children</span>
+function maxAreaOfIsland(grid) {
+  const rows = grid.length, cols = grid[0].length;
+
+  const area = (r, c) =&gt; {
+    if (r &lt; 0 || r &gt;= rows || c &lt; 0 || c &gt;= cols || grid[r][c] !== 1) return 0;
+    grid[r][c] = 0;
+    return 1 + area(r + 1, c) + area(r - 1, c) + area(r, c + 1) + area(r, c - 1);
+  };
+
+  let best = 0;
+  for (let r = 0; r &lt; rows; r++)
+    for (let c = 0; c &lt; cols; c++)
+      if (grid[r][c] === 1) best = Math.max(best, area(r, c));
+  return best;
+}
+
+<span class="cmt">// 3 — rotting oranges: MULTI-SOURCE BFS, level by level</span>
+function orangesRotting(grid) {
+  const rows = grid.length, cols = grid[0].length;
+  const queue = [];
+  let fresh = 0;
+
+  for (let r = 0; r &lt; rows; r++)
+    for (let c = 0; c &lt; cols; c++) {
+      if (grid[r][c] === 2) queue.push([r, c]);   <span class="cmt">// ALL sources seed the queue</span>
+      else if (grid[r][c] === 1) fresh++;
+    }
+
+  if (fresh === 0) return 0;                 <span class="cmt">// nothing to rot</span>
+
+  const DIRS = [[1,0],[-1,0],[0,1],[0,-1]];
+  let head = 0, minutes = 0;
+
+  while (head &lt; queue.length &amp;&amp; fresh &gt; 0) {
+    const levelSize = queue.length - head;   <span class="cmt">// one minute = one BFS level</span>
+    for (let i = 0; i &lt; levelSize; i++) {
+      const [r, c] = queue[head++];
+      for (const [dr, dc] of DIRS) {
+        const nr = r + dr, nc = c + dc;
+        if (nr &lt; 0 || nr &gt;= rows || nc &lt; 0 || nc &gt;= cols || grid[nr][nc] !== 1) continue;
+        grid[nr][nc] = 2;
+        fresh--;
+        queue.push([nr, nc]);
+      }
+    }
+    minutes++;
+  }
+  return fresh === 0 ? minutes : -1;         <span class="cmt">// unreachable fresh oranges</span>
+}
+
+<span class="cmt">// 4 — shortest path, 8-directional BFS</span>
+function shortestPathBinaryMatrix(grid) {
+  const n = grid.length;
+  if (grid[0][0] !== 0 || grid[n-1][n-1] !== 0) return -1;
+
+  const DIRS = [[1,0],[-1,0],[0,1],[0,-1],[1,1],[1,-1],[-1,1],[-1,-1]];
+  const queue = [[0, 0, 1]];                 <span class="cmt">// row, col, distance</span>
+  grid[0][0] = 1;                            <span class="cmt">// mark visited on ENQUEUE, not dequeue</span>
+  let head = 0;
+
+  while (head &lt; queue.length) {
+    const [r, c, dist] = queue[head++];
+    if (r === n - 1 &amp;&amp; c === n - 1) return dist;   <span class="cmt">// first arrival is shortest</span>
+    for (const [dr, dc] of DIRS) {
+      const nr = r + dr, nc = c + dc;
+      if (nr &lt; 0 || nr &gt;= n || nc &lt; 0 || nc &gt;= n || grid[nr][nc] !== 0) continue;
+      grid[nr][nc] = 1;
+      queue.push([nr, nc, dist + 1]);
+    }
+  }
+  return -1;
+}</code></pre>
+            <p>
+              <strong>Two details that separate correct from nearly-correct.</strong> First, in
+              BFS you must <strong>mark visited when you enqueue, not when you dequeue</strong>
+              &mdash; otherwise the same cell can be queued several times before it is processed,
+              and the queue blows up. Second, problem 3's multi-source seeding: every rotten
+              orange starts at time zero, so they all go into the queue before the loop. Running
+              a separate BFS per source would be both slower and wrong.
+            </p>
+            <p>
+              <strong>Problem 1 is genuinely your domain.</strong> Say so: a paint-bucket tool on
+              a canvas is exactly this, operating on <code>ImageData</code> rather than a nested
+              array, and the real version needs an explicit stack because a large fill region
+              would overflow the call stack, plus a colour tolerance rather than exact equality.
+              That turns a LeetCode easy into a conversation about something you have shipped.
+            </p>
+          </div>
+        </details>
+
+        <p class="qlabel">Cross-questions</p>
+        <div class="xq">
+          <div class="xq-item">
+            <p class="xq-q">DFS or BFS for islands &mdash; does it matter?</p>
+            <p class="xq-why">Testing: whether you know when the choice is real.</p>
+            <p class="ans good">"For counting islands, no — both visit every cell once and give the same answer; DFS is just shorter to write. It matters the moment distance is involved. Rotting oranges and shortest path both need BFS, because BFS visits in order of distance so the first time you reach a cell is via the shortest route. DFS would find <em>a</em> path, not the shortest."</p>
+          </div>
+          <div class="xq-item">
+            <p class="xq-q">Your DFS could overflow the stack. When?</p>
+            <p class="xq-why">Testing: realistic limits.</p>
+            <p class="ans good">"On a large grid that is almost all one region — a 1000 by 1000 grid of land is a million-deep recursion in the worst case. Browsers cap out around ten thousand frames. So for image-sized data I use an explicit stack, which is the same algorithm with the recursion made manual. For a typical interview grid it never matters, but saying it shows I know the boundary."</p>
+          </div>
+          <div class="xq-item">
+            <p class="xq-q">How do you avoid repeating the bounds check four times?</p>
+            <p class="xq-why">Testing: code quality under time pressure.</p>
+            <p class="ans good">"Check at the top of the recursive function rather than at each call site — one guard instead of four conditions, and adding diagonal directions later becomes a change to one array. For BFS I keep a <code>DIRS</code> array and loop over it, which is the same idea and makes four-way versus eight-way a one-line change."</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <h2>8 &middot; Graphs and topological sort</h2>
+
+    <div class="qblock">
+      <div class="q-head">
+        <span class="q-n">Question 8</span>
+        <span class="q-t">Given module dependencies, produce a valid build order. Detect cycles.</span>
+        <span class="q-freq">Common at senior level &middot; and it is literally what a bundler does</span>
+      </div>
+      <div class="q-body">
+
+        <div class="saythis">
+          <span class="st-lab">Say this</span>
+          <p>
+            This is <strong>topological sort</strong> on a directed graph, and the cycle detection
+            comes free with it. Two standard algorithms.
+          </p>
+          <p>
+            <strong>Kahn's algorithm</strong> is BFS-based: count each node's incoming edges, start
+            with every node that has none, and each time you remove a node, decrement its
+            neighbours' counts and enqueue any that reach zero. If the output is shorter than the
+            node count, the remainder is a cycle. This one is easier to explain and gives the
+            cycle detection naturally.
+          </p>
+          <p>
+            <strong>DFS with three colours</strong> is the alternative: white unvisited, grey in
+            progress, black finished. Reaching a grey node means a back edge, which is a cycle.
+            The reverse post-order is the topological order.
+          </p>
+          <p>
+            And this is not academic for a frontend engineer: it is how a bundler orders modules,
+            how a task runner orders jobs, and how you would resolve widget dependencies or
+            slide-master inheritance.
+          </p>
+        </div>
+
+<pre><code><span class="cmt">// Kahn's algorithm — BFS topological sort with cycle detection</span>
+function buildOrder(modules) {
+  <span class="cmt">// modules: Map of name -> array of names it depends on</span>
+  const inDegree = new Map();
+  const dependents = new Map();              <span class="cmt">// dependency -> things that need it</span>
+
+  for (const [name] of modules) { inDegree.set(name, 0); dependents.set(name, []); }
+  for (const [name, deps] of modules) {
+    for (const dep of deps) {
+      if (!inDegree.has(dep)) continue;      <span class="cmt">// external / unknown dependency</span>
+      dependents.get(dep).push(name);
+      inDegree.set(name, inDegree.get(name) + 1);
+    }
+  }
+
+  <span class="cmt">// everything with nothing to wait for can start now</span>
+  const queue = [...inDegree].filter(([, d]) =&gt; d === 0).map(([n]) =&gt; n);
+  const order = [];
+  let head = 0;
+
+  while (head &lt; queue.length) {
+    const name = queue[head++];
+    order.push(name);
+    for (const dependent of dependents.get(name)) {
+      const remaining = inDegree.get(dependent) - 1;
+      inDegree.set(dependent, remaining);
+      if (remaining === 0) queue.push(dependent);
+    }
+  }
+
+  if (order.length !== modules.size) {
+    const cyclic = [...inDegree].filter(([, d]) =&gt; d &gt; 0).map(([n]) =&gt; n);
+    throw new Error(`Circular dependency among: ${cyclic.join(", ")}`);
+  }
+  return order;
+}
+<span class="cmt">// Time O(V + E), Space O(V + E)</span></code></pre>
+
+        <div class="drill">
+          <div class="d-head"><span>Problem set &mdash; graphs</span><span>AI off &middot; autocomplete off</span><span class="clock">45 min for 4</span></div>
+          <div class="d-body">
+            <h4>Four problems</h4>
+            <ol>
+              <li><strong>Course schedule</strong> &mdash; can all courses be finished given prerequisite pairs? <em>Just cycle detection; return a boolean.</em></li>
+              <li><strong>Course schedule II</strong> &mdash; return a valid order, or an empty array if impossible.</li>
+              <li><strong>Clone graph</strong> &mdash; deep-copy a connected undirected graph of nodes with neighbour lists. <em>A <code>Map</code> from original to clone, populated <b>before</b> recursing &mdash; the same cycle guard as <code>deepClone</code>.</em></li>
+              <li><strong>Detect a cycle with DFS colours</strong> &mdash; write the three-colour version and return the actual cycle path, not just a boolean. <em>The path is what makes an error message useful.</em></li>
+            </ol>
+          </div>
+        </div>
+
+        <details class="solution">
+          <summary>Solutions &mdash; open only after the timers</summary>
+          <div class="sol-in">
+<pre><code><span class="cmt">// 1 + 2 — course schedule: Kahn's, boolean or order</span>
+function findOrder(numCourses, prerequisites) {
+  const inDegree = new Array(numCourses).fill(0);
+  const graph = Array.from({ length: numCourses }, () =&gt; []);
+
+  for (const [course, prereq] of prerequisites) {
+    graph[prereq].push(course);              <span class="cmt">// edge: prereq → course</span>
+    inDegree[course]++;
+  }
+
+  const queue = [];
+  for (let i = 0; i &lt; numCourses; i++) if (inDegree[i] === 0) queue.push(i);
+
+  const order = [];
+  let head = 0;
+  while (head &lt; queue.length) {
+    const course = queue[head++];
+    order.push(course);
+    for (const next of graph[course]) if (--inDegree[next] === 0) queue.push(next);
+  }
+  return order.length === numCourses ? order : [];    <span class="cmt">// empty ⇒ cycle</span>
+}
+
+<span class="cmt">// 3 — clone graph</span>
+function cloneGraph(node, cloned = new Map()) {
+  if (!node) return null;
+  if (cloned.has(node)) return cloned.get(node);      <span class="cmt">// cycle / revisit guard</span>
+
+  const copy = { val: node.val, neighbors: [] };
+  cloned.set(node, copy);                             <span class="cmt">// register BEFORE recursing</span>
+
+  for (const neighbor of node.neighbors) {
+    copy.neighbors.push(cloneGraph(neighbor, cloned));
+  }
+  return copy;
+}
+
+<span class="cmt">// 4 — three-colour DFS returning the cycle path</span>
+function findCycle(graph) {
+  const WHITE = 0, GREY = 1, BLACK = 2;
+  const colour = new Map([...graph.keys()].map((k) =&gt; [k, WHITE]));
+  const stack = [];
+
+  const visit = (node) =&gt; {
+    colour.set(node, GREY);
+    stack.push(node);
+
+    for (const next of graph.get(node) ?? []) {
+      if (colour.get(next) === GREY) {
+        <span class="cmt">// back edge — the cycle is from `next` to the top of the stack</span>
+        return [...stack.slice(stack.indexOf(next)), next];
+      }
+      if (colour.get(next) === WHITE) {
+        const cycle = visit(next);
+        if (cycle) return cycle;
+      }
+      <span class="cmt">// BLACK: fully explored already, no cycle through it</span>
+    }
+
+    colour.set(node, BLACK);
+    stack.pop();
+    return null;
+  };
+
+  for (const node of graph.keys()) {
+    if (colour.get(node) === WHITE) {
+      const cycle = visit(node);
+      if (cycle) return cycle;
+    }
+  }
+  return null;
+}</code></pre>
+            <p>
+              <strong>Why grey and black are both needed</strong> is the question that follows.
+              Grey means "on the current path" &mdash; reaching it again is a genuine cycle. Black
+              means "fully explored, and no cycle was found through it" &mdash; reaching it again
+              is just a second route to the same place, which is fine in a DAG. A two-state
+              visited set cannot tell those apart and reports false cycles on any diamond-shaped
+              dependency graph, which is extremely common in real module trees.
+            </p>
+            <p>
+              <strong>Problem 4's path output is the practical difference.</strong> "Circular
+              dependency detected" is a useless error message; "a &rarr; b &rarr; c &rarr; a" is
+              one a developer can act on. That is exactly what webpack and Rollup print, and
+              saying so connects the algorithm to tooling you use daily.
+            </p>
+          </div>
+        </details>
+
+        <p class="qlabel">Cross-questions</p>
+        <div class="xq">
+          <div class="xq-item">
+            <p class="xq-q">Kahn's or DFS &mdash; which would you use?</p>
+            <p class="xq-why">Testing: a real preference with a reason.</p>
+            <p class="ans good">"Kahn's, usually. It is easier to explain, cycle detection falls out of the output length, and the in-degree-zero frontier maps naturally onto 'what can I build in parallel right now' — which is what a task runner actually wants. I would use the DFS version when I need the cycle path for a good error message, or when I already have a recursive walk and adding colours is cheaper than restructuring."</p>
+          </div>
+          <div class="xq-item">
+            <p class="xq-q">Is the topological order unique?</p>
+            <p class="xq-why">Testing: precision about what the algorithm guarantees.</p>
+            <p class="ans good">"No — any order respecting the dependencies is valid, and there are usually many. Kahn's produces different valid orders depending on queue order. If determinism matters, for example for reproducible builds, I would process the ready set in sorted order rather than arbitrary order. That is a genuinely important detail for build tooling."</p>
+          </div>
+          <div class="xq-item">
+            <p class="xq-q">How does this relate to anything you have built?</p>
+            <p class="xq-why">Testing: the connection that makes this memorable.</p>
+            <p class="ans good">"Two ways. Slide-master inheritance is a dependency graph — a slide depends on its layout, which depends on the master — and resolving properties requires walking it in order, with cycle detection because a malformed file can reference itself. And the widget system resolves configuration inheritance the same way. It is also what Vite and webpack do to order modules, which is why understanding it makes bundler errors readable rather than mysterious."</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ================================================================= -->
+    <div class="session">
+      <span class="sn">Session 5</span>
+      <span class="st">Sorting and binary search</span>
+      <span class="sd">~75 min</span>
+    </div>
+
+    <h2>9 &middot; Sorting, and what JavaScript does to you</h2>
+
+    <div class="qblock">
+      <div class="q-head">
+        <span class="q-n">Question 9</span>
+        <span class="q-t">What does [1, 30, 4, 21, 100000].sort() return?</span>
+        <span class="q-freq">A five-second question that catches experienced developers</span>
+      </div>
+      <div class="q-body">
+
+        <div class="saythis">
+          <span class="st-lab">Say this</span>
+          <p>
+            <code>[1, 100000, 21, 30, 4]</code>. With no comparator,
+            <code>sort</code> converts every element to a string and compares
+            <strong>UTF-16 code unit sequences</strong>, so it is lexicographic, not numeric.
+            <code>"100000"</code> sorts before <code>"21"</code> because <code>"1"</code> comes
+            before <code>"2"</code>.
+          </p>
+          <p>
+            Four more facts worth having ready. It sorts <strong>in place</strong> and returns a
+            reference to the same array, so it mutates its input &mdash; <code>toSorted()</code>
+            is the copying version added in ES2023. It has been <strong>stable since
+            ES2019</strong>, so equal elements keep their relative order, which is what makes
+            multi-key sorting by sorting twice work. <code>undefined</code> values are moved to
+            the end regardless of the comparator, and holes go after even those. And the
+            comparator must be <strong>well-formed</strong> &mdash; consistent, anti-symmetric and
+            transitive &mdash; or the result is engine-dependent: the same inconsistent comparator
+            produces different output in V8 and SpiderMonkey.
+          </p>
+        </div>
+
+<pre><code>[1, 30, 4, 21, 100000].sort();                     <span class="cmt">// [1, 100000, 21, 30, 4]  ✗</span>
+[1, 30, 4, 21, 100000].sort((a, b) =&gt; a - b);      <span class="cmt">// [1, 4, 21, 30, 100000]  ✓</span>
+
+<span class="cmt">// mutation — this catches people in React</span>
+const sorted = items.sort((a, b) =&gt; a.x - b.x);    <span class="cmt">// `items` is now reordered too</span>
+const safe = [...items].sort((a, b) =&gt; a.x - b.x); <span class="cmt">// or items.toSorted(...)</span>
+
+<span class="cmt">// stability lets you sort by two keys with two passes,
+// least significant first</span>
+widgets.sort((a, b) =&gt; a.name.localeCompare(b.name));   <span class="cmt">// secondary key first</span>
+widgets.sort((a, b) =&gt; a.zIndex - b.zIndex);            <span class="cmt">// primary key second</span>
+
+<span class="cmt">// or one comparator, which is clearer and one pass</span>
+widgets.sort((a, b) =&gt; a.zIndex - b.zIndex || a.name.localeCompare(b.name));</code></pre>
+
+        <div class="trap">
+          <span class="t-lab">Trap</span>
+          <div class="t-in">
+            <p>
+              <code>arr.sort()</code> inside a React render or a selector is a live bug: it
+              mutates the array in place, so if that array is state or a prop you have mutated
+              state directly, and the component may not re-render because the reference did not
+              change. Use <code>toSorted()</code>, or spread first. This shows up in real code
+              reviews constantly.
+            </p>
+          </div>
+        </div>
+
+        <div class="hing">
+          <span class="h-lab">Seedhi baat</span>
+          <p>
+            <code>sort()</code> ke teen jaal hain aur teeno alag alag din bites karte hain.
+            Ek: comparator ke bina numbers string ki tarah sort hote hain. Do: original array
+            badal jata hai &mdash; React mein ye silent bug ban jata hai. Teen: comparator
+            <code>a - b</code> hona chahiye, <code>a &gt; b</code> nahi &mdash; kyunki
+            <code>true/false</code> return karna spec ke hisaab se galat hai aur alag engines par
+            alag result deta hai.
+          </p>
+        </div>
+
+        <div class="drill">
+          <div class="d-head"><span>Problem set &mdash; sorting</span><span>AI off &middot; autocomplete off</span><span class="clock">45 min for 5</span></div>
+          <div class="d-body">
+            <h4>Five problems</h4>
+            <ol>
+              <li>
+                <strong>Multi-key sort</strong> &mdash; sort widgets by <code>zIndex</code>
+                ascending, then <code>name</code> alphabetically, then <code>createdAt</code>
+                descending. One comparator. <em>Then write a generic
+                <code>sortBy(items, ...keyFns)</code>.</em>
+              </li>
+              <li>
+                <strong>Merge sort</strong> &mdash; write it. <em>Then say why it is the
+                algorithm behind stable sorting and why it needs O(n) extra space.</em>
+              </li>
+              <li>
+                <strong>Quicksort</strong> &mdash; write it with Lomuto partitioning.
+                <em>Then say why it is O(n&sup2;) worst case and what pivot choice fixes that in
+                practice.</em>
+              </li>
+              <li>
+                <strong>Merge k sorted arrays</strong> &mdash; the pairwise-merge approach is
+                O(n&nbsp;k); merging in pairs repeatedly gets you O(n&nbsp;log&nbsp;k).
+                <em>A heap is the textbook answer &mdash; note that JavaScript has none built
+                in.</em>
+              </li>
+              <li>
+                <strong>Sort a nearly-sorted array</strong> where each element is at most k
+                positions from its final place. <em>Full sort is O(n log n); you can do
+                O(n log k).</em>
+              </li>
+            </ol>
+          </div>
+        </div>
+
+        <details class="solution">
+          <summary>Solutions &mdash; open only after the timers</summary>
+          <div class="sol-in">
+<pre><code><span class="cmt">// 1 — multi-key, then a generic helper</span>
+widgets.sort((a, b) =&gt;
+  a.zIndex - b.zIndex
+  || a.name.localeCompare(b.name)
+  || b.createdAt - a.createdAt            <span class="cmt">// reversed operands = descending</span>
+);
+
+<span class="cmt">// generic: each entry is [keyFn, direction]</span>
+function sortBy(items, ...specs) {
+  return [...items].sort((a, b) =&gt; {
+    for (const [keyFn, dir = 1] of specs) {
+      const ka = keyFn(a), kb = keyFn(b);
+      const cmp = typeof ka === "string" ? ka.localeCompare(kb) : ka - kb;
+      if (cmp !== 0) return cmp * dir;
+    }
+    return 0;                             <span class="cmt">// equal — stability preserves input order</span>
+  });
+}
+
+<span class="cmt">// 2 — merge sort: O(n log n) always, stable, O(n) space</span>
+function mergeSort(arr) {
+  if (arr.length &lt;= 1) return arr;
+  const mid = arr.length &gt;&gt; 1;
+  const left = mergeSort(arr.slice(0, mid));
+  const right = mergeSort(arr.slice(mid));
+  return merge(left, right);
+}
+
+function merge(a, b) {
+  const out = [];
+  let i = 0, j = 0;
+  while (i &lt; a.length &amp;&amp; j &lt; b.length) {
+    <span class="cmt">// &lt;= keeps equal elements in their original order → STABLE.
+    // Using &lt; here would silently make the sort unstable.</span>
+    if (a[i] &lt;= b[j]) out.push(a[i++]);
+    else out.push(b[j++]);
+  }
+  while (i &lt; a.length) out.push(a[i++]);
+  while (j &lt; b.length) out.push(b[j++]);
+  return out;
+}
+
+<span class="cmt">// 3 — quicksort, Lomuto partition, in place</span>
+function quickSort(arr, lo = 0, hi = arr.length - 1) {
+  if (lo &gt;= hi) return arr;
+  const p = partition(arr, lo, hi);
+  quickSort(arr, lo, p - 1);
+  quickSort(arr, p + 1, hi);
+  return arr;
+}
+
+function partition(arr, lo, hi) {
+  <span class="cmt">// random pivot avoids the O(n²) worst case on sorted input</span>
+  const r = lo + Math.floor(Math.random() * (hi - lo + 1));
+  [arr[r], arr[hi]] = [arr[hi], arr[r]];
+
+  const pivot = arr[hi];
+  let i = lo;                             <span class="cmt">// boundary of the "&lt; pivot" region</span>
+  for (let j = lo; j &lt; hi; j++) {
+    if (arr[j] &lt; pivot) { [arr[i], arr[j]] = [arr[j], arr[i]]; i++; }
+  }
+  [arr[i], arr[hi]] = [arr[hi], arr[i]];
+  return i;
+}
+
+<span class="cmt">// 4 — merge k sorted arrays by repeated pairwise merging: O(n log k)</span>
+function mergeKSorted(arrays) {
+  if (arrays.length === 0) return [];
+  let current = arrays;
+  while (current.length &gt; 1) {
+    const next = [];
+    for (let i = 0; i &lt; current.length; i += 2) {
+      next.push(i + 1 &lt; current.length ? merge(current[i], current[i + 1]) : current[i]);
+    }
+    current = next;                       <span class="cmt">// halves the count each round → log k rounds</span>
+  }
+  return current[0];
+}
+
+<span class="cmt">// 5 — nearly sorted: only ever sort a window of k+1 elements.
+// With a real min-heap this is O(n log k); with a sorted window it is
+// O(n·k) but far simpler — say both and pick based on k.</span>
+function sortNearlySorted(arr, k) {
+  const out = [];
+  const window = [];
+  for (const x of arr) {
+    window.push(x);
+    if (window.length &gt; k + 1) {
+      window.sort((a, b) =&gt; a - b);
+      out.push(window.shift());
+    }
+  }
+  window.sort((a, b) =&gt; a - b);
+  out.push(...window);
+  return out;
+}</code></pre>
+            <p>
+              <strong>The <code>&lt;=</code> in <code>merge</code> is the stability guarantee.</strong>
+              When two elements compare equal, taking from the left array first preserves their
+              original relative order. Change it to <code>&lt;</code> and the sort still produces
+              a correctly ordered array but is no longer stable &mdash; which silently breaks the
+              two-pass multi-key technique. That single character is a genuinely good
+              interview answer.
+            </p>
+            <p>
+              <strong>Why random pivots matter:</strong> Lomuto with a fixed last-element pivot
+              degrades to O(n&sup2;) on already-sorted input, which is the most common real input
+              shape. Randomising makes that case vanishingly unlikely. Real engines use
+              introsort-style hybrids &mdash; quicksort that switches to heapsort at a depth limit
+              and to insertion sort for small arrays &mdash; and V8 uses TimSort for
+              <code>Array.prototype.sort</code>, which is a merge sort variant, which is why the
+              built-in is stable.
+            </p>
+          </div>
+        </details>
+
+        <p class="qlabel">Cross-questions</p>
+        <div class="xq">
+          <div class="xq-item">
+            <p class="xq-q">Why is <code>(a, b) =&gt; a &gt; b</code> a broken comparator?</p>
+            <p class="xq-why">Testing: whether you know the contract, not just the idiom.</p>
+            <p class="ans good">"It returns a boolean, which coerces to 1 or 0 — so it can say 'a after b' but never 'a before b'. It violates anti-symmetry: <code>cmp(a,b)</code> and <code>cmp(b,a)</code> can both be 0 for unequal values. MDN is explicit that the result is then implementation-defined, and it genuinely differs: V8 leaves the array untouched where SpiderMonkey sorts it. The comparator must return a negative number, zero or a positive number."</p>
+          </div>
+          <div class="xq-item">
+            <p class="xq-q">What does "stable" actually buy you?</p>
+            <p class="xq-why">Testing: practical consequence.</p>
+            <p class="ans good">"Equal elements keep their input order, which means you can sort by a secondary key first and a primary key second and get correct multi-key ordering. It also matters in UI: re-sorting a table by a column should not shuffle rows that tie, because visible reordering with no reason looks like a bug. It has been guaranteed since ES2019; before that you had to add a tiebreaker on the original index."</p>
+          </div>
+          <div class="xq-item">
+            <p class="xq-q">When would you not use the built-in sort?</p>
+            <p class="xq-why">Testing: knowing that O(n log n) is not always the target.</p>
+            <p class="ans good">"When the data has structure the general algorithm cannot exploit. Bounded small integers, like ages or frequencies, can be counting-sorted in O(n) — that was the top-k-frequent bucket trick. Nearly-sorted data is better served by insertion sort or a windowed approach. And if I only need the top k, a partial selection is O(n log k) rather than sorting everything. Otherwise I use the built-in: it is TimSort, it is stable, and it is far better tuned than anything I would write."</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <h2>10 &middot; Binary search and its three variants</h2>
+
+    <div class="qblock">
+      <div class="q-head">
+        <span class="q-n">Question 10</span>
+        <span class="q-t">Write binary search. Now find the first occurrence of a duplicated value.</span>
+        <span class="q-freq">Very common &middot; and almost everyone gets the second half wrong first try</span>
+      </div>
+      <div class="q-body">
+
+        <div class="saythis">
+          <span class="st-lab">Say this</span>
+          <p>
+            <strong>Trigger:</strong> the data is sorted, or the answer space is monotonic
+            &mdash; meaning there is some threshold where the answer flips from no to yes.
+          </p>
+          <p>
+            There are three variants and confusing them is where the bugs are.
+            <strong>Exact match</strong> returns any index of the target.
+            <strong>Lower bound</strong> returns the first index whose value is &ge; the target
+            &mdash; which gives you the first occurrence, and the insertion point if it is
+            absent. <strong>Upper bound</strong> returns the first index strictly greater, so
+            <code>upper &minus; lower</code> is the count of occurrences.
+          </p>
+          <p>
+            The thing that makes bounds searches reliable is that you <strong>never return
+            early</strong>. You keep narrowing until the range is empty, and the invariant does
+            the work. Trying to return the moment you hit the target is exactly what breaks the
+            first-occurrence version.
+          </p>
+        </div>
+
+<pre><code><span class="cmt">// 1 — exact match</span>
+function binarySearch(arr, target) {
+  let lo = 0, hi = arr.length - 1;
+  while (lo &lt;= hi) {                          <span class="cmt">// &lt;= : a single-element range is valid</span>
+    const mid = lo + ((hi - lo) &gt;&gt; 1);        <span class="cmt">// overflow-safe by habit</span>
+    if (arr[mid] === target) return mid;
+    if (arr[mid] &lt; target) lo = mid + 1;
+    else hi = mid - 1;
+  }
+  return -1;
+}
+
+<span class="cmt">// 2 — lower bound: first index with arr[i] >= target.
+// Note the half-open range and that we NEVER return early.</span>
+function lowerBound(arr, target) {
+  let lo = 0, hi = arr.length;                <span class="cmt">// hi is exclusive</span>
+  while (lo &lt; hi) {
+    const mid = lo + ((hi - lo) &gt;&gt; 1);
+    if (arr[mid] &lt; target) lo = mid + 1;      <span class="cmt">// mid is too small — discard it</span>
+    else hi = mid;                            <span class="cmt">// mid might be the answer — keep it</span>
+  }
+  return lo;                                  <span class="cmt">// == arr.length if all are smaller</span>
+}
+
+<span class="cmt">// 3 — upper bound: first index with arr[i] > target</span>
+function upperBound(arr, target) {
+  let lo = 0, hi = arr.length;
+  while (lo &lt; hi) {
+    const mid = lo + ((hi - lo) &gt;&gt; 1);
+    if (arr[mid] &lt;= target) lo = mid + 1;     <span class="cmt">// only &lt;= differs from lowerBound</span>
+    else hi = mid;
+  }
+  return lo;
+}
+
+const countOccurrences = (arr, x) =&gt; upperBound(arr, x) - lowerBound(arr, x);</code></pre>
+
+        <div class="drill">
+          <div class="d-head"><span>Problem set &mdash; binary search</span><span>AI off &middot; autocomplete off</span><span class="clock">45 min for 4</span></div>
+          <div class="d-body">
+            <h4>Four problems</h4>
+            <ol>
+              <li>
+                <strong>Search insert position</strong> &mdash; index of the target, or where it
+                would be inserted. <em>This is <code>lowerBound</code>; write it and recognise
+                it.</em>
+              </li>
+              <li>
+                <strong>First and last position</strong> of a target in a sorted array with
+                duplicates. <em>Two bound searches.</em>
+              </li>
+              <li>
+                <strong>Search in a rotated sorted array</strong> &mdash;
+                <code>[4,5,6,7,0,1,2]</code>, find 0. <em>At every step one half is definitely
+                sorted. Work out which, then decide whether the target is inside it.</em>
+              </li>
+              <li>
+                <strong>Binary search on the answer</strong> &mdash; given
+                <code>n</code> slides and a maximum render time per batch, find the smallest
+                batch size such that no batch exceeds the limit. <em>The search space is the
+                answer, not an array. This is the variant that impresses.</em>
+              </li>
+            </ol>
+          </div>
+        </div>
+
+        <details class="solution">
+          <summary>Solutions &mdash; open only after the timers</summary>
+          <div class="sol-in">
+<pre><code><span class="cmt">// 1 — search insert position IS lowerBound</span>
+const searchInsert = (arr, target) =&gt; lowerBound(arr, target);
+
+<span class="cmt">// 2 — first and last position</span>
+function searchRange(arr, target) {
+  const first = lowerBound(arr, target);
+  if (first === arr.length || arr[first] !== target) return [-1, -1];
+  return [first, upperBound(arr, target) - 1];
+}
+
+<span class="cmt">// 3 — rotated array: identify the sorted half each step</span>
+function searchRotated(arr, target) {
+  let lo = 0, hi = arr.length - 1;
+  while (lo &lt;= hi) {
+    const mid = lo + ((hi - lo) &gt;&gt; 1);
+    if (arr[mid] === target) return mid;
+
+    if (arr[lo] &lt;= arr[mid]) {                <span class="cmt">// LEFT half is sorted</span>
+      if (arr[lo] &lt;= target &amp;&amp; target &lt; arr[mid]) hi = mid - 1;   <span class="cmt">// inside it</span>
+      else lo = mid + 1;
+    } else {                                  <span class="cmt">// RIGHT half is sorted</span>
+      if (arr[mid] &lt; target &amp;&amp; target &lt;= arr[hi]) lo = mid + 1;
+      else hi = mid - 1;
+    }
+  }
+  return -1;
+}
+
+<span class="cmt">// 4 — binary search on the answer space</span>
+function minBatchSize(renderCosts, maxBatchMs) {
+  <span class="cmt">// feasible(size) is monotonic: if a size works, every smaller size
+  // also works. That monotonicity is what makes binary search valid.</span>
+  const feasible = (size) =&gt; {
+    for (let i = 0; i &lt; renderCosts.length; i += size) {
+      const batch = renderCosts.slice(i, i + size);
+      if (batch.reduce((a, b) =&gt; a + b, 0) &gt; maxBatchMs) return false;
+    }
+    return true;
+  };
+
+  let lo = 1, hi = renderCosts.length;
+  let best = -1;
+  while (lo &lt;= hi) {
+    const mid = lo + ((hi - lo) &gt;&gt; 1);
+    if (feasible(mid)) { best = mid; lo = mid + 1; }   <span class="cmt">// try bigger</span>
+    else hi = mid - 1;
+  }
+  return best;
+}</code></pre>
+            <p>
+              <strong>Problem 3's structure is the whole trick:</strong> in a rotated sorted
+              array, at any midpoint <em>at least one half is properly sorted</em>. Determine
+              which by comparing <code>arr[lo]</code> with <code>arr[mid]</code>, then check
+              whether the target falls inside that sorted half's range. If it does, search there;
+              otherwise search the other half. Say that in two sentences before writing and the
+              code follows.
+            </p>
+            <p>
+              <strong>Problem 4 is the variant worth knowing exists.</strong> Binary search does
+              not require an array &mdash; it requires a <em>monotonic predicate</em>. Whenever
+              a problem asks for the smallest or largest value satisfying some condition, and
+              that condition is monotonic, you can binary search the answer space instead of the
+              data. Recognising that is a genuinely senior move and it comes up in capacity and
+              rate-limit problems.
+            </p>
+            <p>
+              On <code>mid</code>: integer overflow is not a practical concern in JavaScript
+              until 2<sup>53</sup>, so <code>Math.floor((lo + hi) / 2)</code> is fine. I write
+              <code>lo + ((hi - lo) &gt;&gt; 1)</code> out of habit and because it is the form
+              interviewers from other languages expect &mdash; and it is worth being able to say
+              why the habit exists.
+            </p>
+          </div>
+        </details>
+
+        <p class="qlabel">Cross-questions</p>
+        <div class="xq">
+          <div class="xq-item">
+            <p class="xq-q">Why does <code>lowerBound</code> use <code>lo &lt; hi</code> and exclusive <code>hi</code>, while exact search uses <code>lo &lt;= hi</code>?</p>
+            <p class="xq-why">Testing: whether you understand your own loop invariants.</p>
+            <p class="ans good">"Because they answer different questions. Exact search asks 'is the target here', so a single-element range still needs checking — hence the inclusive bound. A bounds search narrows a half-open range until it is empty, and the answer is the surviving boundary, which may legitimately be one past the end. Mixing the two conventions is where off-by-one errors come from, so I pick one shape per variant and never improvise."</p>
+          </div>
+          <div class="xq-item">
+            <p class="xq-q">Is binary search always better than linear?</p>
+            <p class="xq-why">Testing: proportion.</p>
+            <p class="ans good">"Not always. It requires sorted data, and if you have to sort first that is O(n log n) — worse than one linear scan for a single lookup. It pays off when you search the same sorted data repeatedly, or when the data is already sorted. For small arrays, under a few dozen elements, a linear scan is often faster in practice because of cache behaviour and simpler branching."</p>
+          </div>
+          <div class="xq-item">
+            <p class="xq-q">Where have you used binary search in real code?</p>
+            <p class="xq-why">Testing: a genuine answer you happen to have.</p>
+            <p class="ans good">"The caption editor. Cues are sorted by start time, so finding the active cue for the current playback time is a lower-bound search rather than a scan — and that runs on every timeupdate, so it matters. The same shape appears in virtualised lists: given a scroll offset and an array of cumulative row heights, binary search finds the first visible row. That is the standard technique for variable-height virtualisation."</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ================================================================= -->
+    <div class="session">
+      <span class="sn">Session 6</span>
+      <span class="st">Four DP patterns, and the final mock</span>
+      <span class="sd">~75 min</span>
+    </div>
+
+    <h2>11 &middot; The only DP you need</h2>
+
+    <div class="qblock">
+      <div class="q-head">
+        <span class="q-n">Question 11</span>
+        <span class="q-t">How would you approach a dynamic programming problem?</span>
+        <span class="q-freq">Occasional at frontend level &middot; four patterns cover nearly all of it</span>
+      </div>
+      <div class="q-body">
+
+        <div class="callout warn">
+          <span class="ct">Scope this honestly</span>
+          <p>
+            DP is the lowest-yield topic in Part II for a frontend role. You need enough to
+            recognise it, write a memoised recursion, and convert a simple one to a table. You do
+            not need interval DP, digit DP, bitmask DP or tree DP. If a round opens with a hard
+            DP problem, that company is optimising for a different kind of engineer and the
+            outcome was unlikely regardless.
+          </p>
+        </div>
+
+        <div class="saythis">
+          <span class="st-lab">Say this &mdash; the recognition test and the method</span>
+          <p>
+            <strong>Recognition:</strong> the problem asks for a count of ways, a minimum or
+            maximum, or a yes/no over choices &mdash; and the brute force is an exponential
+            recursion that solves the same subproblem repeatedly. Those two together mean DP.
+          </p>
+          <p>
+            <strong>Method, always in this order.</strong> Write the brute-force recursion first
+            and state its complexity. Identify the <em>state</em> &mdash; what parameters
+            uniquely identify a subproblem. Add memoisation keyed by that state, which usually
+            takes the complexity from exponential to polynomial in one line. Then, only if it is
+            worth it, convert to a bottom-up table and reduce the space.
+          </p>
+          <p>
+            That progression is also the ideal way to <em>present</em> it: brute force, memoise,
+            tabulate. It shows the derivation rather than a recalled answer, and if you run out
+            of time at the memoised stage you have still given a correct polynomial solution.
+          </p>
+        </div>
+
+        <div class="tbl">
+          <table>
+            <thead><tr><th>Pattern</th><th>State</th><th>Recurrence</th><th>Canonical problems</th></tr></thead>
+            <tbody>
+              <tr><td><b>1D linear</b></td><td>index i</td><td><code>f(i)</code> from <code>f(i-1)</code>, <code>f(i-2)</code></td><td>Climbing stairs, house robber, max subarray</td></tr>
+              <tr><td><b>Grid</b></td><td>(row, col)</td><td><code>f(r,c)</code> from above and left</td><td>Unique paths, min path sum</td></tr>
+              <tr><td><b>Choice / knapsack</b></td><td>(index, remaining)</td><td>take it or skip it</td><td>Coin change, subset sum, partition</td></tr>
+              <tr><td><b>Subsequence</b></td><td>(i) or (i, j)</td><td>compare and extend</td><td>LIS, longest common subsequence, edit distance</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="drill">
+          <div class="d-head"><span>Problem set &mdash; one per pattern</span><span>AI off &middot; autocomplete off</span><span class="clock">50 min for 4</span></div>
+          <div class="d-body">
+            <h4>Four problems &mdash; write each one three ways if you can</h4>
+            <ol>
+              <li>
+                <strong>Climbing stairs</strong> &mdash; ways to reach step n taking 1 or 2 at a
+                time. <em>Brute force, memoised, then O(1) space. It is Fibonacci in disguise
+                &mdash; say so.</em>
+              </li>
+              <li>
+                <strong>House robber</strong> &mdash; maximum sum with no two adjacent elements.
+                <em>The state is "best up to i"; the choice is rob i or skip it.</em>
+              </li>
+              <li>
+                <strong>Coin change</strong> &mdash; fewest coins to make an amount, or
+                &minus;1. <em>Unbounded knapsack. Bottom-up is cleaner here.</em>
+              </li>
+              <li>
+                <strong>Longest increasing subsequence</strong> &mdash; the O(n&sup2;) DP.
+                <em>Then look up the O(n log n) patience-sorting version and understand it; do
+                not try to derive it under time pressure.</em>
+              </li>
+            </ol>
+          </div>
+        </div>
+
+        <details class="solution">
+          <summary>Solutions &mdash; open only after the timers</summary>
+          <div class="sol-in">
+<pre><code><span class="cmt">// 1 — climbing stairs, three stages of the same idea</span>
+const climbBrute = (n) =&gt; (n &lt;= 2 ? n : climbBrute(n - 1) + climbBrute(n - 2));  <span class="cmt">// O(2ⁿ)</span>
+
+function climbMemo(n, memo = new Map()) {                                        <span class="cmt">// O(n)</span>
+  if (n &lt;= 2) return n;
+  if (memo.has(n)) return memo.get(n);
+  memo.set(n, climbMemo(n - 1, memo) + climbMemo(n - 2, memo));
+  return memo.get(n);
+}
+
+function climbStairs(n) {                          <span class="cmt">// O(n) time, O(1) space</span>
+  let a = 1, b = 2;
+  for (let i = 3; i &lt;= n; i++) [a, b] = [b, a + b];
+  return n &lt;= 2 ? n : b;
+}
+
+<span class="cmt">// 2 — house robber: at each house, rob it + best from two back, or skip</span>
+function rob(nums) {
+  let prev2 = 0;                                   <span class="cmt">// best up to i-2</span>
+  let prev1 = 0;                                   <span class="cmt">// best up to i-1</span>
+  for (const value of nums) {
+    const current = Math.max(prev1, prev2 + value);
+    prev2 = prev1;
+    prev1 = current;
+  }
+  return prev1;
+}
+
+<span class="cmt">// 3 — coin change, bottom-up: dp[a] = fewest coins to make amount a</span>
+function coinChange(coins, amount) {
+  const dp = new Array(amount + 1).fill(Infinity);
+  dp[0] = 0;                                       <span class="cmt">// zero coins make zero</span>
+
+  for (let a = 1; a &lt;= amount; a++) {
+    for (const coin of coins) {
+      if (coin &lt;= a &amp;&amp; dp[a - coin] + 1 &lt; dp[a]) dp[a] = dp[a - coin] + 1;
+    }
+  }
+  return dp[amount] === Infinity ? -1 : dp[amount];
+}
+<span class="cmt">// Time O(amount · coins), Space O(amount)</span>
+
+<span class="cmt">// 4 — LIS, O(n²): dp[i] = length of the best subsequence ENDING at i</span>
+function lengthOfLIS(nums) {
+  if (nums.length === 0) return 0;
+  const dp = new Array(nums.length).fill(1);
+  let best = 1;
+
+  for (let i = 1; i &lt; nums.length; i++) {
+    for (let j = 0; j &lt; i; j++) {
+      if (nums[j] &lt; nums[i]) dp[i] = Math.max(dp[i], dp[j] + 1);
+    }
+    best = Math.max(best, dp[i]);
+  }
+  return best;
+}
+
+<span class="cmt">// 4b — O(n log k) with patience sorting. `tails[k]` is the smallest
+// possible tail of an increasing subsequence of length k+1.
+// Note: tails is NOT the LIS itself, only its length is meaningful.</span>
+function lengthOfLISFast(nums) {
+  const tails = [];
+  for (const x of nums) {
+    const i = lowerBound(tails, x);                <span class="cmt">// from question 10</span>
+    if (i === tails.length) tails.push(x);         <span class="cmt">// extends the longest</span>
+    else tails[i] = x;                             <span class="cmt">// improves a tail</span>
+  }
+  return tails.length;
+}</code></pre>
+            <p>
+              <strong>House robber shows the whole technique in five lines.</strong> The state is
+              "the best total considering houses up to i", and the recurrence is a choice: take
+              this house plus the best from two back, or skip it and keep the best from one back.
+              Once the recurrence is written, the two-variable rolling version is obvious because
+              only the last two values are ever read. That "only the last k states matter"
+              observation is how every 1D DP gets its space reduced to O(1).
+            </p>
+            <p>
+              <strong>On LIS:</strong> write the O(n&sup2;) version in an interview and mention
+              that an O(n log k) patience-sorting version exists. Attempting to derive the fast
+              one live is a bad use of twenty minutes, and the slow one is usually accepted.
+              Knowing that the fast version uses the same <code>lowerBound</code> you wrote
+              earlier is a nice, honest connection to make.
+            </p>
+          </div>
+        </details>
+
+        <p class="qlabel">Cross-questions</p>
+        <div class="xq">
+          <div class="xq-item">
+            <p class="xq-q">Memoisation or tabulation &mdash; which do you prefer?</p>
+            <p class="xq-why">Testing: a considered preference.</p>
+            <p class="ans good">"Memoisation first, always, because it is a mechanical transformation of the recursion I already wrote — add a cache keyed by the state and I am done. It also only computes the states actually reachable, which matters when the state space is sparse. Tabulation is better when I need the space optimisation, since it makes 'only the last two rows matter' obvious, and it avoids stack depth limits. In an interview I present memoisation and offer the table."</p>
+          </div>
+          <div class="xq-item">
+            <p class="xq-q">How do you identify the state?</p>
+            <p class="xq-why">Testing: the actual skill, rather than pattern recall.</p>
+            <p class="ans good">"I ask what parameters I would need to pass to a fresh function call for it to produce the right answer without any other context. Those parameters <em>are</em> the state, and they become the memo key. If I find myself needing extra information the parameters do not capture, my state is incomplete — which is the usual reason a DP solution is subtly wrong."</p>
+          </div>
+          <div class="xq-item">
+            <p class="xq-q">Have you used DP in frontend work?</p>
+            <p class="xq-why">Testing: honesty. A fabricated example collapses immediately.</p>
+            <p class="ans good">"Directly, almost never. The closest real instances are diffing algorithms — edit distance underlies text diffing and list reconciliation — and text layout, where breaking a paragraph into optimally balanced lines is a classic DP, which is what Knuth's line-breaking algorithm does. I would not claim to reach for DP in product work; I would claim I can recognise it and write a memoised solution."</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <h2>12 &middot; The final mock, and what to skip</h2>
+
+    <div class="qblock">
+      <div class="q-head">
+        <span class="q-n">Question 12</span>
+        <span class="q-t">Five problems, unlabelled, forty-five minutes. Go.</span>
+        <span class="q-freq">This is the round &mdash; and pattern identification is what is scored</span>
+      </div>
+      <div class="q-body">
+
+        <div class="drill">
+          <div class="d-head"><span>The Part II exit mock</span><span>AI off &middot; narrate aloud &middot; no notes</span><span class="clock">45 min for 5</span></div>
+          <div class="d-body">
+            <h4>Name the pattern out loud before writing anything</h4>
+            <ol>
+              <li>Given a nested comment thread, return the id of the most-replied-to comment at any depth.</li>
+              <li>Given a sorted array of caption cue start times and a playback time, return the index of the currently active cue.</li>
+              <li>Given a list of widget ids with parent ids, detect whether any widget is its own ancestor.</li>
+              <li>Given a grid of cells marking which are selected, count the number of separate selection regions.</li>
+              <li>Given n undo steps each with a cost, and a memory budget, find the maximum number of steps you can keep.</li>
+            </ol>
+          </div>
+        </div>
+
+        <details class="solution">
+          <summary>Patterns and approaches &mdash; open only after all five</summary>
+          <div class="sol-in">
+            <ol>
+              <li>
+                <strong>N-ary tree traversal with an accumulator.</strong> DFS the thread, count
+                each node's direct replies, track the maximum. One pass, O(n). The trap is
+                counting descendants rather than direct replies &mdash; clarify which is wanted.
+              </li>
+              <li>
+                <strong>Binary search, upper bound.</strong> The active cue is the last one whose
+                start time is &le; the playback time, which is
+                <code>upperBound(starts, t) - 1</code>. Not a linear scan &mdash; this runs on
+                every <code>timeupdate</code> event.
+              </li>
+              <li>
+                <strong>Cycle detection in a directed graph.</strong> Each widget points at its
+                parent, so follow parent pointers with a visited set, or use three-colour DFS.
+                Kahn's also works: if the topological sort is short, there is a cycle.
+              </li>
+              <li>
+                <strong>Grid flood fill / connected components.</strong> Islands with different
+                vocabulary. Count the number of times you start a fill.
+              </li>
+              <li>
+                <strong>Not DP &mdash; it is a sort plus a greedy scan.</strong> To maximise the
+                <em>count</em> of items within a budget, take the cheapest first: sort ascending
+                and accumulate until the budget is exceeded. Reaching for knapsack here is
+                over-engineering, and recognising that greedy is provably optimal for
+                maximising count is the actual answer.
+              </li>
+            </ol>
+            <p>
+              <strong>Problem 5 is deliberately a trap.</strong> "Budget" and "maximise" look like
+              knapsack, and knapsack would give the right answer far more slowly. The
+              distinguishing question is whether items have <em>different values</em>: if every
+              item counts the same, greedy-cheapest-first is optimal and O(n log n). If they had
+              differing values, it would be a real knapsack. Asking "are all steps equally
+              valuable?" before choosing is exactly the clarifying question the round rewards.
+            </p>
+            <p>
+              <strong>Score:</strong> five out of five patterns named within a minute each is a
+              pass for Part II. Three or fewer means run another mixed set before moving on
+              &mdash; not more new problems.
+            </p>
+          </div>
+        </details>
+
+        <p class="qlabel">What to skip, and why</p>
+
+        <div class="tbl">
+          <table>
+            <thead><tr><th>Topic</th><th>Verdict</th><th>Reason</th></tr></thead>
+            <tbody>
+              <tr><td>Tries</td><td><b>Skip</b></td><td>Asked at a handful of companies. If autocomplete comes up, a <code>Map</code>-of-prefixes answer is accepted.</td></tr>
+              <tr><td>Union-find</td><td><b>Skip</b></td><td>Only beats BFS/DFS for dynamic connectivity, which is rare in frontend rounds.</td></tr>
+              <tr><td>Segment trees, Fenwick trees</td><td><b>Skip</b></td><td>Competitive-programming territory. Not asked for product frontend roles.</td></tr>
+              <tr><td>Dijkstra, A*, MST</td><td><b>Skip</b></td><td>Weighted graphs essentially never appear in frontend interviews.</td></tr>
+              <tr><td>Hard DP</td><td><b>Skip</b></td><td>Four patterns are enough to recognise and attempt. Beyond that the return is near zero.</td></tr>
+              <tr><td>Heaps</td><td><b>Know of</b></td><td>No built-in in JavaScript. Know when one is the right answer; writing one under time pressure is rarely worth it.</td></tr>
+              <tr><td>Linked lists</td><td><b>Light</b></td><td>Reverse, find the middle, detect a cycle. That is the realistic ceiling.</td></tr>
+              <tr><td>Bit manipulation</td><td><b>Light</b></td><td>XOR for finding a single number, and bitmasks for subsets. Nothing deeper.</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <p>
+          That table is not an excuse to do less &mdash; it is a reallocation. Every hour you do
+          not spend on segment trees is an hour for the machine coding builds in Chapters 26 and
+          27, which are what actually move your number.
+        </p>
+      </div>
+    </div>
+
+    <div class="practice">
+      <span class="pt">Practice &mdash; Part II exit</span>
+      <h4>The maintenance schedule</h4>
+      <ol>
+        <li><strong>Three problems a week, mixed, narrated aloud, timed.</strong> Not thirty. Enough to keep recognition warm while you spend your real hours on React and machine coding.</li>
+        <li><strong>Re-read both trigger tables every morning</strong> &mdash; Chapter 5's pattern table and this chapter's DP table. Sixty seconds total.</li>
+        <li><strong>Re-attempt anything in your log marked "not solved unaided"</strong> on days 3, 10 and 24. Twice, then let it go &mdash; a problem you have failed three times is not the best use of the fourth hour.</li>
+        <li><strong>Before any DSA round</strong>, do two easy problems as a warm-up in the hour before. Cold starts are where fluent people look slow.</li>
+      </ol>
+    </div>
+
+    <h2>Rapid fire</h2>
+
+    <div class="rapid">
+      <div class="r-head"><span>Chapter 6 &mdash; recursion, trees, graphs, sorting, DP</span><span class="rc">24 questions</span></div>
+
+      <details><summary>Three questions for any recursive problem?</summary><p class="ra">What is the base case; what is the recurrence assuming smaller inputs already work; does state go down as parameters or come back up as return values.</p></details>
+      <details><summary>Space complexity of a recursive solution?</summary><p class="ra">O(depth) for the call stack — O(log n) balanced, O(n) degenerate. Never O(1).</p></details>
+      <details><summary>Does JavaScript have tail call optimisation?</summary><p class="ra">In the spec, but only JavaScriptCore implements it. Assume no TCO and expect a stack overflow around ten thousand frames.</p></details>
+      <details><summary>The backtracking template?</summary><p class="ra">Choose, explore, un-choose. And push a <em>copy</em> of the path into the results.</p></details>
+      <details><summary>Why <code>[...path]</code> and not <code>path</code>?</summary><p class="ra">You keep mutating <code>path</code>, so pushing the reference makes every result point at the same eventually-empty array.</p></details>
+      <details><summary>Which traversal sorts a BST?</summary><p class="ra">In-order — left, node, right — by the BST invariant.</p></details>
+      <details><summary>Iterative pre-order: which child do you push first?</summary><p class="ra">Right, so left pops first. A stack reverses the order.</p></details>
+      <details><summary>Why snapshot the level size in BFS?</summary><p class="ra">The loop pushes onto the same queue, so reading <code>length</code> inside merges all levels into one.</p></details>
+      <details><summary>Validate a BST — what is wrong with comparing to children?</summary><p class="ra">It is a local check; a node deep in the left subtree can exceed the root. Thread a min/max range down instead.</p></details>
+      <details><summary>Path sum — why is the base case a leaf, not null?</summary><p class="ra">A root-to-leaf path must end where there are no children; a null base case reports success on single-child nodes.</p></details>
+      <details><summary><code>children</code> vs <code>childNodes</code>?</summary><p class="ra"><code>children</code> is elements only; <code>childNodes</code> includes text and comment nodes, which have no <code>classList</code>.</p></details>
+      <details><summary>Why <code>classList.contains</code> over <code>className.includes</code>?</summary><p class="ra">Substring matching: <code>"btn-primary"</code> contains <code>"btn"</code> and would falsely match.</p></details>
+      <details><summary>Corresponding node in two cloned trees — the efficient way?</summary><p class="ra">Build the index path upward with <code>parentElement</code>, then replay it downward on the other tree. O(depth), not O(n).</p></details>
+      <details><summary>List to tree without O(n²)?</summary><p class="ra">Build an id→node map in one pass, then link children in a second. Also handles children arriving before parents.</p></details>
+      <details><summary>Filtering a tree but keeping ancestors — which order?</summary><p class="ra">Post-order: recurse first, then keep a node if it matches or any descendant survived.</p></details>
+      <details><summary>DFS or BFS for shortest path?</summary><p class="ra">BFS — it visits in order of distance, so the first arrival is the shortest route.</p></details>
+      <details><summary>When do you mark a cell visited in BFS?</summary><p class="ra">On enqueue, not dequeue — otherwise the same cell is queued many times.</p></details>
+      <details><summary>Why three colours for cycle detection, not two?</summary><p class="ra">Grey means "on the current path" — a real cycle. Black means "explored, no cycle" — revisiting it is fine. Two states report false cycles on diamond graphs.</p></details>
+      <details><summary>What does <code>[1,30,4,21,100000].sort()</code> give?</summary><p class="ra"><code>[1, 100000, 21, 30, 4]</code> — default sort is lexicographic by UTF-16 code units.</p></details>
+      <details><summary>Is <code>sort</code> stable? Does it mutate?</summary><p class="ra">Stable since ES2019, and it sorts in place returning the same reference. <code>toSorted()</code> is the copying version.</p></details>
+      <details><summary>Why is <code>(a, b) =&gt; a &gt; b</code> broken?</summary><p class="ra">It returns a boolean, never a negative number, so it violates anti-symmetry and produces engine-dependent results.</p></details>
+      <details><summary>Lower bound vs upper bound?</summary><p class="ra">First index with value ≥ target, versus first index strictly greater. Their difference is the occurrence count.</p></details>
+      <details><summary>What does binary search actually require?</summary><p class="ra">A monotonic predicate — not necessarily an array. That is what lets you binary search an answer space.</p></details>
+      <details><summary>The four DP patterns?</summary><p class="ra">1D linear, grid, choice/knapsack, subsequence. Brute force → memoise → tabulate, in that order.</p></details>
+    </div>
+
+    <div class="checkpoint">
+      <span class="pt">Before moving on &mdash; you should be able to</span>
+      <ul>
+        <li>Answer the three recursion questions for a new problem in under a minute, and always state O(depth) space.</li>
+        <li>Write the backtracking template from memory and use it for subsets, permutations and combination sum without re-deriving it.</li>
+        <li>Write all four traversals recursively in five minutes, and iterative in-order and pre-order correctly.</li>
+        <li>Solve validate-BST, LCA, diameter and balanced-tree cold, and explain the return-versus-record split in diameter.</li>
+        <li>Implement <code>getElementsByClassName</code>, path-to-node and DOM serialisation, and name the <code>children</code> and <code>classList</code> traps unprompted.</li>
+        <li>Build list-to-tree in O(n), and filter a tree keeping ancestors, and say why the second is post-order.</li>
+        <li>Solve number-of-islands and rotting-oranges, and say precisely when BFS is required rather than optional.</li>
+        <li>Write Kahn's algorithm with cycle detection, explain three-colour DFS, and connect both to how a bundler orders modules.</li>
+        <li>State all four <code>sort</code> traps &mdash; lexicographic default, in-place mutation, stability, well-formed comparators.</li>
+        <li>Write exact, lower-bound and upper-bound binary search without off-by-one errors, and explain binary search on an answer space.</li>
+        <li>Recognise DP, write the memoised version, and name the four patterns &mdash; and say honestly where DP appears in frontend work.</li>
+        <li>Name the pattern for an unlabelled problem four times out of five, and say which topics you have deliberately skipped and why.</li>
+      </ul>
+    </div>
+
+    <h2>What's next</h2>
+
+    <p>
+      Part II is done, and it is the part you should now spend the least time on. Three mixed
+      problems a week, narrated, keeps it warm. Anything beyond that is time taken from where
+      your offer will actually be decided.
+    </p>
+    <p>
+      Part III is the backend round &mdash; the Node runtime, Express and API design, and auth,
+      security and MongoDB. Three chapters, scoped so you are credible in the conversation
+      without pretending to be a backend engineer. Then Part IV is TypeScript, and Part V is
+      React, which is where the number is set.
+    </p>
+    <p>
+      One scheduling reminder, because it decays fastest: <strong>keep running the Chapter 4
+      canon.</strong> Fifteen minutes each morning on the three slowest implementations. DSA
+      recognition survives a gap of a week; hand-writing fluency does not.
+    </p>
 
     <div class="ch-nav" id="chnav"></div>
 
@@ -44,7 +2561,7 @@
 
 <footer class="site-foot">
   <div class="site-foot-in">
-    <span>Chapter 6 &middot; not written yet</span>
+    <span>Chapter 6 &middot; Recursion, Trees, Graphs, Sorting &amp; a Little DP</span>
     <span class="sp"></span>
     <span>Use &larr; and &rarr; to move between chapters</span>
   </div>
