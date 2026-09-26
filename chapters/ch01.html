@@ -1,0 +1,2071 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Scope, Closures &amp; the Execution Model — Chapter 1</title>
+<link rel="stylesheet" href="../assets/book.css">
+</head>
+<body data-chapter="1">
+
+<header class="site-head">
+  <div class="site-head-in">
+    <a class="logo" href="../index.html"><span class="logo-mark">DM</span> Dev Mastery</a>
+    <span class="head-sp"></span>
+    <span class="head-meta">Part I &middot; Chapter 1 of 30</span>
+  </div>
+  <div class="readbar" id="readbar"></div>
+</header>
+
+<div class="ch-wrap">
+
+  <main class="ch-main">
+
+    <div class="ch-hero">
+      <p class="ch-kicker">Part I &middot; JavaScript: The Gate &middot; Chapter One</p>
+      <h1>Scope, Closures &amp; the Execution Model</h1>
+      <p class="lede">
+        Ten questions. You will be asked at least four of them in your next round, and the
+        closure one is close to certain. This chapter is not about learning closures &mdash;
+        you already use them forty times a day. It is about being able to <em>say</em> what
+        one is, <em>draw</em> what one is, and survive the three follow-ups that come after
+        the definition.
+      </p>
+      <div class="ch-facts">
+        <span><b>5</b> sessions</span>
+        <span><b>~6.25</b> hours</span>
+        <span><b>10</b> Q-blocks</span>
+        <span><b>7</b> timed drills</span>
+        <span>Prerequisites: <b>none</b></span>
+      </div>
+    </div>
+
+    <p>
+      Here is the uncomfortable framing. You have written JavaScript for seven years. An
+      interviewer does not get to see those seven years &mdash; they get forty minutes. In those
+      forty minutes the only evidence available is how precisely you speak and how fluently you
+      type. Vague answers read as shallow experience, even when the experience is real. This
+      chapter closes that gap for the first topic they will reach for.
+    </p>
+
+    <div class="callout key">
+      <span class="ct">How to work a Q-block</span>
+      <p>
+        Read the question. <strong>Cover the page and answer it out loud, from memory, in full
+        sentences.</strong> Only then read the <em>Say this</em> box and compare. The gap between
+        what you said and what is in the box is your actual revision list &mdash; not the whole
+        chapter. Then do the drill with AI off. Then read the cross-questions and answer those
+        out loud too.
+      </p>
+      <p>
+        Silent reading builds recognition. Interviews need recall. These are different skills and
+        only one of them gets you paid.
+      </p>
+    </div>
+
+    <!-- ================================================================= -->
+    <div class="session">
+      <span class="sn">Session 1</span>
+      <span class="st">How JavaScript decides what a name means</span>
+      <span class="sd">~75 min</span>
+    </div>
+
+    <h2>1 &middot; The execution model</h2>
+
+    <div class="qblock">
+      <div class="q-head">
+        <span class="q-n">Question 1</span>
+        <span class="q-t">Walk me through what happens when JavaScript runs your code.</span>
+        <span class="q-freq">Common opener &middot; sets the tone for the whole round</span>
+      </div>
+      <div class="q-body">
+
+        <div class="saythis">
+          <span class="st-lab">Say this</span>
+          <p>
+            When a piece of code runs &mdash; a script, or a function call &mdash; the engine
+            creates an <strong>execution context</strong> and pushes it onto the call stack.
+            Setting up that context happens in two steps.
+          </p>
+          <p>
+            First, a <strong>creation step</strong>: the engine walks the code and creates the
+            bindings for that scope before running a single line. Parameters and
+            <code>var</code> declarations are created and initialised to <code>undefined</code>;
+            function declarations are created <em>and</em> fully initialised, so they are callable
+            straight away; <code>let</code>, <code>const</code> and <code>class</code> bindings are
+            created but deliberately left uninitialised, which is what the temporal dead zone is.
+            The context also records a reference to its <strong>outer environment</strong>, which
+            is fixed by where the code is written, not by who called it.
+          </p>
+          <p>
+            Then the <strong>execution step</strong> runs the statements in order and does the
+            actual assignments. When a name is used, the engine looks it up in the current
+            environment record, then the outer one, and so on up to global &mdash; that walk is the
+            <strong>scope chain</strong>. If it is never found, you get a
+            <code>ReferenceError</code>.
+          </p>
+        </div>
+
+        <p class="qlabel">Example</p>
+
+        <div class="pre-label">what you wrote</div>
+<pre><code>function renderSlide(slide) {
+  console.log(typeof toPx);     <span class="cmt">// "function"  — declarations are ready</span>
+  console.log(scale);           <span class="cmt">// undefined   — var exists, no value yet</span>
+  console.log(dpr);             <span class="cmt">// ReferenceError — let exists, uninitialised</span>
+
+  var scale = slide.width / 960;
+  let dpr = window.devicePixelRatio;
+
+  function toPx(emu) { return (emu / 914400) * 96 * scale; }
+}</code></pre>
+
+        <div class="pre-label">what the engine has built before line 1 executes</div>
+<pre><code>renderSlide execution context
+├─ environment record
+│    slide : &lt;the argument&gt;
+│    toPx  : &lt;function object&gt;   ← created AND initialised
+│    scale : undefined            ← created, initialised to undefined
+│    dpr   : &lt;uninitialised&gt;      ← created, NOT initialised  (TDZ)
+└─ outer : &lt;the module/global environment&gt;   ← from where it was WRITTEN</code></pre>
+
+        <figure class="diagram">
+          <svg viewBox="0 0 700 262" role="img" aria-label="Two-step execution context setup and the scope chain">
+            <defs>
+              <marker id="a1" markerWidth="9" markerHeight="9" refX="7" refY="3.2" orient="auto">
+                <path d="M0,0 L7,3.2 L0,6.4 z" fill="var(--muted)"/>
+              </marker>
+            </defs>
+            <g font-family="var(--ui)" font-size="12">
+              <text x="16" y="18" font-size="10.5" font-weight="700" fill="var(--muted)" letter-spacing="1.4">STEP 1 — CREATION</text>
+              <rect x="16" y="28" width="300" height="118" rx="9" fill="var(--accent-soft)" stroke="var(--accent-line)"/>
+              <text x="32" y="50" font-weight="700" fill="var(--accent)" font-size="12">bindings created, nothing run yet</text>
+              <text x="32" y="72" fill="var(--ink-2)">function decls &rarr; created + initialised</text>
+              <text x="32" y="92" fill="var(--ink-2)">var, params &rarr; created = undefined</text>
+              <text x="32" y="112" fill="var(--ink-2)">let / const / class &rarr; created, no value</text>
+              <text x="32" y="132" fill="var(--ink-2)">outer environment reference recorded</text>
+
+              <line x1="316" y1="87" x2="362" y2="87" stroke="var(--muted)" stroke-width="1.4" marker-end="url(#a1)"/>
+
+              <text x="368" y="18" font-size="10.5" font-weight="700" fill="var(--muted)" letter-spacing="1.4">STEP 2 — EXECUTION</text>
+              <rect x="368" y="28" width="300" height="118" rx="9" fill="var(--ok-soft)" stroke="var(--ok-line)"/>
+              <text x="384" y="50" font-weight="700" fill="var(--ok)" font-size="12">statements run top to bottom</text>
+              <text x="384" y="72" fill="var(--ink-2)">assignments actually happen</text>
+              <text x="384" y="92" fill="var(--ink-2)">let / const leave the TDZ on their line</text>
+              <text x="384" y="112" fill="var(--ink-2)">name lookups walk the scope chain</text>
+              <text x="384" y="132" fill="var(--ink-2)">nested calls push new contexts</text>
+
+              <text x="16" y="178" font-size="10.5" font-weight="700" fill="var(--muted)" letter-spacing="1.4">THE SCOPE CHAIN — A LOOKUP, NOT A SEARCH OF THE CALL STACK</text>
+              <rect x="16" y="190" width="170" height="44" rx="8" fill="var(--paper)" stroke="var(--line)"/>
+              <text x="101" y="210" text-anchor="middle" font-weight="700" fill="var(--ink)" font-size="11.5">current record</text>
+              <text x="101" y="226" text-anchor="middle" fill="var(--muted)" font-size="11">toPx, scale, dpr</text>
+              <line x1="186" y1="212" x2="222" y2="212" stroke="var(--muted)" stroke-width="1.4" marker-end="url(#a1)"/>
+              <rect x="228" y="190" width="170" height="44" rx="8" fill="var(--paper)" stroke="var(--line)"/>
+              <text x="313" y="210" text-anchor="middle" font-weight="700" fill="var(--ink)" font-size="11.5">outer record</text>
+              <text x="313" y="226" text-anchor="middle" fill="var(--muted)" font-size="11">module scope</text>
+              <line x1="398" y1="212" x2="434" y2="212" stroke="var(--muted)" stroke-width="1.4" marker-end="url(#a1)"/>
+              <rect x="440" y="190" width="170" height="44" rx="8" fill="var(--paper)" stroke="var(--line)"/>
+              <text x="525" y="210" text-anchor="middle" font-weight="700" fill="var(--ink)" font-size="11.5">global record</text>
+              <text x="525" y="226" text-anchor="middle" fill="var(--muted)" font-size="11">window, globalThis</text>
+              <line x1="610" y1="212" x2="644" y2="212" stroke="var(--danger)" stroke-width="1.4" marker-end="url(#a1)"/>
+              <text x="651" y="216" fill="var(--danger)" font-size="11" font-weight="700">Ref&shy;Error</text>
+            </g>
+          </svg>
+          <figcaption>Two steps per context. The outer link comes from where the function was written, which is the whole basis of closures.</figcaption>
+        </figure>
+
+        <div class="hing">
+          <span class="h-lab">Seedhi baat</span>
+          <p>
+            Engine do baar dekhta hai aapka code. Pehli baar sirf naam register karta hai &mdash;
+            "is scope mein ye-ye variables honge" &mdash; value nahi deta. Doosri baar line-by-line
+            chalata hai aur values bharta hai. Isliye <code>var</code> pehle se
+            <code>undefined</code> milta hai (naam ban chuka tha), aur <code>let</code> par error
+            aata hai (naam bana tha, par value dene se mana kiya gaya tha).
+          </p>
+          <p>
+            Aur sabse important: <strong>outer link function ke likhe jaane ki jagah se banta
+            hai, call karne ki jagah se nahi.</strong> Ye ek line poore closure topic ki jad hai.
+          </p>
+        </div>
+
+        <div class="drill">
+          <div class="d-head"><span>Now you code</span><span>AI off &middot; autocomplete off</span><span class="clock">10 min</span></div>
+          <div class="d-body">
+            <h4>Rewrite the code as the engine sees it</h4>
+            <p>
+              Take the function below and write a second version by hand where every binding is
+              declared at the top with the value it holds <em>before</em> execution starts, and the
+              original declaration lines become plain assignments. Then mark which lines would
+              throw if you moved them to the top.
+            </p>
+<pre><code>function buildWidget(config) {
+  render();
+  const id = config.id ?? nextId();
+  var retries = 0;
+  function render() { return `&lt;div data-id="${id}"&gt;`; }
+  let nextId = () =&gt; Math.random().toString(36).slice(2);
+  return { id, retries, render };
+}</code></pre>
+            <p>
+              Before you run it: write down, on paper, what <code>buildWidget({})</code> does.
+              There is a bug in here that the two-step model predicts exactly.
+            </p>
+          </div>
+        </div>
+
+        <details class="solution">
+          <summary>Solution &mdash; open only after the timer</summary>
+          <div class="sol-in">
+            <p class="sol-warn">Reading this before you have written your own version converts a 40-minute skill into a 4-minute feeling.</p>
+<pre><code><span class="cmt">// after the creation step, before any line runs:</span>
+function buildWidget(config) {
+  <span class="cmt">// config : the argument</span>
+  <span class="cmt">// render : &lt;function object&gt;   — usable immediately</span>
+  <span class="cmt">// retries: undefined</span>
+  <span class="cmt">// id     : &lt;uninitialised, TDZ&gt;</span>
+  <span class="cmt">// nextId : &lt;uninitialised, TDZ&gt;</span>
+
+  render();                 <span class="cmt">// runs fine — and returns "&lt;div data-id=" + TDZ read → ReferenceError</span>
+  ...
+}</code></pre>
+            <p>
+              <strong>The bug:</strong> <code>render()</code> is callable on line 1 because function
+              declarations are initialised in the creation step. But its body reads <code>id</code>,
+              which is still in the temporal dead zone at that moment, so the call throws
+              <code>ReferenceError: Cannot access 'id' before initialization</code> &mdash; from
+              inside <code>render</code>, not from the line you are looking at.
+            </p>
+            <p>
+              The second bug is the same shape: <code>nextId</code> is an arrow function assigned to
+              a <code>let</code>, so it is <em>not</em> callable before its line. Had
+              <code>render()</code> not thrown first, <code>config.id ?? nextId()</code> would have.
+            </p>
+            <p>
+              This is the whole point of the two-step model: it tells you <em>which</em> of two
+              identical-looking functions is safe to call early. Declarations are. Expressions
+              assigned to variables are not.
+            </p>
+          </div>
+        </details>
+
+        <p class="qlabel">Cross-questions</p>
+        <div class="xq">
+
+          <div class="xq-item">
+            <p class="xq-q">Is "hoisting" actually in the specification, or is it a teaching metaphor?</p>
+            <p class="xq-why">Testing: have you read anything primary, or only blog posts?</p>
+            <p class="ans bad">"Yes, JavaScript moves declarations to the top of the file."</p>
+            <p class="ans ok">"Nothing physically moves; it just behaves as if declarations were at the top."</p>
+            <p class="ans good">"The word does not appear as a mechanism in the spec &mdash; MDN itself calls it a colloquial term for four different behaviours. Nothing moves. The bindings are instantiated when the scope is entered, before any statement is evaluated, and 'hoisting' is the name we give to the observable effect of that."</p>
+          </div>
+
+          <div class="xq-item">
+            <p class="xq-q">What is the difference between scope and execution context?</p>
+            <p class="xq-why">Testing: static versus runtime. People blur these two constantly.</p>
+            <p class="ans bad">"They're basically the same thing."</p>
+            <p class="ans ok">"Scope is where a variable is visible; context is the environment a function runs in."</p>
+            <p class="ans good">"Scope is <em>lexical and static</em> &mdash; fixed by where you wrote the code, known before it runs. An execution context is <em>runtime</em> &mdash; one is created per invocation and destroyed when it returns. Call a function three times and you get three contexts but one scope structure. That is also why recursion works: separate records, same lexical shape."</p>
+          </div>
+
+          <div class="xq-item">
+            <p class="xq-q">Does a function's scope chain come from where it was defined or where it was called?</p>
+            <p class="xq-why">Testing: lexical vs dynamic scoping &mdash; the single fact closures rest on.</p>
+            <p class="ans bad">"From where it's called."</p>
+            <p class="ans good">"From where it was defined. The function object captures its outer environment at creation time, so calling it from somewhere else entirely does not change what names it can see. JavaScript is lexically scoped. The one thing that <em>is</em> decided by the call site is <code>this</code> &mdash; which is exactly why <code>this</code> confuses people who think scoping is dynamic."</p>
+          </div>
+
+          <div class="xq-item">
+            <p class="xq-q">What is in the global execution context, and does <code>var</code> differ from <code>let</code> there?</p>
+            <p class="xq-why">Testing: do you know why some globals show up on <code>window</code> and some do not?</p>
+            <p class="ans good">"At the top level of a classic script, <code>var</code> and function declarations become properties of <code>globalThis</code>, so <code>window.x</code> works. <code>let</code>, <code>const</code> and <code>class</code> go into a separate declarative record &mdash; they are global in scope but are not properties of <code>globalThis</code>. In an ES module none of it lands on <code>globalThis</code>, because module scope is its own thing and top-level <code>this</code> is <code>undefined</code>."</p>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <h2>2 &middot; Hoisting, precisely</h2>
+
+    <div class="qblock">
+      <div class="q-head">
+        <span class="q-n">Question 2</span>
+        <span class="q-t">What is hoisting? What gets hoisted and what doesn't?</span>
+        <span class="q-freq">Extremely common &middot; usually the second question asked</span>
+      </div>
+      <div class="q-body">
+
+        <div class="saythis">
+          <span class="st-lab">Say this</span>
+          <p>
+            Hoisting is the name for the fact that declarations are processed when the scope is
+            entered, before any code in it runs &mdash; so a name can be referenced above the line
+            that declares it. It is not code movement; it is the order of binding instantiation.
+          </p>
+          <p>
+            It is not one behaviour, it is three. <strong>Function declarations</strong> are
+            hoisted <em>with their value</em>, so you can call them before their line.
+            <strong><code>var</code></strong> is hoisted as a name only and initialised to
+            <code>undefined</code>, so reading it early gives <code>undefined</code> rather than an
+            error. <strong><code>let</code>, <code>const</code> and <code>class</code></strong> are
+            also hoisted &mdash; the binding exists from the top of the block &mdash; but they are
+            left uninitialised, and touching them before their declaration throws. That region is
+            the temporal dead zone.
+          </p>
+        </div>
+
+        <div class="tbl">
+          <table>
+            <thead>
+              <tr><th>Declaration</th><th>Binding created early?</th><th>Initial value</th><th>Access before the line</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><code>function f(){}</code></td><td>Yes</td><td>the function</td><td>Works &mdash; callable</td></tr>
+              <tr><td><code>var x = 1</code></td><td>Yes</td><td><code>undefined</code></td><td><code>undefined</code>, no error</td></tr>
+              <tr><td><code>let x = 1</code></td><td>Yes</td><td>none (TDZ)</td><td><code>ReferenceError</code></td></tr>
+              <tr><td><code>const x = 1</code></td><td>Yes</td><td>none (TDZ)</td><td><code>ReferenceError</code></td></tr>
+              <tr><td><code>class X {}</code></td><td>Yes</td><td>none (TDZ)</td><td><code>ReferenceError</code></td></tr>
+              <tr><td><code>var f = function(){}</code></td><td>Name only</td><td><code>undefined</code></td><td><code>TypeError: f is not a function</code></td></tr>
+              <tr><td><code>let f = () =&gt; {}</code></td><td>Name only</td><td>none (TDZ)</td><td><code>ReferenceError</code></td></tr>
+              <tr><td><code>import x from …</code></td><td>Yes</td><td>the binding</td><td>Works &mdash; module bindings are resolved first</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <p class="pre-cap">
+          Rows six and seven are where interviewers live: the <em>same</em> function body behaves
+          differently purely because of how it was declared.
+        </p>
+
+        <div class="predict">
+          <span class="p-lab">Predict the output &mdash; write all four down before reading on</span>
+<pre><code><span class="cmt">// A</span>
+greet();
+function greet() { console.log("A: hi"); }
+
+<span class="cmt">// B</span>
+greet2();
+var greet2 = function () { console.log("B: hi"); };
+
+<span class="cmt">// C</span>
+console.log(typeof later);
+console.log(typeof never);
+var later = 1;
+
+<span class="cmt">// D</span>
+{
+  console.log(typeof caption);
+  let caption = "hello";
+}</code></pre>
+          <p>
+            <strong>A:</strong> logs <code>A: hi</code>. <strong>B:</strong>
+            <code>TypeError: greet2 is not a function</code> &mdash; the name exists and holds
+            <code>undefined</code>, so this is a type error, not a reference error.
+            <strong>C:</strong> <code>"undefined"</code> then <code>"undefined"</code> &mdash;
+            <code>typeof</code> on a never-declared name is safe. <strong>D:</strong>
+            <code>ReferenceError</code> &mdash; <code>typeof</code> is <em>not</em> safe in the TDZ.
+            Getting B and D right in the same breath is what a strong answer sounds like.
+          </p>
+        </div>
+
+        <div class="drill">
+          <div class="d-head"><span>Now you code</span><span>AI off &middot; autocomplete off</span><span class="clock">12 min</span></div>
+          <div class="d-body">
+            <h4>Write the proof, one snippet per row</h4>
+            <p>
+              Create <code>hoisting-proof.js</code>. Write eight tiny snippets &mdash; one per row of
+              the table above &mdash; each wrapped in <code>try/catch</code>, each logging either the
+              value it produced or the <em>exact constructor name</em> of the error it threw:
+            </p>
+<pre><code>function probe(label, fn) {
+  try { console.log(label, "=&gt;", fn()); }
+  catch (e) { console.log(label, "=&gt; threw", e.constructor.name + ":", e.message); }
+}
+
+<span class="cmt">// probe("var before decl", () =&gt; { ... });  ← you write the eight</span></code></pre>
+            <p>
+              Run it in Node. If any line surprises you, that line is a real gap &mdash; write it in
+              your notes file, not in the margin of this page.
+            </p>
+          </div>
+        </div>
+
+        <details class="solution">
+          <summary>Solution &mdash; open only after the timer</summary>
+          <div class="sol-in">
+<pre><code>probe("1 fn decl", () =&gt; { return hoisted(); function hoisted(){ return "callable"; } });
+probe("2 var", () =&gt; { return typeof x1 + ":" + x1; var x1 = 1; });
+probe("3 let", () =&gt; { return x2; let x2 = 1; });
+probe("4 const", () =&gt; { return x3; const x3 = 1; });
+probe("5 class", () =&gt; { return new C(); class C {} });
+probe("6 fn expr on var", () =&gt; { return f1(); var f1 = function(){ return 1; }; });
+probe("7 arrow on let", () =&gt; { return f2(); let f2 = () =&gt; 1; });
+probe("8 typeof undeclared", () =&gt; typeof definitelyNotDeclared);
+
+<span class="cmt">// 1 =&gt; callable
+// 2 =&gt; undefined:undefined
+// 3 =&gt; threw ReferenceError: Cannot access 'x2' before initialization
+// 4 =&gt; threw ReferenceError: Cannot access 'x3' before initialization
+// 5 =&gt; threw ReferenceError: Cannot access 'C' before initialization
+// 6 =&gt; threw TypeError: f1 is not a function
+// 7 =&gt; threw ReferenceError: Cannot access 'f2' before initialization
+// 8 =&gt; "undefined"</span></code></pre>
+            <p>
+              Memorise the <em>shape</em> of the distinction, not the list: <code>TypeError</code>
+              means the binding existed and held the wrong thing. <code>ReferenceError</code> means
+              the binding could not be read at all &mdash; either it does not exist, or it exists
+              but is still uninitialised.
+            </p>
+          </div>
+        </details>
+
+        <p class="qlabel">Cross-questions</p>
+        <div class="xq">
+
+          <div class="xq-item">
+            <p class="xq-q">So is <code>let</code> hoisted or not?</p>
+            <p class="xq-why">Testing: the exact thing most candidates get wrong, because most tutorials get it wrong.</p>
+            <p class="ans bad">"No. Only <code>var</code> and functions are hoisted."</p>
+            <p class="ans ok">"Technically yes, but you can't use it before the declaration."</p>
+            <p class="ans good">"Yes &mdash; the binding is created when the block is entered, it is just not initialised. You can prove it: if it were not hoisted, <code>let</code> inside a block would fall through to an outer variable of the same name; instead the inner declaration taints the whole block and you get a <code>ReferenceError</code>. MDN's own pages disagree on the wording, which is a good sign that the useful answer is 'hoisted, but uninitialised' rather than a yes or a no."</p>
+          </div>
+
+          <div class="xq-item">
+            <p class="xq-q">Two function declarations with the same name in one scope &mdash; what happens?</p>
+            <p class="xq-why">Testing: do you know that declarations overwrite silently?</p>
+            <p class="ans good">"The later one wins, silently, in non-strict and strict code alike &mdash; both are instantiated in the creation step and the last one processed is the value you get. That is a real bug source in long files. Doing the same with two <code>let</code>s of one name is a <code>SyntaxError</code> instead, caught before anything runs, which is the better failure mode."</p>
+          </div>
+
+          <div class="xq-item">
+            <p class="xq-q">What about a function declaration inside an <code>if</code> block?</p>
+            <p class="xq-why">Testing: are you honest about the messy corners?</p>
+            <p class="ans ok">"It's block-scoped in strict mode."</p>
+            <p class="ans good">"In strict mode &mdash; so in any module or any modern build &mdash; it is block-scoped and hoisted to the top of that block only. In sloppy mode there is a legacy web-compatibility behaviour that partly leaks the name into the enclosing function scope as <code>undefined</code>. It is genuinely inconsistent across engines historically, which is why the practical rule is: never declare functions inside blocks &mdash; assign a <code>const</code> arrow instead."</p>
+          </div>
+
+          <div class="xq-item">
+            <p class="xq-q">Why does <code>typeof</code> throw in the TDZ when its whole purpose is to be safe?</p>
+            <p class="xq-why">Testing: do you understand intent, or just behaviour?</p>
+            <p class="ans good">"<code>typeof</code> is only safe for names that do not exist at all. In the TDZ the binding <em>does</em> exist, so this is not an unknown identifier &mdash; it is a known one you are not allowed to read yet. Making it return <code>&quot;undefined&quot;</code> would have hidden exactly the bug <code>let</code> was introduced to surface."</p>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <div class="practice">
+      <span class="pt">Practice &mdash; Session 1</span>
+      <h4>Start your answer log</h4>
+      <p>
+        Create <code>answers.md</code> next to this book. For every Q-block in this course, write
+        the answer <em>in your own words, from memory</em>, before reading the box. This file is
+        the thing you re-read on the morning of an interview &mdash; not the chapters.
+      </p>
+      <ol>
+        <li>Write your own answer to Q1 and Q2, out loud first, then typed.</li>
+        <li>Diff yours against the boxes. Mark every fact you missed with <code>MISSED</code>.</li>
+        <li>Tomorrow morning, re-answer only the <code>MISSED</code> lines.</li>
+      </ol>
+    </div>
+
+    <!-- ================================================================= -->
+    <div class="session">
+      <span class="sn">Session 2</span>
+      <span class="st">var, let, const and the temporal dead zone</span>
+      <span class="sd">~75 min</span>
+    </div>
+
+    <h2>3 &middot; var vs let vs const</h2>
+
+    <div class="qblock">
+      <div class="q-head">
+        <span class="q-n">Question 3</span>
+        <span class="q-t">What's the difference between var, let and const?</span>
+        <span class="q-freq">Near-certain &middot; treated as a warm-up, scored as a filter</span>
+      </div>
+      <div class="q-body">
+
+        <div class="callout warn">
+          <span class="ct">Why this question is a trap despite being easy</span>
+          <p>
+            Everyone can answer it in one sentence, so a one-sentence answer scores zero. The
+            interviewer is not checking whether you know; they are calibrating how much depth you
+            volunteer unprompted. Give four axes, not one, and finish with the <code>const</code>
+            nuance &mdash; then they skip ahead to harder questions, which is what you want.
+          </p>
+        </div>
+
+        <div class="saythis">
+          <span class="st-lab">Say this</span>
+          <p>
+            They differ on four axes. <strong>Scope:</strong> <code>var</code> is function-scoped,
+            <code>let</code> and <code>const</code> are block-scoped &mdash; any pair of braces,
+            including a loop body or a <code>try</code> block. <strong>Initialisation:</strong>
+            <code>var</code> starts as <code>undefined</code>; <code>let</code> and
+            <code>const</code> sit in the temporal dead zone until their line runs.
+            <strong>Redeclaration:</strong> <code>var</code> can be redeclared silently,
+            <code>let</code> and <code>const</code> cannot &mdash; that is a
+            <code>SyntaxError</code>. <strong>Global object:</strong> a top-level <code>var</code>
+            in a classic script becomes a property of <code>globalThis</code>;
+            <code>let</code> and <code>const</code> do not.
+          </p>
+          <p>
+            And the one people get wrong: <code>const</code> does not make a value immutable, it
+            makes the <em>binding</em> unassignable. A <code>const</code> object can still have its
+            properties changed. If I want the value frozen I need <code>Object.freeze</code>, and
+            even that is shallow.
+          </p>
+        </div>
+
+        <p class="qlabel">Example</p>
+
+<pre><code><span class="cmt">// scope: the classic bug this fixes</span>
+function collectWidgets(slides) {
+  for (var i = 0; i &lt; slides.length; i++) { <span class="cmt">/* ... */</span> }
+  console.log(i);            <span class="cmt">// slides.length — var leaked out of the loop</span>
+
+  for (let j = 0; j &lt; slides.length; j++) { <span class="cmt">/* ... */</span> }
+  console.log(j);            <span class="cmt">// ReferenceError — j never existed out here</span>
+}
+
+<span class="cmt">// const binds the binding, not the value</span>
+const widget = { id: "w1", x: 0 };
+widget.x = 120;              <span class="cmt">// fine — mutating the object</span>
+widget = { id: "w2" };       <span class="cmt">// TypeError: Assignment to constant variable</span>
+
+Object.freeze(widget);
+widget.x = 999;              <span class="cmt">// silently ignored (throws in strict mode)</span>
+widget.style.fill = "red";   <span class="cmt">// still works — freeze is one level deep</span></code></pre>
+
+        <div class="trap">
+          <span class="t-lab">Trap</span>
+          <div class="t-in">
+            <p>
+              <code>Object.freeze</code> being shallow is the follow-up to the
+              <code>const</code> answer about seventy percent of the time. Have
+              <code>deepFreeze</code> ready &mdash; it is the next drill for exactly that reason.
+            </p>
+          </div>
+        </div>
+
+        <div class="drill">
+          <div class="d-head"><span>Now you code</span><span>AI off &middot; autocomplete off</span><span class="clock">12 min</span></div>
+          <div class="d-body">
+            <h4>deepFreeze(obj)</h4>
+<pre><code><span class="cmt">// Freeze an object and every nested object/array it reaches.
+// Must handle: nested objects, arrays, functions as values,
+// and CYCLES (obj.self = obj) without blowing the stack.
+// Return the same object (not a copy).</span>
+
+function deepFreeze(obj) {
+  <span class="cmt">// your code</span>
+}
+
+const w = { id: "w1", style: { fill: "red", pad: [1, 2] } };
+w.self = w;
+deepFreeze(w);
+w.style.fill = "blue";       <span class="cmt">// must not change</span>
+w.style.pad.push(3);         <span class="cmt">// must throw in strict mode</span></code></pre>
+          </div>
+        </div>
+
+        <details class="solution">
+          <summary>Solution &mdash; open only after the timer</summary>
+          <div class="sol-in">
+<pre><code>function deepFreeze(obj, seen = new WeakSet()) {
+  if (obj === null || (typeof obj !== "object" &amp;&amp; typeof obj !== "function")) return obj;
+  if (seen.has(obj)) return obj;          <span class="cmt">// cycle guard</span>
+  seen.add(obj);
+
+  Object.freeze(obj);
+  for (const key of Reflect.ownKeys(obj)) {
+    const desc = Object.getOwnPropertyDescriptor(obj, key);
+    if (desc &amp;&amp; "value" in desc) deepFreeze(desc.value, seen); <span class="cmt">// skip getters</span>
+  }
+  return obj;
+}</code></pre>
+            <p>Three things a reviewer looks for, in order of how often they are missed:</p>
+            <ul>
+              <li><strong>The cycle guard.</strong> Without the <code>WeakSet</code>, <code>w.self = w</code> recurses until the stack dies. Mentioning cycles before they ask is a strong signal.</li>
+              <li><strong>Not triggering getters.</strong> <code>obj[key]</code> would <em>invoke</em> an accessor, which can have side effects. Reading the descriptor avoids that. Almost nobody does this; it reads as senior.</li>
+              <li><strong><code>Reflect.ownKeys</code></strong> rather than <code>Object.keys</code>, so symbol keys and non-enumerable properties are covered too.</li>
+            </ul>
+            <p>
+              Say out loud while writing: "freeze first, then recurse, so a cycle back to this
+              object finds it already frozen and already in the set."
+            </p>
+          </div>
+        </details>
+
+        <p class="qlabel">Cross-questions</p>
+        <div class="xq">
+
+          <div class="xq-item">
+            <p class="xq-q">Is <code>const</code> immutable?</p>
+            <p class="xq-why">Testing: binding versus value. The single most common imprecision in this topic.</p>
+            <p class="ans bad">"Yes, a const can't be changed."</p>
+            <p class="ans good">"The binding is immutable, the value is not. <code>const</code> means you cannot reassign the name after initialisation. The object it points to is as mutable as any other. For actual immutability you need <code>Object.freeze</code>, and that is shallow, so for real trees you write a <code>deepFreeze</code> with a cycle guard."</p>
+          </div>
+
+          <div class="xq-item">
+            <p class="xq-q">Why does <code>for (const item of list)</code> work, when <code>for (const i = 0; i &lt; n; i++)</code> throws?</p>
+            <p class="xq-why">Testing: per-iteration bindings &mdash; the setup for the closure question two sessions from now.</p>
+            <p class="ans ok">"Because for-of assigns a new variable each time."</p>
+            <p class="ans good">"<code>for…of</code> creates a <em>fresh binding per iteration</em> and initialises it from the iterator, so nothing is ever reassigned &mdash; which is exactly what <code>const</code> allows. The C-style loop has one binding and an <code>i++</code> afterthought that <em>reassigns</em> it, and reassignment is precisely what <code>const</code> forbids. So it is a <code>TypeError</code> on the second iteration, not a syntax error."</p>
+          </div>
+
+          <div class="xq-item">
+            <p class="xq-q">Is there a performance cost to <code>let</code> over <code>var</code>?</p>
+            <p class="xq-why">Testing: will you invent a number, or say you would measure?</p>
+            <p class="ans bad">"Yes, <code>let</code> is slower because of the TDZ checks."</p>
+            <p class="ans good">"Not meaningfully. Engines statically prove most TDZ checks away, and the block scoping is resolved at compile time. Any difference is noise next to layout, network or a re-render. If someone claimed otherwise in a code review I would ask for a benchmark before changing anything."</p>
+          </div>
+
+          <div class="xq-item">
+            <p class="xq-q">Is there any reason to use <code>var</code> today?</p>
+            <p class="xq-why">Testing: dogma versus judgement.</p>
+            <p class="ans good">"In new code, effectively no &mdash; <code>const</code> by default, <code>let</code> when it genuinely has to change. The honest exceptions are all legacy: <code>var</code> in an old script that relies on the global-object property, or on redeclaration across concatenated files. I would not rewrite working code purely to remove <code>var</code>; I would change it when I am already in that file for another reason."</p>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <h2>4 &middot; The temporal dead zone</h2>
+
+    <div class="qblock">
+      <div class="q-head">
+        <span class="q-n">Question 4</span>
+        <span class="q-t">What is the temporal dead zone, and why does it exist?</span>
+        <span class="q-freq">Common follow-up &middot; the "why" half is where people stop</span>
+      </div>
+      <div class="q-body">
+
+        <div class="saythis">
+          <span class="st-lab">Say this</span>
+          <p>
+            The temporal dead zone is the stretch between entering a scope and the moment a
+            <code>let</code>, <code>const</code> or <code>class</code> declaration is evaluated. The
+            binding exists for that whole stretch but holds no value, and any attempt to read or
+            write it &mdash; including with <code>typeof</code> &mdash; throws a
+            <code>ReferenceError</code>.
+          </p>
+          <p>
+            The word to stress is <strong>temporal</strong>. It is about <em>time</em>, not about
+            position in the source. If a function defined above the declaration is
+            <em>called</em> after it, that read succeeds. So the same line of code can throw or not
+            throw depending only on when it runs.
+          </p>
+          <p>
+            It exists for two reasons. It makes <code>const</code> coherent &mdash; a constant must
+            never be observable without its value. And it converts a class of silent
+            <code>undefined</code> bugs, which surface three functions later as
+            <code>Cannot read properties of undefined</code>, into a loud error at the exact line
+            that is wrong.
+          </p>
+        </div>
+
+        <p class="qlabel">Example</p>
+
+<pre><code><span class="cmt">// 1 — position does not decide it; time does</span>
+function readCaption() { return caption; }   <span class="cmt">// written ABOVE the declaration</span>
+
+<span class="cmt">// readCaption();        → ReferenceError if called here</span>
+let caption = "Scene 1";
+console.log(readCaption());                  <span class="cmt">// "Scene 1" — fine now</span>
+
+
+<span class="cmt">// 2 — the shadowing trap: the inner declaration poisons the whole block</span>
+let scale = 1;
+function resize() {
+  console.log(scale);   <span class="cmt">// ReferenceError — NOT 1</span>
+  let scale = 2;        <span class="cmt">// this line is what makes the line above throw</span>
+}
+
+<span class="cmt">// 3 — the same with var would have silently logged undefined,
+//     and your canvas would have rendered at NaN scale</span></code></pre>
+
+        <div class="hing">
+          <span class="h-lab">Seedhi baat</span>
+          <p>
+            TDZ ka matlab ye <em>nahi</em> hai ki variable exist nahi karta. Variable <strong>exist
+            karta hai</strong>, bas usme value daalne se pehle chhoone par error aata hai. Isliye
+            example 2 mein andar wala <code>let scale</code> bahar wale <code>scale</code> ko dhak
+            deta hai &mdash; poore function block mein &mdash; aur upar wali line
+            <code>1</code> print karne ke bajaye phat jaati hai.
+          </p>
+          <p>
+            Yaad rakhne ka tareeka: <em>"naam register ho gaya, value baad mein aayegi, beech ka
+            time zone hi dead zone hai."</em>
+          </p>
+        </div>
+
+        <div class="drill">
+          <div class="d-head"><span>Now you code</span><span>AI off &middot; autocomplete off</span><span class="clock">15 min</span></div>
+          <div class="d-body">
+            <h4>Find and fix three TDZ bugs</h4>
+            <p>Type this out by hand &mdash; do not copy it. Then fix it so it runs, changing as little as possible, and write one comment per fix saying which rule you applied.</p>
+<pre><code>function createCaptionTrack(cues) {
+  const track = {
+    cues: sorted,
+    duration: totalDuration(),
+    activeAt(t) { return findCue(t); },
+  };
+
+  const sorted = [...cues].sort((a, b) =&gt; a.start - b.start);
+  const findCue = (t) =&gt; sorted.find(c =&gt; t &gt;= c.start &amp;&amp; t &lt; c.end);
+
+  function totalDuration() {
+    return sorted.length ? sorted[sorted.length - 1].end : 0;
+  }
+  return track;
+}
+
+console.log(createCaptionTrack([{ start: 2, end: 4 }, { start: 0, end: 1 }]));</code></pre>
+          </div>
+        </div>
+
+        <details class="solution">
+          <summary>Solution &mdash; open only after the timer</summary>
+          <div class="sol-in">
+            <p>Three separate failures, and they do not all fire at once &mdash; the first one masks the rest:</p>
+            <ol>
+              <li><code>cues: sorted</code> reads <code>sorted</code> while it is still in the TDZ. Throws immediately.</li>
+              <li><code>duration: totalDuration()</code> <em>calls</em> a hoisted function declaration &mdash; legal &mdash; but its body reads <code>sorted</code>, still in the TDZ. Same error, thrown from a different line than the one you are looking at.</li>
+              <li><code>activeAt</code> is safe, because <code>findCue</code> is only read when <code>activeAt</code> is <em>called</em>, which is after everything is initialised. This is the "temporal, not positional" point made concrete.</li>
+            </ol>
+<pre><code>function createCaptionTrack(cues) {
+  <span class="cmt">// fix: declare before use — initialisation order is the real fix,
+  // not moving things into functions</span>
+  const sorted = [...cues].sort((a, b) =&gt; a.start - b.start);
+  const findCue = (t) =&gt; sorted.find(c =&gt; t &gt;= c.start &amp;&amp; t &lt; c.end);
+
+  function totalDuration() {
+    return sorted.length ? sorted[sorted.length - 1].end : 0;
+  }
+
+  return {
+    cues: sorted,
+    duration: totalDuration(),
+    activeAt(t) { return findCue(t); },
+  };
+}</code></pre>
+            <p>
+              The lesson to state out loud: <strong>a function declaration being callable early does
+              not make its body safe early.</strong> Hoisting moves the function, not the data it
+              reads.
+            </p>
+          </div>
+        </details>
+
+        <p class="qlabel">Cross-questions</p>
+        <div class="xq">
+
+          <div class="xq-item">
+            <p class="xq-q">Is the TDZ a compile-time or a runtime concept?</p>
+            <p class="xq-why">Testing: the "temporal" word. Most people answer positionally.</p>
+            <p class="ans bad">"Compile time &mdash; it's the code above the declaration."</p>
+            <p class="ans good">"Runtime. The binding is marked uninitialised when the scope is entered and marked initialised when the declaration is evaluated; the error comes from reading it in between. That is why a function written above the declaration works perfectly if it is called after it &mdash; the source position never changed, only the time did."</p>
+          </div>
+
+          <div class="xq-item">
+            <p class="xq-q">Does the TDZ apply to function parameters?</p>
+            <p class="xq-why">Testing: depth. Most candidates have never thought about it.</p>
+            <p class="ans good">"Yes, within the parameter list itself. Parameters are initialised left to right, so a default value may reference parameters to its left but not to its right &mdash; <code>function f(a = b, b = 2){}</code> throws when you call <code>f()</code>, while <code>function f(b = 2, a = b){}</code> is fine."</p>
+          </div>
+
+          <div class="xq-item">
+            <p class="xq-q">Could you get a TDZ error on a variable you never declared in that function?</p>
+            <p class="xq-why">Testing: do you understand that the declaration taints the whole block?</p>
+            <p class="ans good">"Yes &mdash; by shadowing. If a block reads an outer <code>scale</code> but later declares its own <code>let scale</code>, that inner declaration owns the name for the entire block, so the earlier read throws instead of quietly finding the outer one. It is a genuinely surprising bug the first time you hit it, and it is the reason 'declare at first use' is a better rule than 'declare at the top'."</p>
+          </div>
+
+          <div class="xq-item">
+            <p class="xq-q">Why not just make <code>let</code> behave like <code>var</code> and initialise to <code>undefined</code>?</p>
+            <p class="xq-why">Testing: language-design reasoning, not memorisation.</p>
+            <p class="ans good">"Because then <code>const</code> would be incoherent &mdash; you would be able to observe a constant holding <code>undefined</code> before its value, so it would have had two values in its lifetime. And practically, <code>undefined</code> is the worst possible default: it does not fail where the mistake is, it fails later, somewhere else, in a stack trace that points at innocent code."</p>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <div class="practice">
+      <span class="pt">Practice &mdash; Session 2</span>
+      <h4>Break your own codebase on purpose</h4>
+      <ol>
+        <li>Open a real file from your canvas editor. Find a <code>var</code> if one survives, or a <code>let</code> that could be <code>const</code>; change it and predict the failure before running.</li>
+        <li>Deliberately introduce the shadowing TDZ bug from example 2 in a component. Run it. Read the exact error text &mdash; learn to recognise <code>Cannot access 'x' before initialization</code> on sight, because in a bundled stack trace that string is the fastest diagnosis you own.</li>
+        <li>Add <code>deepFreeze</code> to a <code>utils/</code> file and freeze one config object at startup. Note anything that breaks &mdash; that is code mutating config you did not know about.</li>
+      </ol>
+    </div>
+
+    <!-- ================================================================= -->
+    <div class="session">
+      <span class="sn">Session 3</span>
+      <span class="st">Closures: the question you cannot fumble</span>
+      <span class="sd">~75 min</span>
+    </div>
+
+    <h2>5 &middot; What a closure is</h2>
+
+    <div class="qblock">
+      <div class="q-head">
+        <span class="q-n">Question 5</span>
+        <span class="q-t">What is a closure?</span>
+        <span class="q-freq">Asked in roughly nine of ten JavaScript rounds</span>
+      </div>
+      <div class="q-body">
+
+        <div class="saythis">
+          <span class="st-lab">Say this</span>
+          <p>
+            A closure is a function bundled together with the lexical environment it was created
+            in. MDN's phrasing is worth borrowing directly: <em>"the combination of a function
+            bundled together (enclosed) with references to its surrounding state."</em>
+          </p>
+          <p>
+            In practice it means a function keeps access to the scope where it was
+            <strong>written</strong>, not where it is <strong>called</strong> &mdash; and it keeps
+            that access after the outer function has already returned. Two consequences matter:
+            the captured variables are held by <strong>reference, not copied</strong>, so the
+            function sees later changes; and every call to the outer function produces a
+            <strong>separate environment</strong>, so two closures made the same way do not share
+            state.
+          </p>
+          <p>
+            And closures are not rare or advanced &mdash; they are created every time a function is
+            created. Every callback, every event handler, every hook body is one.
+          </p>
+        </div>
+
+        <p class="qlabel">Example</p>
+
+<pre><code>function makeRedrawScheduler(ctx) {
+  let pending = null;                      <span class="cmt">// lives in the closure — private, per-instance</span>
+
+  return function schedule(draw) {
+    if (pending !== null) cancelAnimationFrame(pending);
+    pending = requestAnimationFrame(() =&gt; {
+      draw(ctx);
+      pending = null;
+    });
+  };
+}
+
+const scheduleSlideA = makeRedrawScheduler(ctxA);
+const scheduleSlideB = makeRedrawScheduler(ctxB);   <span class="cmt">// its OWN pending</span></code></pre>
+
+        <p>
+          That eight-line function demonstrates all three interview points at once.
+          <strong>Persistence:</strong> <code>pending</code> outlives the call to
+          <code>makeRedrawScheduler</code>. <strong>Privacy:</strong> nothing outside can read or
+          corrupt it &mdash; there is no <code>scheduler.pending</code> to poke.
+          <strong>Independence:</strong> <code>scheduleSlideA</code> and
+          <code>scheduleSlideB</code> each closed over their own environment, so cancelling one
+          never touches the other.
+        </p>
+
+        <div class="callout key">
+          <span class="ct">The sentence that upgrades your answer</span>
+          <p>
+            "A closure captures the <em>binding</em>, not the value." Say that unprompted and the
+            interviewer usually skips the two easy follow-ups, because you have already answered
+            them.
+          </p>
+        </div>
+
+        <div class="drill">
+          <div class="d-head"><span>Now you code</span><span>AI off &middot; autocomplete off</span><span class="clock">12 min</span></div>
+          <div class="d-body">
+            <h4>once(fn)</h4>
+<pre><code><span class="cmt">// Returns a function that invokes fn at most once.
+// Every later call returns the FIRST result without calling fn again.
+// `this` and all arguments must pass through.
+// Must work if fn returns undefined (i.e. don't use the result as the flag).</span>
+
+function once(fn) {
+  <span class="cmt">// your code</span>
+}
+
+const init = once(() =&gt; { console.log("init"); return Date.now(); });
+init(); init(); init();   <span class="cmt">// logs "init" exactly once, same timestamp each time</span></code></pre>
+          </div>
+        </div>
+
+        <details class="solution">
+          <summary>Solution &mdash; open only after the timer</summary>
+          <div class="sol-in">
+<pre><code>function once(fn) {
+  let called = false;         <span class="cmt">// separate flag — result may legitimately be undefined</span>
+  let result;
+  return function (...args) {
+    if (!called) {
+      called = true;          <span class="cmt">// set BEFORE calling: guards re-entrant calls</span>
+      result = fn.apply(this, args);
+      fn = null;              <span class="cmt">// optional: let the original be garbage collected</span>
+    }
+    return result;
+  };
+}</code></pre>
+            <p>What is being scored here, in the order an interviewer notices it:</p>
+            <ul>
+              <li><strong>A separate boolean flag</strong> rather than <code>if (result === undefined)</code>. A function that legitimately returns <code>undefined</code> would be called every time.</li>
+              <li><strong><code>function</code>, not an arrow</strong>, plus <code>fn.apply(this, args)</code> &mdash; so <code>obj.method = once(f)</code> still gets the right <code>this</code>. An arrow here silently breaks method usage.</li>
+              <li><strong>Setting the flag before invoking.</strong> If <code>fn</code> calls the wrapper again, the flag must already be set or you recurse.</li>
+              <li><strong><code>fn = null</code></strong> is the senior touch &mdash; you are releasing the closure's reference so the original function and anything it captured can be collected. Mention it even if you do not write it.</li>
+            </ul>
+          </div>
+        </details>
+
+        <p class="qlabel">Cross-questions</p>
+        <div class="xq">
+
+          <div class="xq-item">
+            <p class="xq-q">Does a closure copy the variable, or reference it?</p>
+            <p class="xq-why">Testing: whether you know it is live, or memorised a definition.</p>
+            <p class="ans bad">"It copies the value at the time the function is created."</p>
+            <p class="ans ok">"It references it, so it sees later changes."</p>
+            <p class="ans good">"It captures the binding. The variable lives in an environment record that outlives the call, so two closures over the same variable see each other's writes &mdash; one can increment and the other observes it. That is exactly why the <code>var</code>-in-a-loop puzzle prints the final value three times: three functions, one binding."</p>
+          </div>
+
+          <div class="xq-item">
+            <p class="xq-q">When is a closure created?</p>
+            <p class="xq-why">Testing: creation time vs call time.</p>
+            <p class="ans bad">"When the inner function is called."</p>
+            <p class="ans good">"At function creation time &mdash; every time a function is created, it captures a reference to the environment it was created in. Calling it later just uses that captured reference. So a loop that creates three functions creates three closures, even if none of them is ever called."</p>
+          </div>
+
+          <div class="xq-item">
+            <p class="xq-q">Where do the captured variables live &mdash; stack or heap?</p>
+            <p class="xq-why">Testing: do you have any model of memory at all?</p>
+            <p class="ans ok">"On the heap, since they outlive the function call."</p>
+            <p class="ans good">"Conceptually the environment record is heap-allocated, because it has to survive the call frame that created it. In practice engines optimise: V8 only promotes the variables that are actually captured into a context object and keeps the rest on the stack. That detail matters for leaks &mdash; it means what a closure retains is roughly what it references, not the entire outer scope, though the granularity is per-context and not perfect."</p>
+          </div>
+
+          <div class="xq-item">
+            <p class="xq-q">Is a closure the same as a scope?</p>
+            <p class="xq-why">Testing: precision of vocabulary.</p>
+            <p class="ans good">"No. A scope is the static region where names are visible. A closure is the runtime pairing of a function object with a captured environment. Scope is a property of the source; a closure is a thing that exists in memory."</p>
+          </div>
+
+          <div class="xq-item">
+            <p class="xq-q">Do arrow functions create closures?</p>
+            <p class="xq-why">Testing: whether "arrow functions are different" has calcified into superstition.</p>
+            <p class="ans good">"Identically to normal functions &mdash; closure behaviour is about the scope chain and is the same for both. The difference is only that arrows do not bind their own <code>this</code>, <code>arguments</code>, <code>super</code> or <code>new.target</code>; they take <code>this</code> lexically, which is a related but separate mechanism."</p>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <h2>6 &middot; Closures in real code</h2>
+
+    <div class="qblock">
+      <div class="q-head">
+        <span class="q-n">Question 6</span>
+        <span class="q-t">Give me a real example of a closure from your own work — not a counter.</span>
+        <span class="q-freq">The follow-up that separates seven years from one year, repeated seven times</span>
+      </div>
+      <div class="q-body">
+
+        <div class="callout warn">
+          <span class="ct">Why this question exists</span>
+          <p>
+            Everyone has the textbook counter. Almost nobody can point at a closure in code they
+            shipped. Having two rehearsed, specific, domain-real answers here is worth more than
+            perfect recall of the definition &mdash; it is the moment the interviewer decides
+            whether your seven years are real.
+          </p>
+        </div>
+
+        <div class="saythis">
+          <span class="st-lab">Say this &mdash; then pick one and go deep</span>
+          <p>
+            Closures show up in five recurring shapes in production code:
+            <strong>private state</strong> in a factory; <strong>function factories</strong> that
+            pre-bake configuration; <strong>callbacks that need to remember something</strong> from
+            the moment they were created; <strong>rate-limiting utilities</strong> like debounce,
+            throttle and memoize, which are entirely built out of captured variables; and
+            <strong>module-level privacy</strong>, where a file exports functions that share state
+            nothing outside can reach.
+          </p>
+          <p>
+            The one I hit constantly is the third: in the slide editor, every tool handler is
+            created with the widget it is operating on already captured, so the pointer-move
+            callback does not have to look anything up mid-drag.
+          </p>
+        </div>
+
+        <p class="qlabel">Example &mdash; the drag handler, which is your real answer</p>
+
+<pre><code>function beginDrag(widget, startEvent) {
+  <span class="cmt">// captured once, at creation: no lookups, no re-reads during the drag</span>
+  const originX = widget.x;
+  const originY = widget.y;
+  const startX  = startEvent.clientX;
+  const startY  = startEvent.clientY;
+
+  function onMove(e) {
+    widget.x = originX + (e.clientX - startX);   <span class="cmt">// reads captured values</span>
+    widget.y = originY + (e.clientY - startY);
+    scheduleRedraw();
+  }
+
+  function onUp() {
+    window.removeEventListener("pointermove", onMove);
+    window.removeEventListener("pointerup", onUp);
+    commitHistory({ type: "move", id: widget.id, from: { x: originX, y: originY } });
+  }
+
+  window.addEventListener("pointermove", onMove);
+  window.addEventListener("pointerup", onUp);
+}</code></pre>
+
+        <p>
+          Three closure facts are doing real work there, and naming them is what makes this answer
+          land. <code>onMove</code> and <code>onUp</code> <strong>share one environment</strong>, so
+          <code>onUp</code> can remove <code>onMove</code> by reference. The origin values are
+          <strong>captured at creation</strong>, which is what makes the drag frame-rate
+          independent and what lets undo know where the widget started. And the environment is
+          <strong>per-drag</strong> &mdash; drag two widgets and nothing collides.
+        </p>
+
+        <div class="terms">
+          <dt>Private state</dt>
+          <dd>A factory returns methods that close over variables no caller can reach. This is the module pattern, and it predates <code>#private</code> fields by twenty years.</dd>
+
+          <dt>Function factory / partial application</dt>
+          <dd><code>const toPx = makeEmuConverter(dpi)</code> &mdash; the configuration is captured once so the hot path takes one argument instead of three.</dd>
+
+          <dt>Callbacks that remember</dt>
+          <dd>Event handlers, timers, observers. The drag handler above. Anything registered now and run later.</dd>
+
+          <dt>Rate limiters and caches</dt>
+          <dd><code>debounce</code>, <code>throttle</code>, <code>memoize</code>, <code>once</code>. Each is literally a closure over a timer id, a timestamp or a Map.</dd>
+
+          <dt>Hooks</dt>
+          <dd>Every <code>useEffect</code> body closes over the props and state of the render that created it. That is the entire mechanism behind stale closures &mdash; Chapter 13.</dd>
+        </div>
+
+        <div class="drill">
+          <div class="d-head"><span>Now you code</span><span>AI off &middot; autocomplete off</span><span class="clock">20 min</span></div>
+          <div class="d-body">
+            <h4>createStore(reducer, initialState)</h4>
+            <p>Redux in fifteen lines. This gets asked directly, and it is pure closure work.</p>
+<pre><code><span class="cmt">// Requirements:
+//   getState()          -> current state
+//   dispatch(action)    -> runs reducer, notifies every subscriber
+//   subscribe(listener) -> returns an unsubscribe function
+// Rules:
+//   - state must be unreachable except through getState
+//   - unsubscribing during a dispatch must not skip another listener
+//   - unsubscribe called twice must not throw or remove someone else</span>
+
+function createStore(reducer, initialState) {
+  <span class="cmt">// your code</span>
+}</code></pre>
+          </div>
+        </div>
+
+        <details class="solution">
+          <summary>Solution &mdash; open only after the timer</summary>
+          <div class="sol-in">
+<pre><code>function createStore(reducer, initialState) {
+  let state = initialState;          <span class="cmt">// private: only reachable via the closure</span>
+  let listeners = [];
+
+  function getState() { return state; }
+
+  function dispatch(action) {
+    state = reducer(state, action);
+    <span class="cmt">// copy before iterating: a listener may subscribe/unsubscribe mid-notify</span>
+    for (const l of [...listeners]) l();
+    return action;
+  }
+
+  function subscribe(listener) {
+    listeners.push(listener);
+    let subscribed = true;           <span class="cmt">// per-subscription flag, own closure</span>
+    return function unsubscribe() {
+      if (!subscribed) return;       <span class="cmt">// idempotent</span>
+      subscribed = false;
+      const i = listeners.indexOf(listener);
+      if (i &gt;= 0) listeners.splice(i, 1);
+    };
+  }
+
+  dispatch({ type: "@@INIT" });      <span class="cmt">// let the reducer seed the default state</span>
+  return { getState, dispatch, subscribe };
+}</code></pre>
+            <p>
+              Two closures are nested here and being able to say so out loud is the point:
+              <code>getState</code>, <code>dispatch</code> and <code>subscribe</code> share
+              <em>one</em> environment holding <code>state</code> and <code>listeners</code>; and
+              each call to <code>subscribe</code> creates a <em>second, inner</em> environment
+              holding that subscription's own <code>subscribed</code> flag and
+              <code>listener</code>.
+            </p>
+            <p>
+              The <code>[...listeners]</code> copy is the detail that separates a memorised answer
+              from an engineered one. Without it, a listener that unsubscribes itself during
+              notification shifts the array underneath the loop and the next listener is skipped.
+              Real Redux solves this with a current/next listener pair for the same reason.
+            </p>
+          </div>
+        </details>
+
+        <p class="qlabel">Cross-questions</p>
+        <div class="xq">
+
+          <div class="xq-item">
+            <p class="xq-q">Why use a closure for private state instead of a class with <code>#private</code> fields?</p>
+            <p class="xq-why">Testing: judgement, not preference.</p>
+            <p class="ans bad">"Closures are more modern."</p>
+            <p class="ans good">"Both give real privacy now. I use a factory with closures when there is no inheritance, when I want the returned methods to be freely detachable &mdash; no <code>this</code> to lose when you pass <code>store.dispatch</code> as a callback &mdash; and when instances are few. I use a class when there will be many instances, because closure-based methods are recreated per instance while prototype methods are shared. MDN makes that exact point: do not put methods in the constructor if the prototype will do."</p>
+          </div>
+
+          <div class="xq-item">
+            <p class="xq-q">In your drag example, what happens if the user drags two widgets at once on a touch screen?</p>
+            <p class="xq-why">Testing: do you actually understand your own example, or is it recited?</p>
+            <p class="ans good">"Each <code>beginDrag</code> call creates its own environment, so the captured origins and the handler pair are per-drag and do not collide. What <em>would</em> break is that both register on <code>window</code> without checking <code>pointerId</code> &mdash; so both would respond to both pointers. The closure is correct; the event filtering is the bug. I would capture <code>startEvent.pointerId</code> and ignore non-matching moves."</p>
+          </div>
+
+          <div class="xq-item">
+            <p class="xq-q">Is there a cost to creating closures in a hot loop?</p>
+            <p class="xq-why">Testing: do you know the real trade-off, or just repeat "closures are slow"?</p>
+            <p class="ans good">"Each function instance carries its own context object, so creating them per item in a hot path costs allocation and GC pressure &mdash; MDN warns about exactly this. In a canvas render loop running at 60fps I hoist handler creation out of the loop, or attach one delegated listener instead of one per widget. Outside a hot path it is not worth reasoning about, and I would profile before restructuring readable code."</p>
+          </div>
+
+          <div class="xq-item">
+            <p class="xq-q">Can two closures share state deliberately?</p>
+            <p class="xq-why">Testing: whether you see the environment as a first-class thing.</p>
+            <p class="ans good">"Yes, and that is the module pattern: several functions created in the same scope share one environment, so <code>increment</code> and <code>value</code> see the same private variable. It is also how <code>onMove</code> and <code>onUp</code> coordinate in the drag handler. Closures sharing an environment is not an accident to avoid &mdash; it is the feature."</p>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <div class="practice">
+      <span class="pt">Practice &mdash; Session 3</span>
+      <h4>Mine two real closures out of your own repository</h4>
+      <ol>
+        <li>Open the canvas editor. Find two closures you wrote without thinking of them as closures. Copy them into <code>answers.md</code>.</li>
+        <li>For each, write three sentences: what is captured, why capturing beats passing it as an argument, and what would break if the variable were shared instead of per-call.</li>
+        <li>Say both explanations out loud, timed, in under ninety seconds each. That is the length of the real answer.</li>
+        <li>Then write <code>memoize(fn)</code> from scratch &mdash; a <code>Map</code> in a closure, keyed by <code>JSON.stringify(args)</code>. Note in your log why that key is wrong for object arguments; Chapter 4 fixes it properly.</li>
+      </ol>
+    </div>
+
+    <!-- ================================================================= -->
+    <div class="session">
+      <span class="sn">Session 4</span>
+      <span class="st">The loop puzzle, and closures that leak</span>
+      <span class="sd">~75 min</span>
+    </div>
+
+    <h2>7 &middot; The 3-3-3 loop puzzle</h2>
+
+    <div class="qblock">
+      <div class="q-head">
+        <span class="q-n">Question 7</span>
+        <span class="q-t">Why does this print 3, 3, 3? Now fix it in three different ways.</span>
+        <span class="q-freq">The most-asked closure follow-up in existence</span>
+      </div>
+      <div class="q-body">
+
+<pre><code>for (var i = 0; i &lt; 3; i++) {
+  setTimeout(() =&gt; console.log(i), 0);
+}
+<span class="cmt">// 3 3 3</span>
+
+for (let i = 0; i &lt; 3; i++) {
+  setTimeout(() =&gt; console.log(i), 0);
+}
+<span class="cmt">// 0 1 2</span></code></pre>
+
+        <div class="saythis">
+          <span class="st-lab">Say this</span>
+          <p>
+            <code>var</code> is function-scoped, so there is exactly <strong>one</strong>
+            <code>i</code> and all three callbacks close over that same binding. The loop is
+            synchronous and finishes before any timer callback runs &mdash; timers go to the task
+            queue and only run once the stack is empty &mdash; so by the time they execute,
+            <code>i</code> is already 3.
+          </p>
+          <p>
+            <code>let</code> in the loop header is special-cased by <code>for</code>: each
+            iteration gets a <strong>fresh binding</strong>. Precisely, after the body runs, a new
+            scope is created, the previous iteration's values are copied into it, and only then
+            does <code>i++</code> run &mdash; in the new scope. So each callback closed over a
+            different <code>i</code>, holding the value that iteration had.
+          </p>
+          <p>
+            The general principle: it is not about <code>setTimeout</code>, and not about
+            asynchrony. It is <strong>one binding shared by three closures</strong> versus
+            <strong>three bindings, one each.</strong>
+          </p>
+        </div>
+
+        <figure class="diagram">
+          <svg viewBox="0 0 700 250" role="img" aria-label="var creates one shared binding; let creates one binding per iteration">
+            <defs>
+              <marker id="a2" markerWidth="8" markerHeight="8" refX="6.4" refY="2.9" orient="auto">
+                <path d="M0,0 L6.4,2.9 L0,5.8 z" fill="var(--muted)"/>
+              </marker>
+            </defs>
+            <g font-family="var(--ui)" font-size="11.5">
+              <text x="16" y="16" font-size="10.5" font-weight="700" fill="var(--danger)" letter-spacing="1.3">WITH var — ONE BINDING</text>
+              <rect x="16" y="28" width="96" height="30" rx="7" fill="var(--paper)" stroke="var(--line)"/><text x="64" y="47" text-anchor="middle" fill="var(--ink-2)">cb #1</text>
+              <rect x="16" y="66" width="96" height="30" rx="7" fill="var(--paper)" stroke="var(--line)"/><text x="64" y="85" text-anchor="middle" fill="var(--ink-2)">cb #2</text>
+              <rect x="16" y="104" width="96" height="30" rx="7" fill="var(--paper)" stroke="var(--line)"/><text x="64" y="123" text-anchor="middle" fill="var(--ink-2)">cb #3</text>
+              <line x1="112" y1="43" x2="176" y2="76" stroke="var(--muted)" stroke-width="1.3" marker-end="url(#a2)"/>
+              <line x1="112" y1="81" x2="176" y2="81" stroke="var(--muted)" stroke-width="1.3" marker-end="url(#a2)"/>
+              <line x1="112" y1="119" x2="176" y2="88" stroke="var(--muted)" stroke-width="1.3" marker-end="url(#a2)"/>
+              <rect x="182" y="62" width="122" height="40" rx="8" fill="var(--danger-soft)" stroke="var(--danger-line)"/>
+              <text x="243" y="80" text-anchor="middle" font-weight="700" fill="var(--danger)" font-size="12">i</text>
+              <text x="243" y="95" text-anchor="middle" fill="var(--ink-2)">final value: 3</text>
+              <text x="182" y="126" fill="var(--muted)" font-size="11">all three read the same box &rarr; 3 3 3</text>
+
+              <line x1="350" y1="10" x2="350" y2="240" stroke="var(--line)" stroke-width="1"/>
+
+              <text x="372" y="16" font-size="10.5" font-weight="700" fill="var(--ok)" letter-spacing="1.3">WITH let — ONE BINDING PER ITERATION</text>
+              <rect x="372" y="28" width="96" height="30" rx="7" fill="var(--paper)" stroke="var(--line)"/><text x="420" y="47" text-anchor="middle" fill="var(--ink-2)">cb #1</text>
+              <rect x="372" y="66" width="96" height="30" rx="7" fill="var(--paper)" stroke="var(--line)"/><text x="420" y="85" text-anchor="middle" fill="var(--ink-2)">cb #2</text>
+              <rect x="372" y="104" width="96" height="30" rx="7" fill="var(--paper)" stroke="var(--line)"/><text x="420" y="123" text-anchor="middle" fill="var(--ink-2)">cb #3</text>
+              <line x1="468" y1="43" x2="534" y2="43" stroke="var(--muted)" stroke-width="1.3" marker-end="url(#a2)"/>
+              <line x1="468" y1="81" x2="534" y2="81" stroke="var(--muted)" stroke-width="1.3" marker-end="url(#a2)"/>
+              <line x1="468" y1="119" x2="534" y2="119" stroke="var(--muted)" stroke-width="1.3" marker-end="url(#a2)"/>
+              <rect x="540" y="28" width="122" height="30" rx="7" fill="var(--ok-soft)" stroke="var(--ok-line)"/><text x="601" y="47" text-anchor="middle" fill="var(--ok)" font-weight="700">i = 0</text>
+              <rect x="540" y="66" width="122" height="30" rx="7" fill="var(--ok-soft)" stroke="var(--ok-line)"/><text x="601" y="85" text-anchor="middle" fill="var(--ok)" font-weight="700">i = 1</text>
+              <rect x="540" y="104" width="122" height="30" rx="7" fill="var(--ok-soft)" stroke="var(--ok-line)"/><text x="601" y="123" text-anchor="middle" fill="var(--ok)" font-weight="700">i = 2</text>
+              <text x="372" y="152" fill="var(--muted)" font-size="11">copy forward, then i++ runs in the NEW scope</text>
+
+              <rect x="16" y="168" width="646" height="66" rx="9" fill="var(--bg-2)" stroke="var(--line)"/>
+              <text x="32" y="189" font-weight="700" fill="var(--ink)" font-size="12">Why 0 1 2 and not 1 2 3?</text>
+              <text x="32" y="209" fill="var(--ink-2)">Per iteration: (1) run the body — the callback captures this scope's i · (2) create a new scope ·</text>
+              <text x="32" y="226" fill="var(--ink-2)">(3) copy i into it · (4) run i++ there. The increment lands in the NEXT scope, not the captured one.</text>
+            </g>
+          </svg>
+          <figcaption>The copy-then-increment order is the part almost nobody can explain. It is why the captured values are 0, 1, 2.</figcaption>
+        </figure>
+
+        <div class="hing">
+          <span class="h-lab">Seedhi baat</span>
+          <p>
+            <code>var</code> wale case mein teeno callbacks ek hi dabbe ko point kar rahe hain.
+            Loop pehle khatam hota hai, dabbe mein 3 pada hota hai, phir timers chalte hain &mdash;
+            isliye teen baar 3.
+          </p>
+          <p>
+            <code>let</code> mein har round ka apna dabba banta hai. Aur order ye hai: body
+            chalao &rarr; naya dabba banao &rarr; purani value copy karo &rarr; ab
+            <code>i++</code> naye dabbe mein karo. Isliye jo callback pakda gaya tha usme
+            purani value hi bachi &mdash; 0, 1, 2.
+          </p>
+        </div>
+
+        <p class="qlabel">The four fixes &mdash; know all of them, they ask for "another way"</p>
+
+<pre><code><span class="cmt">// 1 — let (the answer you give first)</span>
+for (let i = 0; i &lt; 3; i++) setTimeout(() =&gt; console.log(i), 0);
+
+<span class="cmt">// 2 — IIFE: manufacture a scope per iteration (the pre-ES6 answer)</span>
+for (var i = 0; i &lt; 3; i++) {
+  (function (j) { setTimeout(() =&gt; console.log(j), 0); })(i);
+}
+
+<span class="cmt">// 3 — pass it as an argument: setTimeout forwards extra args to the callback,
+//     so the value is copied at scheduling time and never captured at all</span>
+for (var i = 0; i &lt; 3; i++) setTimeout(console.log, 0, i);
+
+<span class="cmt">// 4 — a callback-taking method makes a fresh function scope per element</span>
+[0, 1, 2].forEach(i =&gt; setTimeout(() =&gt; console.log(i), 0));</code></pre>
+
+        <p>
+          Fix 3 is the one that shows you understand the <em>shape</em> of the problem rather than
+          the incantation: it works because nothing is captured &mdash; the value is passed by
+          value at schedule time. If you can only recite "use <code>let</code>", you have
+          memorised a fix. If you can explain why passing the argument also works, you have
+          understood the cause.
+        </p>
+
+        <div class="predict">
+          <span class="p-lab">Predict the output &mdash; all three, before reading on</span>
+<pre><code><span class="cmt">// A</span>
+const fns = [];
+for (var i = 0; i &lt; 3; i++) fns.push(() =&gt; i);
+console.log(fns.map(f =&gt; f()));
+
+<span class="cmt">// B</span>
+for (let i = 0; i &lt; 3; i++) {
+  setTimeout(() =&gt; console.log(i), 0);
+  i += 0;
+}
+
+<span class="cmt">// C</span>
+let k = 0;
+for (; k &lt; 3; k++) setTimeout(() =&gt; console.log(k), 0);</code></pre>
+          <p>
+            <strong>A:</strong> <code>[3, 3, 3]</code> &mdash; no timers involved at all, which
+            proves the puzzle was never about asynchrony. <strong>B:</strong> <code>0 1 2</code>
+            &mdash; mutating <code>i</code> inside the body affects that iteration's own binding,
+            and the copy-forward carries it on. <strong>C:</strong> <code>3 3 3</code> &mdash;
+            <code>let</code> is not magic; the per-iteration binding only happens when the
+            declaration is <em>in the loop header</em>. Declared outside, it is one binding again.
+            C is the trick version, and MDN documents it explicitly.
+          </p>
+        </div>
+
+        <div class="drill">
+          <div class="d-head"><span>Now you code</span><span>AI off &middot; autocomplete off</span><span class="clock">15 min</span></div>
+          <div class="d-body">
+            <h4>Fix the widget toolbar without using <code>let</code></h4>
+            <p>
+              Every button logs the last widget's id. Fix it <strong>three separate ways</strong>,
+              keeping <code>var</code> in at least two of them. Then write one sentence per fix
+              explaining what scope each one creates.
+            </p>
+<pre><code>function bindToolbar(widgets, toolbar) {
+  for (var i = 0; i &lt; widgets.length; i++) {
+    var btn = document.createElement("button");
+    btn.textContent = widgets[i].label;
+    btn.addEventListener("click", function () {
+      selectWidget(widgets[i].id);      <span class="cmt">// always the last one — and it throws</span>
+    });
+    toolbar.appendChild(btn);
+  }
+}</code></pre>
+            <p>
+              Bonus, and it is the real interview question hiding inside this one: why does this
+              version <em>throw</em> rather than just selecting the wrong widget?
+            </p>
+          </div>
+        </div>
+
+        <details class="solution">
+          <summary>Solution &mdash; open only after the timer</summary>
+          <div class="sol-in">
+            <p>
+              <strong>Why it throws:</strong> after the loop, <code>i === widgets.length</code>, so
+              <code>widgets[i]</code> is <code>undefined</code> and reading <code>.id</code> gives
+              <code>Cannot read properties of undefined</code>. The off-by-one is what turns a
+              wrong-value bug into a crash &mdash; and it is why this shape is so commonly used as
+              the interview version.
+            </p>
+<pre><code><span class="cmt">// 1 — IIFE captures a per-iteration copy</span>
+for (var i = 0; i &lt; widgets.length; i++) {
+  (function (w) {
+    var btn = document.createElement("button");
+    btn.textContent = w.label;
+    btn.addEventListener("click", function () { selectWidget(w.id); });
+    toolbar.appendChild(btn);
+  })(widgets[i]);
+}
+
+<span class="cmt">// 2 — forEach: the callback body IS a fresh scope per element</span>
+widgets.forEach(function (w) {
+  var btn = document.createElement("button");
+  btn.textContent = w.label;
+  btn.addEventListener("click", function () { selectWidget(w.id); });
+  toolbar.appendChild(btn);
+});
+
+<span class="cmt">// 3 — capture nothing: put the value on the element, read it from the event</span>
+for (var i = 0; i &lt; widgets.length; i++) {
+  var btn = document.createElement("button");
+  btn.textContent = widgets[i].label;
+  btn.dataset.id = widgets[i].id;
+  btn.addEventListener("click", function (e) { selectWidget(e.currentTarget.dataset.id); });
+  toolbar.appendChild(btn);
+}</code></pre>
+            <p>
+              Fix 3 is what you would actually ship, and it generalises to the answer you give in a
+              machine coding round: <strong>one delegated listener on the toolbar</strong>, reading
+              <code>event.target.closest("[data-id]")</code>. One listener instead of N, no
+              closures retained per button, and it survives buttons being added later. Say that
+              and you have turned a trivia question into a design answer.
+            </p>
+          </div>
+        </details>
+
+        <p class="qlabel">Cross-questions</p>
+        <div class="xq">
+
+          <div class="xq-item">
+            <p class="xq-q">Is this a problem with <code>setTimeout</code>?</p>
+            <p class="xq-why">Testing: can you separate the cause from the demo?</p>
+            <p class="ans bad">"Yes, because <code>setTimeout</code> runs later."</p>
+            <p class="ans good">"No. <code>setTimeout</code> only makes it visible. Push the functions into an array and call them synchronously after the loop and you still get 3, 3, 3. The cause is one shared binding; asynchrony just guarantees you observe it after the loop has finished."</p>
+          </div>
+
+          <div class="xq-item">
+            <p class="xq-q">With <code>let</code>, why 0, 1, 2 and not 1, 2, 3? The increment does run.</p>
+            <p class="xq-why">Testing: the copy-then-increment order. This is a genuine differentiator.</p>
+            <p class="ans ok">"Because each iteration gets its own copy of <code>i</code>."</p>
+            <p class="ans good">"Because of the order. The body runs first and the callback captures that iteration's binding. Then a new scope is created, the value is copied into it, and <code>i++</code> is evaluated <em>in the new scope</em>. So the increment mutates the next iteration's binding, never the one already captured. The last iteration's binding does reach 3, but no callback ever captured it &mdash; the loop exited on the condition check."</p>
+          </div>
+
+          <div class="xq-item">
+            <p class="xq-q">Does the same fix work for <code>for…in</code> and <code>for…of</code>?</p>
+            <p class="xq-why">Testing: breadth, and whether you know <code>const</code> is allowed there.</p>
+            <p class="ans good">"Yes, and more simply &mdash; <code>for…of</code> and <code>for…in</code> create a fresh binding each iteration and initialise it from the iterator rather than by assignment, so <code>const</code> works there and closures capture correctly. It is only the C-style loop that has the shared-binding hazard, because it is the only one with an assignment-based afterthought."</p>
+          </div>
+
+          <div class="xq-item">
+            <p class="xq-q">Where does this bite you in React?</p>
+            <p class="xq-why">Testing: can you carry a JS fundamental into framework code?</p>
+            <p class="ans good">"Same mechanism, different clothes: a stale closure. An effect or a callback captures the props and state of the render it was created in, so an interval created once with an empty dependency array keeps reading the first render's state forever and appears frozen. The fix is the same family &mdash; recreate the closure when the value changes, or stop capturing and use a functional update or a ref. That is Chapter 13."</p>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <h2>8 &middot; Closures and memory leaks</h2>
+
+    <div class="qblock">
+      <div class="q-head">
+        <span class="q-n">Question 8</span>
+        <span class="q-t">Can closures cause memory leaks? Have you ever found one?</span>
+        <span class="q-freq">Senior-level differentiator &middot; almost nobody has the second half</span>
+      </div>
+      <div class="q-body">
+
+        <div class="saythis">
+          <span class="st-lab">Say this</span>
+          <p>
+            Closures do not leak by themselves &mdash; garbage collection is reachability-based, so
+            a closure is collected as soon as nothing references it. The leak happens when
+            <strong>something long-lived holds the closure</strong>, and the closure in turn keeps
+            a large object reachable.
+          </p>
+          <p>
+            The four shapes I look for: a listener added to a long-lived target like
+            <code>window</code> or <code>document</code> and never removed; an interval or timer
+            never cleared; a subscription to a store or observer with no unsubscribe; and a
+            closure kept in a module-level cache or <code>Map</code> that grows without bound.
+          </p>
+          <p>
+            The symptom in a single-page app is <strong>detached DOM</strong>: the component
+            unmounted, the nodes were removed from the document, but a surviving handler still
+            references them, so the whole subtree stays in memory. You find it in the DevTools
+            Memory panel &mdash; take a heap snapshot, filter for <em>Detached</em>, and read the
+            retainer path back to whatever is holding it.
+          </p>
+        </div>
+
+        <p class="qlabel">Example &mdash; a leak in a canvas editor, and its fix</p>
+
+<pre><code><span class="cmt">// LEAKS. Every time this slide mounts, another handler is added to window,
+// and each one captures `bitmap` — a full-resolution ImageBitmap.</span>
+function mountSlide(slide, canvas) {
+  const ctx = canvas.getContext("2d");
+  const bitmap = slide.renderToBitmap();      <span class="cmt">// several MB</span>
+
+  window.addEventListener("resize", () =&gt; {
+    ctx.drawImage(bitmap, 0, 0);
+  });
+}
+
+<span class="cmt">// FIXED. Return a teardown; the listener and everything it captured
+// become unreachable the moment it runs.</span>
+function mountSlide(slide, canvas) {
+  const ctx = canvas.getContext("2d");
+  let bitmap = slide.renderToBitmap();
+
+  const onResize = () =&gt; { if (bitmap) ctx.drawImage(bitmap, 0, 0); };
+  window.addEventListener("resize", onResize);
+
+  return function unmount() {
+    window.removeEventListener("resize", onResize);
+    bitmap.close?.();     <span class="cmt">// release the GPU-side resource explicitly</span>
+    bitmap = null;        <span class="cmt">// drop the reference even if something still holds onResize</span>
+  };
+}</code></pre>
+
+        <div class="callout key">
+          <span class="ct">The detail that makes this answer senior</span>
+          <p>
+            In V8, all closures created in the same function scope share <strong>one context
+            object</strong>. So a tiny callback that never touches <code>bitmap</code> can still
+            keep it alive, purely because a <em>sibling</em> closure in the same scope references
+            it. That is why the fix sets <code>bitmap = null</code> rather than trusting the small
+            handler to be harmless &mdash; and it is why "but my closure does not use the big
+            object" is not a safe argument.
+          </p>
+        </div>
+
+        <div class="hing">
+          <span class="h-lab">Seedhi baat</span>
+          <p>
+            Closure khud leak nahi karta. Leak tab hota hai jab koi <em>lambi umar wali cheez</em>
+            &mdash; <code>window</code>, ek interval, ek store subscription &mdash; us closure ko
+            pakde rehti hai, aur closure ke andar koi bhaari object pada hota hai.
+          </p>
+          <p>
+            Isliye rule simple hai: <strong>jo cheez add ki hai, uska remove bhi usi jagah likho.</strong>
+            Listener add kiya &rarr; cleanup mein remove. Interval start kiya &rarr; cleanup mein
+            clear. Subscribe kiya &rarr; unsubscribe return karo.
+          </p>
+        </div>
+
+        <div class="drill">
+          <div class="d-head"><span>Now you code</span><span>AI off &middot; autocomplete off</span><span class="clock">18 min</span></div>
+          <div class="d-body">
+            <h4>Find the leak, then prove it is gone</h4>
+            <ol>
+              <li>
+                Write a small page with a button that mounts and unmounts a component fifty times.
+                The component should add a <code>window</code> resize listener that captures a
+                large array (<code>new Array(200_000).fill(0)</code>) and never remove it.
+              </li>
+              <li>
+                Open DevTools &rarr; Memory &rarr; Heap snapshot. Take one, click the button fifty
+                times, force GC, take another. Compare snapshots and find the retained arrays.
+                Read the <strong>retainer path</strong> and write down the exact chain.
+              </li>
+              <li>Now write <code>createListenerBag()</code>:</li>
+            </ol>
+<pre><code><span class="cmt">// A tiny utility that makes cleanup impossible to forget.
+//   const bag = createListenerBag();
+//   bag.on(window, "resize", onResize);
+//   bag.on(canvas, "pointerdown", onDown);
+//   bag.timer(setInterval(tick, 1000));
+//   bag.clear();   // removes every listener and clears every timer, once</span>
+
+function createListenerBag() {
+  <span class="cmt">// your code</span>
+}</code></pre>
+            <p>
+              Then repeat step 2 using the bag. The heap delta should be flat &mdash; and
+              &ldquo;flat after fifty mount/unmount cycles&rdquo; is the sentence you want in your
+              answer log, because it is evidence rather than a claim.
+            </p>
+          </div>
+        </div>
+
+        <details class="solution">
+          <summary>Solution &mdash; open only after the timer</summary>
+          <div class="sol-in">
+<pre><code>function createListenerBag() {
+  let entries = [];                 <span class="cmt">// closed over — no external access</span>
+  let cleared = false;
+
+  return {
+    on(target, type, handler, options) {
+      if (cleared) return () =&gt; {};
+      target.addEventListener(type, handler, options);
+      const off = () =&gt; target.removeEventListener(type, handler, options);
+      entries.push(off);
+      return off;                   <span class="cmt">// allow removing just this one</span>
+    },
+    timer(id, kind = "interval") {
+      if (cleared) { kind === "interval" ? clearInterval(id) : clearTimeout(id); return; }
+      entries.push(() =&gt; (kind === "interval" ? clearInterval(id) : clearTimeout(id)));
+      return id;
+    },
+    clear() {
+      if (cleared) return;          <span class="cmt">// idempotent</span>
+      cleared = true;
+      for (const off of entries) { try { off(); } catch {} }
+      entries = [];                 <span class="cmt">// drop references so captured targets can be collected</span>
+    },
+  };
+}</code></pre>
+            <p>
+              The retainer chain you should have written down in step 2 reads roughly:
+              <code>Window &rarr; EventListener list &rarr; handler function &rarr; context &rarr;
+              the array</code>. Being able to say "I read the retainer path in a heap snapshot"
+              is the sentence that ends this question in your favour &mdash; it is the difference
+              between knowing leaks exist and having debugged one.
+            </p>
+            <p>
+              Note <code>entries = []</code> in <code>clear</code>. Without it the bag itself keeps
+              every target and handler reachable, and you have written a leak into your
+              anti-leak utility. Interviewers who know this topic look for exactly that line.
+            </p>
+          </div>
+        </details>
+
+        <p class="qlabel">Cross-questions</p>
+        <div class="xq">
+
+          <div class="xq-item">
+            <p class="xq-q">If garbage collection is automatic, how is a leak even possible?</p>
+            <p class="xq-why">Testing: do you know what GC actually guarantees?</p>
+            <p class="ans bad">"The garbage collector sometimes misses things."</p>
+            <p class="ans good">"GC frees what is <em>unreachable</em>, not what is unused. A leak in JavaScript is always unintentional reachability &mdash; something still points at memory you are finished with. So the question is never 'why was it not collected', it is 'who still references it', and the heap snapshot's retainer path answers that directly."</p>
+          </div>
+
+          <div class="xq-item">
+            <p class="xq-q">Would a <code>WeakMap</code> have solved it?</p>
+            <p class="xq-why">Testing: whether you reach for weak references correctly or as a talisman.</p>
+            <p class="ans good">"Not for this one. The problem is <code>window</code> holding the listener, and <code>addEventListener</code> holds a strong reference regardless of what I do inside. A <code>WeakMap</code> helps when <em>I</em> own the cache &mdash; keying metadata by DOM node or widget object so entries vanish when the key does. For listeners, the tools are <code>removeEventListener</code>, an <code>AbortSignal</code> passed as the <code>signal</code> option, or a cleanup bag."</p>
+          </div>
+
+          <div class="xq-item">
+            <p class="xq-q">How would you detect this in production rather than in DevTools?</p>
+            <p class="xq-why">Testing: operational thinking. Rare, and it lands hard.</p>
+            <p class="ans good">"<code>performance.measureUserAgentSpecificMemory()</code> where available, sampled and reported; or a synthetic long-session test in CI that mounts and unmounts the editor a few hundred times and fails if heap after forced GC grows beyond a threshold. For a canvas editor with multi-megabyte bitmaps that check is worth having, because the failure mode is a tab that dies after forty minutes &mdash; which no unit test will ever catch."</p>
+          </div>
+
+          <div class="xq-item">
+            <p class="xq-q">Does setting a variable to <code>null</code> inside a closure actually help?</p>
+            <p class="xq-why">Testing: superstition check.</p>
+            <p class="ans good">"It helps only when the closure itself is going to stay alive &mdash; then nulling drops the reference to the big object while the small function survives. If the whole closure is about to become unreachable, nulling is pointless. It is not a magic incantation; it is one specific fix for one specific shape, which is a long-lived function holding a short-lived resource."</p>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <div class="practice">
+      <span class="pt">Practice &mdash; Session 4</span>
+      <h4>Take a heap snapshot of your real app</h4>
+      <ol>
+        <li>Open the slide editor. Record a heap snapshot. Open and close a slide ten times. Force GC. Snapshot again.</li>
+        <li>Filter for <em>Detached</em> in the comparison view. Write down what you find, even if it is nothing &mdash; "I checked and it was flat" is also an interview answer.</li>
+        <li>If you find something, write the retainer path into <code>answers.md</code> verbatim. That is a story you can tell in a round: symptom, tool, retainer path, fix, evidence it worked.</li>
+      </ol>
+    </div>
+
+    <!-- ================================================================= -->
+    <div class="session">
+      <span class="sn">Session 5</span>
+      <span class="st">Closures as tools: debounce, throttle, modules, currying</span>
+      <span class="sd">~75 min</span>
+    </div>
+
+    <h2>9 &middot; Debounce vs throttle</h2>
+
+    <div class="qblock">
+      <div class="q-head">
+        <span class="q-n">Question 9</span>
+        <span class="q-t">What's the difference between debounce and throttle? Implement debounce.</span>
+        <span class="q-freq">Near-certain &middot; and it reappears inside the machine coding round</span>
+      </div>
+      <div class="q-body">
+
+        <div class="saythis">
+          <span class="st-lab">Say this</span>
+          <p>
+            Both limit how often a function runs, but they answer different questions.
+            <strong>Debounce</strong> waits for a pause: it postpones the call until the events
+            have stopped for N milliseconds, so a burst of fifty events produces one call. You use
+            it when only the <em>final</em> state matters &mdash; a search box, autosave, a resize
+            that triggers an expensive re-layout.
+          </p>
+          <p>
+            <strong>Throttle</strong> enforces a rate: it guarantees at most one call every N
+            milliseconds during a continuous stream. You use it when the <em>intermediate</em>
+            states matter and you just cannot afford all of them &mdash; scroll position,
+            pointer-move while dragging, a canvas redraw capped at one per frame.
+          </p>
+          <p>
+            One sentence to remember it by: <strong>debounce collapses a burst into its last
+            event; throttle samples a stream at a fixed rate.</strong>
+          </p>
+        </div>
+
+        <div class="tbl">
+          <table>
+            <thead><tr><th style="width:90px">Events</th><th>Debounce (300ms)</th><th>Throttle (300ms)</th></tr></thead>
+            <tbody>
+              <tr><td>t=0</td><td>schedule for 300</td><td><b>run</b> (leading)</td></tr>
+              <tr><td>t=100</td><td>reschedule for 400</td><td>ignored, remember args</td></tr>
+              <tr><td>t=200</td><td>reschedule for 500</td><td>ignored, remember args</td></tr>
+              <tr><td>t=350</td><td>reschedule for 650</td><td><b>run</b> with latest args</td></tr>
+              <tr><td>&mdash;</td><td><b>one</b> call, at t=650</td><td><b>two</b> calls, evenly spaced</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="trap">
+          <span class="t-lab">Trap</span>
+          <div class="t-in">
+            <p>
+              "Use debounce for scroll" is a common wrong answer. Debouncing a scroll handler means
+              <em>nothing renders until the user stops scrolling</em> &mdash; the sticky header
+              never updates mid-scroll. Scroll wants throttle, or better,
+              <code>requestAnimationFrame</code>. Search input wants debounce. Say which and why;
+              the "why" is the score.
+            </p>
+          </div>
+        </div>
+
+        <div class="drill">
+          <div class="d-head"><span>Now you code</span><span>AI off &middot; autocomplete off</span><span class="clock">20 min</span></div>
+          <div class="d-body">
+            <h4>debounce(fn, wait, options)</h4>
+<pre><code><span class="cmt">// Level 1 — the baseline every candidate must produce
+//   debounce(fn, wait)  -> delays fn until `wait` ms after the last call
+//   preserves `this` and arguments
+//
+// Level 2 — what a ₹18L answer adds
+//   .cancel()           -> drop the pending call
+//   .flush()            -> run the pending call right now, return its result
+//   { leading: true }   -> fire on the first call, then suppress the burst
+//
+// Test it against:
+//   const d = debounce(save, 300);
+//   d(1); d(2); d(3);      → save called once, with 3
+//   d(1); d.cancel();      → save never called</span>
+
+function debounce(fn, wait, options = {}) {
+  <span class="cmt">// your code</span>
+}</code></pre>
+            <p>
+              Write level 1 first and get it working before you touch level 2. In a real interview
+              that order is also the correct strategy: a working simple version beats a broken
+              clever one, every time.
+            </p>
+          </div>
+        </div>
+
+        <details class="solution">
+          <summary>Solution &mdash; open only after the timer</summary>
+          <div class="sol-in">
+<pre><code>function debounce(fn, wait, { leading = false, trailing = true } = {}) {
+  let timer = null;
+  let lastArgs = null;
+  let lastThis = null;
+  let result;
+
+  function invoke() {
+    const args = lastArgs, ctx = lastThis;
+    lastArgs = lastThis = null;
+    result = fn.apply(ctx, args);
+    return result;
+  }
+
+  function debounced(...args) {
+    lastArgs = args;
+    lastThis = this;                       <span class="cmt">// must be a normal function, not an arrow</span>
+
+    const isFirst = timer === null;
+    if (timer !== null) clearTimeout(timer);
+
+    if (leading &amp;&amp; isFirst) invoke();
+
+    timer = setTimeout(() =&gt; {
+      timer = null;
+      <span class="cmt">// don't double-fire when leading already ran and nothing new arrived</span>
+      if (trailing &amp;&amp; lastArgs) invoke();
+    }, wait);
+
+    return result;                         <span class="cmt">// last known result, like lodash</span>
+  }
+
+  debounced.cancel = function () {
+    if (timer !== null) clearTimeout(timer);
+    timer = null;
+    lastArgs = lastThis = null;
+  };
+
+  debounced.flush = function () {
+    if (timer !== null &amp;&amp; lastArgs) {
+      clearTimeout(timer);
+      timer = null;
+      return invoke();
+    }
+    return result;
+  };
+
+  debounced.pending = () =&gt; timer !== null;
+
+  return debounced;
+}</code></pre>
+            <p>Scoring notes, in the order an interviewer checks them:</p>
+            <ul>
+              <li><strong><code>function</code>, not arrow, for <code>debounced</code></strong> &mdash; otherwise <code>this</code> is lost and <code>input.oninput = debounce(...)</code> breaks.</li>
+              <li><strong>Storing the latest args, not the first.</strong> The whole point is that the final call wins.</li>
+              <li><strong><code>clearTimeout</code> before setting a new one.</strong> Forgetting it means every call eventually fires &mdash; a delay, not a debounce.</li>
+              <li><strong>Clearing <code>lastArgs</code> after invoking</strong>, so a leading-edge call with no follow-up does not fire twice at the trailing edge. This is the bug in most hand-written versions.</li>
+              <li><strong>Nulling <code>lastThis</code>/<code>lastArgs</code> in <code>cancel</code></strong> &mdash; otherwise you retain the arguments, which in a React app can mean retaining a whole event object or component scope.</li>
+            </ul>
+            <p>
+              Now say the closure sentence out loud: "<code>timer</code>, <code>lastArgs</code> and
+              <code>result</code> live in the closure, so the returned function has memory between
+              calls without any external state." That single line converts an implementation into
+              an explanation.
+            </p>
+          </div>
+        </details>
+
+        <p class="qlabel">Cross-questions</p>
+        <div class="xq">
+
+          <div class="xq-item">
+            <p class="xq-q">Which would you use for a typeahead, and what wait?</p>
+            <p class="xq-why">Testing: product judgement, not just mechanics.</p>
+            <p class="ans good">"Debounce, around 250&ndash;300ms &mdash; long enough that a normal typist does not fire per keystroke, short enough to feel instant. Below ~150ms you are still firing per keystroke; above ~500ms it feels laggy. And debounce alone is not enough: I would also cancel the in-flight request or ignore out-of-order responses, because debounce reduces requests but does not stop response #2 arriving after response #3."</p>
+          </div>
+
+          <div class="xq-item">
+            <p class="xq-q">Can you implement throttle using debounce?</p>
+            <p class="xq-why">Testing: whether you understand both, or memorised two snippets.</p>
+            <p class="ans good">"Not cleanly, no &mdash; they have different guarantees. Debounce guarantees a quiet period before running; throttle guarantees a maximum rate <em>during</em> activity. Lodash implements throttle as debounce with a <code>maxWait</code>, which is the honest relationship: throttle is debounce plus 'but never wait longer than N'. If I wrote it from scratch I would use a timestamp check, which is about four lines."</p>
+          </div>
+
+          <div class="xq-item">
+            <p class="xq-q">For a drag on a canvas, would you throttle the pointermove?</p>
+            <p class="xq-why">Testing: your own domain. Get this one wrong and the interview cools.</p>
+            <p class="ans ok">"Yes, throttle it to about 16ms."</p>
+            <p class="ans good">"I would not use a timer at all &mdash; I would coalesce into <code>requestAnimationFrame</code>. Store the latest pointer position in a closure variable, schedule one rAF if none is pending, and draw once per frame. A 16ms throttle is fighting the browser's clock rather than aligning with it, and it can drop a frame or draw twice in one. That is exactly what the redraw scheduler from question 5 does."</p>
+          </div>
+
+          <div class="xq-item">
+            <p class="xq-q">Why does your debounced function need <code>cancel</code>?</p>
+            <p class="xq-why">Testing: have you used this in a real component lifecycle?</p>
+            <p class="ans good">"Unmount. If a component is removed while a debounced save is pending, that call will still fire and touch state that no longer exists, or send a request for a screen the user has left. Every debounce in a React app should be cancelled in the effect's cleanup. It is the same discipline as removing a listener."</p>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <h2>10 &middot; Modules, IIFEs and currying</h2>
+
+    <div class="qblock">
+      <div class="q-head">
+        <span class="q-n">Question 10</span>
+        <span class="q-t">What's the module pattern, and is an IIFE still useful today?</span>
+        <span class="q-freq">Occasional &middot; but the currying half is a frequent machine-coding warm-up</span>
+      </div>
+      <div class="q-body">
+
+        <div class="saythis">
+          <span class="st-lab">Say this</span>
+          <p>
+            The module pattern is an immediately-invoked function that returns an object of public
+            methods, all closing over variables that stay private. Before ES modules it was the
+            only way to avoid polluting the global scope and the only way to get privacy at all.
+          </p>
+          <p>
+            Today ES modules do that natively &mdash; a module has its own scope, and anything not
+            exported is already private &mdash; so the pattern is largely historical. Where an
+            IIFE is still genuinely useful is narrower: creating a scope inline for a one-off
+            computed constant, running async top-level code in a non-module script, and isolating
+            a script you are injecting into a page you do not control.
+          </p>
+          <p>
+            Currying and partial application are the same closure mechanism pointed at arguments
+            instead of privacy: each call captures some arguments and returns a function waiting
+            for the rest.
+          </p>
+        </div>
+
+        <p class="qlabel">Example</p>
+
+<pre><code><span class="cmt">// module pattern — one shared private environment</span>
+const historyStack = (function () {
+  const undoStack = [];      <span class="cmt">// unreachable from outside</span>
+  const redoStack = [];
+
+  return {
+    push(cmd) { undoStack.push(cmd); redoStack.length = 0; },
+    undo() { const c = undoStack.pop(); if (c) { redoStack.push(c); c.revert(); } },
+    redo() { const c = redoStack.pop(); if (c) { undoStack.push(c); c.apply(); } },
+    get depth() { return undoStack.length; },
+  };
+})();
+
+<span class="cmt">// the modern equivalent — same privacy, no ceremony</span>
+<span class="cmt">// history.js</span>
+const undoStack = [];        <span class="cmt">// private simply by not being exported</span>
+export function push(cmd) { <span class="cmt">/* ... */</span> }
+
+<span class="cmt">// partial application — capture config once, call with one argument forever after</span>
+const makeEmuConverter = (dpi) =&gt; (emu) =&gt; (emu / 914400) * dpi;
+const toPx = makeEmuConverter(96);     <span class="cmt">// the .pptx hot path</span>
+toPx(914400);                          <span class="cmt">// 96</span></code></pre>
+
+        <div class="drill">
+          <div class="d-head"><span>Now you code</span><span>AI off &middot; autocomplete off</span><span class="clock">18 min</span></div>
+          <div class="d-body">
+            <h4>curry(fn)</h4>
+<pre><code><span class="cmt">// Turn fn(a, b, c) into a function callable as any of:
+//   f(1)(2)(3)   f(1, 2)(3)   f(1)(2, 3)   f(1, 2, 3)
+// Use fn.length to know how many arguments are still needed.
+// `this` must pass through.
+// Bonus: make curry(fn)(1)(2) reusable — calling it twice must not
+//        accumulate arguments across the two uses.</span>
+
+function curry(fn) {
+  <span class="cmt">// your code</span>
+}
+
+const volume = curry((w, h, d) =&gt; w * h * d);
+volume(2)(3)(4);      <span class="cmt">// 24</span>
+const base = volume(2, 3);
+base(4);              <span class="cmt">// 24</span>
+base(10);             <span class="cmt">// 60  ← must still work</span></code></pre>
+          </div>
+        </div>
+
+        <details class="solution">
+          <summary>Solution &mdash; open only after the timer</summary>
+          <div class="sol-in">
+<pre><code>function curry(fn) {
+  return function curried(...args) {
+    if (args.length &gt;= fn.length) return fn.apply(this, args);
+    return function (...rest) {
+      <span class="cmt">// new array every time — never mutate `args`, or `base` would
+      // accumulate and base(10) after base(4) would break</span>
+      return curried.apply(this, [...args, ...rest]);
+    };
+  };
+}</code></pre>
+            <p>
+              The bonus is the whole test. If you write <code>args.push(...rest)</code> instead of
+              building a new array, the captured <code>args</code> is mutated and the partially
+              applied <code>base</code> is poisoned after its first use. <strong>Each closure must
+              own its own arguments array</strong> &mdash; which is the same per-instance
+              environment idea from question 5, showing up for the fourth time in this chapter.
+            </p>
+            <p>
+              Known limits worth saying out loud, because they are the follow-up:
+              <code>fn.length</code> ignores default parameters and rest parameters, so
+              <code>(a, b = 2) =&gt; …</code> reports an arity of 1. For variadic functions you need
+              an explicit arity argument: <code>curry(fn, 3)</code>.
+            </p>
+          </div>
+        </details>
+
+        <p class="qlabel">Cross-questions</p>
+        <div class="xq">
+
+          <div class="xq-item">
+            <p class="xq-q">Difference between currying and partial application?</p>
+            <p class="xq-why">Testing: precision. People use the words interchangeably; they are not.</p>
+            <p class="ans good">"Currying transforms an n-argument function into a chain of n one-argument functions. Partial application fixes <em>some</em> arguments and returns a function taking the rest &mdash; it does not care about arity. <code>bind</code> is partial application, not currying. Both are built on the same closure capture."</p>
+          </div>
+
+          <div class="xq-item">
+            <p class="xq-q">Do you use currying in production React?</p>
+            <p class="xq-why">Testing: honesty over buzzwords.</p>
+            <p class="ans good">"Rarely in its pure form. Partial application, constantly &mdash; <code>onChange={handleField('title')}</code>, pre-configured converters, selector factories. Full currying tends to hurt readability and defeats TypeScript inference in places. It is worth knowing because it is asked, not because it is common."</p>
+          </div>
+
+          <div class="xq-item">
+            <p class="xq-q">If ES modules give privacy, is the module pattern dead?</p>
+            <p class="xq-why">Testing: dogma versus nuance.</p>
+            <p class="ans good">"For structuring an app, yes &mdash; use modules. The pattern survives in three places: a factory that needs <em>per-instance</em> privacy, since module scope is per-file and shared, not per-instance; inline scripts and snippets injected into pages you do not own; and reading older code, which is the real reason to recognise it."</p>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <div class="practice">
+      <span class="pt">Practice &mdash; Session 5</span>
+      <h4>The consolidation set &mdash; 45 minutes, timer visible, no AI</h4>
+      <p>Blank file. From memory, in this order, no reference material:</p>
+      <ol>
+        <li><code>once(fn)</code> &mdash; 5 min</li>
+        <li><code>debounce(fn, wait)</code> with <code>cancel</code> &mdash; 12 min</li>
+        <li><code>throttle(fn, wait)</code> with leading and trailing &mdash; 12 min</li>
+        <li><code>curry(fn)</code> &mdash; 8 min</li>
+        <li><code>createListenerBag()</code> &mdash; 8 min</li>
+      </ol>
+      <p>
+        Then, without running anything, write one sentence per function naming <em>what is in its
+        closure</em>. If you cannot name the captured variables, you copied a shape rather than
+        understanding it. Repeat this whole set on day 3 and day 10 &mdash; spaced, not massed.
+      </p>
+    </div>
+
+    <h2>Rapid fire</h2>
+
+    <p>
+      Cover the answers. Fifteen seconds each, out loud, in a full sentence. If you hesitate on
+      one, it goes back into tomorrow's set.
+    </p>
+
+    <div class="rapid">
+      <div class="r-head"><span>Chapter 1 &mdash; scope, closures, execution</span><span class="rc">24 questions</span></div>
+
+      <details><summary>Define a closure in one sentence.</summary><p class="ra">A function bundled with references to the lexical environment it was created in, which it keeps even after the outer function has returned.</p></details>
+      <details><summary>When is a closure created?</summary><p class="ra">At function creation time — every function creation captures its surrounding environment, whether or not it is ever called.</p></details>
+      <details><summary>Value or reference?</summary><p class="ra">Reference to the binding. The closure sees later changes to the captured variable.</p></details>
+      <details><summary>Two functions created in the same scope — separate closures or shared?</summary><p class="ra">Separate function objects, one shared environment. They can see each other's writes.</p></details>
+      <details><summary>What determines a function's scope chain?</summary><p class="ra">Where it was written, not where it is called. Lexical scoping.</p></details>
+      <details><summary>What is decided by the call site instead?</summary><p class="ra"><code>this</code> — which is Chapter 2, and why people who assume dynamic scoping get confused.</p></details>
+      <details><summary>Is <code>let</code> hoisted?</summary><p class="ra">Yes — the binding is created on entering the block, but left uninitialised. That uninitialised window is the TDZ.</p></details>
+      <details><summary>What does <code>typeof</code> do on a TDZ variable?</summary><p class="ra">Throws <code>ReferenceError</code>. It is only safe for names that were never declared.</p></details>
+      <details><summary><code>ReferenceError</code> vs <code>TypeError</code> when calling too early?</summary><p class="ra"><code>var f = function(){}</code> gives <code>TypeError: f is not a function</code>; <code>let f = () =&gt; {}</code> gives <code>ReferenceError</code>.</p></details>
+      <details><summary>Why is the TDZ called "temporal"?</summary><p class="ra">It is about execution time, not source position. A function written above the declaration works if it is called after it.</p></details>
+      <details><summary>Is <code>const</code> immutable?</summary><p class="ra">The binding is; the value is not. <code>Object.freeze</code> for the value, and it is shallow.</p></details>
+      <details><summary>Why does <code>for (const x of list)</code> work?</summary><p class="ra">Fresh binding per iteration, initialised rather than reassigned — so nothing violates <code>const</code>.</p></details>
+      <details><summary>Why does <code>for (const i = 0; …; i++)</code> throw?</summary><p class="ra"><code>i++</code> reassigns the binding — <code>TypeError</code> on the second iteration.</p></details>
+      <details><summary>Why does the <code>var</code> loop log 3, 3, 3?</summary><p class="ra">One binding shared by three closures; the loop finishes before any callback runs.</p></details>
+      <details><summary>Why does <code>let</code> log 0, 1, 2 and not 1, 2, 3?</summary><p class="ra">New scope per iteration, value copied forward, and <code>i++</code> runs in the new scope — never in the one already captured.</p></details>
+      <details><summary>Does <code>let</code> fix it if declared outside the loop header?</summary><p class="ra">No. <code>let k = 0; for (; k &lt; 3; k++)</code> logs 3, 3, 3 — the per-iteration binding only applies to the header declaration.</p></details>
+      <details><summary>Name a fix that captures nothing at all.</summary><p class="ra"><code>setTimeout(console.log, 0, i)</code> — extra arguments are forwarded, so the value is passed at schedule time.</p></details>
+      <details><summary>Do closures leak memory?</summary><p class="ra">Not by themselves. They leak when something long-lived holds them and they keep a large object reachable.</p></details>
+      <details><summary>How do you find one?</summary><p class="ra">Heap snapshot, filter <em>Detached</em>, follow the retainer path back to the holder.</p></details>
+      <details><summary>Debounce vs throttle in one line?</summary><p class="ra">Debounce collapses a burst into its last event; throttle samples a continuous stream at a fixed rate.</p></details>
+      <details><summary>Which for a search box, which for scroll?</summary><p class="ra">Debounce for search; throttle — or better, <code>requestAnimationFrame</code> — for scroll and pointermove.</p></details>
+      <details><summary>Why must <code>debounce</code> return a normal function, not an arrow?</summary><p class="ra">To forward <code>this</code>, so it still works when assigned as a method or a DOM handler.</p></details>
+      <details><summary>Currying vs partial application?</summary><p class="ra">Currying converts an n-ary function into n unary ones; partial application fixes some arguments and returns a function for the rest. <code>bind</code> is the latter.</p></details>
+      <details><summary>Where do closures bite you in React?</summary><p class="ra">Stale closures — an effect or callback captures the props and state of the render that created it.</p></details>
+    </div>
+
+    <div class="checkpoint">
+      <span class="pt">Before moving on &mdash; you should be able to</span>
+      <ul>
+        <li>Describe the two steps of setting up an execution context, without notes, in under a minute.</li>
+        <li>State what <code>var</code>, <code>let</code>, <code>const</code>, <code>class</code>, function declarations and function expressions each do before their line runs &mdash; and predict <code>ReferenceError</code> versus <code>TypeError</code> correctly every time.</li>
+        <li>Explain the TDZ as a <em>time</em> phenomenon, and produce the shadowing example that proves it.</li>
+        <li>Give MDN's definition of a closure verbatim, then improve on it with "it captures the binding, not the value."</li>
+        <li>Point at two closures in your own shipped code and explain what each captures and why.</li>
+        <li>Explain 3-3-3 including the copy-then-increment order that makes <code>let</code> produce 0, 1, 2 &mdash; and give four fixes, one of which captures nothing.</li>
+        <li>Describe how you would find a closure-driven memory leak in DevTools, in the order you would actually do it.</li>
+        <li>Write <code>once</code>, <code>debounce</code> with <code>cancel</code>, <code>throttle</code>, <code>curry</code>, <code>deepFreeze</code>, <code>createStore</code> and <code>createListenerBag</code> from memory, in under 45 minutes total, with AI off.</li>
+        <li>Say which of those you would <em>not</em> hand-write in production, and name the library instead. Knowing when not to write it is also an answer.</li>
+      </ul>
+    </div>
+
+    <h2>What's next</h2>
+
+    <p>
+      Chapter 2 takes the other half of the lookup story. This chapter was about how JavaScript
+      resolves <em>variables</em> &mdash; the scope chain, fixed at authoring time. Chapter 2 is
+      about how it resolves <em>properties</em> &mdash; the prototype chain, walked at runtime
+      &mdash; and about <code>this</code>, the one thing in the language that is decided by the
+      call site rather than by where you wrote the code.
+    </p>
+    <p>
+      That pairing is deliberate. Interviewers almost always ask these two areas back to back,
+      and the candidates who sound strongest are the ones who can say plainly: <em>"names come
+      from the scope chain, properties come from the prototype chain, and <code>this</code>
+      comes from the call."</em> Three sentences, three mechanisms, no hand-waving.
+    </p>
+
+    <div class="ch-nav" id="chnav"></div>
+
+  </main>
+
+  <aside class="ch-side">
+    <p class="sh">On this page</p>
+    <ul class="toc" id="toc"></ul>
+    <button class="side-btn" id="markdone">Mark chapter complete</button>
+    <a class="side-btn" href="../index.html">All chapters</a>
+  </aside>
+
+</div>
+
+<footer class="site-foot">
+  <div class="site-foot-in">
+    <span>Chapter 1 &middot; Scope, Closures &amp; the Execution Model</span>
+    <span class="sp"></span>
+    <span>Use &larr; and &rarr; to move between chapters</span>
+  </div>
+</footer>
+
+<script src="../assets/book-data.js"></script>
+<script src="../assets/book.js"></script>
+</body>
+</html>
